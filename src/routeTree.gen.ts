@@ -9,9 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiPublicCronPublishDueRouteImport } from './routes/api/public/cron/publish-due'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -24,33 +30,44 @@ const ApiPublicCronPublishDueRoute = ApiPublicCronPublishDueRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
   '/api/public/cron/publish-due': typeof ApiPublicCronPublishDueRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
   '/api/public/cron/publish-due': typeof ApiPublicCronPublishDueRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
   '/api/public/cron/publish-due': typeof ApiPublicCronPublishDueRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/api/chat' | '/api/public/cron/publish-due'
+  fullPaths: '/' | '/api/chat' | '/api/public/cron/publish-due'
   fileRoutesByTo: FileRoutesByTo
-  to: '/api/chat' | '/api/public/cron/publish-due'
-  id: '__root__' | '/api/chat' | '/api/public/cron/publish-due'
+  to: '/' | '/api/chat' | '/api/public/cron/publish-due'
+  id: '__root__' | '/' | '/api/chat' | '/api/public/cron/publish-due'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiPublicCronPublishDueRoute: typeof ApiPublicCronPublishDueRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/chat': {
       id: '/api/chat'
       path: '/api/chat'
@@ -69,6 +86,7 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   ApiChatRoute: ApiChatRoute,
   ApiPublicCronPublishDueRoute: ApiPublicCronPublishDueRoute,
 }
