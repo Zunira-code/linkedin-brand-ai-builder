@@ -14,7 +14,143 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      inspiration_templates: {
+        Row: {
+          category: string
+          created_at: string
+          hook_type: string
+          id: string
+          template_text: string
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          hook_type: string
+          id?: string
+          template_text: string
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          hook_type?: string
+          id?: string
+          template_text?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      post_metrics: {
+        Row: {
+          comments: number | null
+          fetched_at: string
+          impressions: number | null
+          likes: number | null
+          post_id: string
+          shares: number | null
+        }
+        Insert: {
+          comments?: number | null
+          fetched_at?: string
+          impressions?: number | null
+          likes?: number | null
+          post_id: string
+          shares?: number | null
+        }
+        Update: {
+          comments?: number | null
+          fetched_at?: string
+          impressions?: number | null
+          likes?: number | null
+          post_id?: string
+          shares?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_metrics_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: true
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          content: string
+          created_at: string
+          error: string | null
+          format: string
+          id: string
+          linkedin_urn: string | null
+          posted_at: string | null
+          scheduled_at: string | null
+          status: Database["public"]["Enums"]["post_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          error?: string | null
+          format?: string
+          id?: string
+          linkedin_urn?: string | null
+          posted_at?: string | null
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["post_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          error?: string | null
+          format?: string
+          id?: string
+          linkedin_urn?: string | null
+          posted_at?: string | null
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["post_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          brand_voice: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          linkedin_urn: string | null
+          timezone: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          brand_voice?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          linkedin_urn?: string | null
+          timezone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          brand_voice?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          linkedin_urn?: string | null
+          timezone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +159,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      post_status: "draft" | "scheduled" | "posted" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +286,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      post_status: ["draft", "scheduled", "posted", "failed"],
+    },
   },
 } as const
