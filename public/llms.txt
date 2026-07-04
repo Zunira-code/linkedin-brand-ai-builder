@@ -1,0 +1,7 @@
+# Postpilot
+
+> An AI-powered LinkedIn brand builder: post generator, content calendar, viral post library and personal analytics in one workspace.
+
+## Pages
+- [Home](/): product overview and features
+- [Sign in](/auth): create an account or sign in
