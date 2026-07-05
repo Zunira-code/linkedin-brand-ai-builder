@@ -32,9 +32,10 @@ function Settings() {
   const runCalibrationFn = useServerFn(runCalibration);
   const calibration = useQuery({ queryKey: ["calibration"], queryFn: () => calibrationFn() });
   const [profileText, setProfileText] = useState("");
+  const [profileUrl, setProfileUrl] = useState("");
 
   const calibrate = useMutation({
-    mutationFn: () => runCalibrationFn({ data: { profileText } }),
+    mutationFn: () => runCalibrationFn({ data: { profileText, profileUrl } }),
     onSuccess: (data) => {
       toast.success(`Calibrated to your niche: ${data.niche}`);
       client.invalidateQueries({ queryKey: ["calibration"] });
@@ -79,6 +80,8 @@ function Settings() {
           calibration={calibration.data ?? null}
           profileText={profileText}
           setProfileText={setProfileText}
+          profileUrl={profileUrl}
+          setProfileUrl={setProfileUrl}
           onRun={() => calibrate.mutate()}
           running={calibrate.isPending}
           linkedInConnected={!!status.data?.connected}
