@@ -3,13 +3,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Linkedin, CheckCircle2 } from "lucide-react";
+import { Linkedin, CheckCircle2, Sparkles, Loader2, Wand2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { getMyProfile, updateProfile, connectLinkedIn, getLinkedInStatus } from "@/lib/profile.functions";
+import { runCalibration, getCalibration, type Calibration } from "@/lib/calibration.functions";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Settings — Postpilot" }] }),
@@ -25,6 +27,21 @@ function Settings() {
 
   const profile = useQuery({ queryKey: ["profile"], queryFn: () => profileFn() });
   const status = useQuery({ queryKey: ["linkedin-status"], queryFn: () => statusFn() });
+
+  const calibrationFn = useServerFn(getCalibration);
+  const runCalibrationFn = useServerFn(runCalibration);
+  const calibration = useQuery({ queryKey: ["calibration"], queryFn: () => calibrationFn() });
+  const [profileText, setProfileText] = useState("");
+
+  const calibrate = useMutation({
+    mutationFn: () => runCalibrationFn({ data: { profileText } }),
+    onSuccess: (data) => {
+      toast.success(`Calibrated to your niche: ${data.niche}`);
+      client.invalidateQueries({ queryKey: ["calibration"] });
+      client.invalidateQueries({ queryKey: ["profile"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
+  });
 
   const [displayName, setDisplayName] = useState("");
   const [voice, setVoice] = useState("");
@@ -57,6 +74,15 @@ function Settings() {
   return (
     <AppShell title="Settings">
       <div className="grid gap-6 lg:grid-cols-2">
+        <CalibrationCard
+          className="lg:col-span-2"
+          calibration={calibration.data ?? null}
+          profileText={profileText}
+          setProfileText={setProfileText}
+          onRun={() => calibrate.mutate()}
+          running={calibrate.isPending}
+          linkedInConnected={!!status.data?.connected}
+        />
         <div className="rounded-2xl border border-border bg-card p-6">
           <h2 className="font-display text-lg font-semibold">Profile</h2>
           <div className="mt-4 space-y-4">
