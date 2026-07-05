@@ -13,6 +13,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiGeneratePostImageRouteImport } from './routes/api/generate-post-image'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedInspirationRouteImport } from './routes/_authenticated/inspiration'
@@ -39,6 +40,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGeneratePostImageRoute = ApiGeneratePostImageRouteImport.update({
+  id: '/api/generate-post-image',
+  path: '/api/generate-post-image',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/inspiration': typeof AuthenticatedInspirationRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/generate-post-image': typeof ApiGeneratePostImageRoute
   '/api/public/cron/publish-due': typeof ApiPublicCronPublishDueRoute
 }
 export interface FileRoutesByTo {
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/inspiration': typeof AuthenticatedInspirationRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/generate-post-image': typeof ApiGeneratePostImageRoute
   '/api/public/cron/publish-due': typeof ApiPublicCronPublishDueRoute
 }
 export interface FileRoutesById {
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/_authenticated/inspiration': typeof AuthenticatedInspirationRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/generate-post-image': typeof ApiGeneratePostImageRoute
   '/api/public/cron/publish-due': typeof ApiPublicCronPublishDueRoute
 }
 export interface FileRouteTypes {
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/inspiration'
     | '/settings'
     | '/api/chat'
+    | '/api/generate-post-image'
     | '/api/public/cron/publish-due'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/inspiration'
     | '/settings'
     | '/api/chat'
+    | '/api/generate-post-image'
     | '/api/public/cron/publish-due'
   id:
     | '__root__'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/_authenticated/inspiration'
     | '/_authenticated/settings'
     | '/api/chat'
+    | '/api/generate-post-image'
     | '/api/public/cron/publish-due'
   fileRoutesById: FileRoutesById
 }
@@ -173,6 +185,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiGeneratePostImageRoute: typeof ApiGeneratePostImageRoute
   ApiPublicCronPublishDueRoute: typeof ApiPublicCronPublishDueRoute
 }
 
@@ -204,6 +217,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/generate-post-image': {
+      id: '/api/generate-post-image'
+      path: '/api/generate-post-image'
+      fullPath: '/api/generate-post-image'
+      preLoaderRoute: typeof ApiGeneratePostImageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -292,6 +312,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiGeneratePostImageRoute: ApiGeneratePostImageRoute,
   ApiPublicCronPublishDueRoute: ApiPublicCronPublishDueRoute,
 }
 export const routeTree = rootRouteImport
