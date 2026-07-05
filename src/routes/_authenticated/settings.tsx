@@ -32,9 +32,10 @@ function Settings() {
   const runCalibrationFn = useServerFn(runCalibration);
   const calibration = useQuery({ queryKey: ["calibration"], queryFn: () => calibrationFn() });
   const [profileText, setProfileText] = useState("");
+  const [profileUrl, setProfileUrl] = useState("");
 
   const calibrate = useMutation({
-    mutationFn: () => runCalibrationFn({ data: { profileText } }),
+    mutationFn: () => runCalibrationFn({ data: { profileText, profileUrl } }),
     onSuccess: (data) => {
       toast.success(`Calibrated to your niche: ${data.niche}`);
       client.invalidateQueries({ queryKey: ["calibration"] });
@@ -79,6 +80,8 @@ function Settings() {
           calibration={calibration.data ?? null}
           profileText={profileText}
           setProfileText={setProfileText}
+          profileUrl={profileUrl}
+          setProfileUrl={setProfileUrl}
           onRun={() => calibrate.mutate()}
           running={calibrate.isPending}
           linkedInConnected={!!status.data?.connected}
@@ -146,6 +149,8 @@ function CalibrationCard({
   calibration,
   profileText,
   setProfileText,
+  profileUrl,
+  setProfileUrl,
   onRun,
   running,
   linkedInConnected,
@@ -154,6 +159,8 @@ function CalibrationCard({
   calibration: Calibration | null;
   profileText: string;
   setProfileText: (v: string) => void;
+  profileUrl: string;
+  setProfileUrl: (v: string) => void;
   onRun: () => void;
   running: boolean;
   linkedInConnected: boolean;
@@ -179,18 +186,30 @@ function CalibrationCard({
       <div className="mt-4 grid gap-6 lg:grid-cols-2">
         <div className="space-y-3">
           <div>
-            <Label htmlFor="pt">Your LinkedIn profile (paste)</Label>
+            <Label htmlFor="purl">Your LinkedIn profile URL</Label>
+            <Input
+              id="purl"
+              value={profileUrl}
+              onChange={(e) => setProfileUrl(e.target.value)}
+              placeholder="https://www.linkedin.com/in/your-handle/"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Paste the link — Postpilot will scan it in seconds to learn your niche and voice.
+            </p>
+          </div>
+          <div>
+            <Label htmlFor="pt">Optional: paste headline / about / recent posts</Label>
             <Textarea
               id="pt"
-              rows={8}
+              rows={6}
               value={profileText}
               onChange={(e) => setProfileText(e.target.value)}
-              placeholder={`Paste your headline, About section, and 2–3 recent posts.\n\nExample:\nHeadline: Growth lead @ Acme — helping SaaS teams ship faster\nAbout: I write about product velocity...\nRecent post 1: ...`}
+              placeholder={`Boost the signal by pasting your headline, About section, and 2–3 recent posts.`}
             />
             <p className="mt-1 text-xs text-muted-foreground">
               {linkedInConnected
-                ? "We'll combine this with your connected LinkedIn identity."
-                : "Connect LinkedIn on the right for a richer signal, or just paste text here."}
+                ? "We combine URL scan + your connected LinkedIn identity + any text you paste."
+                : "Connect LinkedIn on the right for a richer signal, or use URL + pasted text."}
             </p>
           </div>
           <Button onClick={onRun} disabled={running} className="bg-brand-gradient text-brand-foreground">

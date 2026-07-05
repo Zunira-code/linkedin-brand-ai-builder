@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Sparkles, Save, Send, Loader2, Wand2 } from "lucide-react";
+import { Sparkles, Save, Send, Loader2, Wand2, Image as ImageIcon, Download } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { savePost, publishPostNow } from "@/lib/posts.functions";
 import { getMyProfile } from "@/lib/profile.functions";
 import { getCalibration } from "@/lib/calibration.functions";
+import { streamImage } from "@/lib/streamImage";
 
 type SearchParams = { topic?: string; hook?: string; template?: string };
 
@@ -110,6 +111,38 @@ function Generator() {
   }
 
   const busy = status === "submitted" || status === "streaming";
+
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
+  const [imgFinal, setImgFinal] = useState(false);
+  const [imgBusy, setImgBusy] = useState(false);
+
+  async function generateImage() {
+    const seed = (edited || topic).trim();
+    if (!seed) return toast.error("Write or generate a draft first");
+    setImgBusy(true);
+    setImgFinal(false);
+    setImgSrc(null);
+    try {
+      // Keep the visual prompt short; use topic + first ~200 chars of the post.
+      const visualPrompt = `${topic ? `${topic}. ` : ""}${edited.slice(0, 220)}`;
+      await streamImage("/api/generate-post-image", visualPrompt, (dataUrl, final) => {
+        setImgSrc(dataUrl);
+        if (final) setImgFinal(true);
+      });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Image generation failed");
+    } finally {
+      setImgBusy(false);
+    }
+  }
+
+  function downloadImage() {
+    if (!imgSrc) return;
+    const a = document.createElement("a");
+    a.href = imgSrc;
+    a.download = `postpilot-${Date.now()}.png`;
+    a.click();
+  }
 
   return (
     <AppShell title="Post generator">
@@ -233,6 +266,40 @@ function Generator() {
               {publishMut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
               Publish now
             </Button>
+          </div>
+
+          <div className="mt-6 border-t border-border pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="flex items-center gap-2 font-display text-sm font-semibold">
+                  <ImageIcon className="h-4 w-4 text-brand" /> Visual for this post
+                </h3>
+                <p className="text-xs text-muted-foreground">AI-generated square image tuned for LinkedIn engagement.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={generateImage} disabled={imgBusy || !edited}>
+                  {imgBusy ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Rendering…</> : <><Sparkles className="mr-2 h-4 w-4" /> {imgSrc ? "Regenerate image" : "Generate image"}</>}
+                </Button>
+                {imgSrc && imgFinal ? (
+                  <Button size="sm" variant="outline" onClick={downloadImage}>
+                    <Download className="mr-2 h-4 w-4" /> Download
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+            <div className="mt-4 flex items-center justify-center rounded-xl border border-dashed border-border bg-background/40 p-4">
+              {imgSrc ? (
+                <img
+                  src={imgSrc}
+                  alt="Generated post visual"
+                  className={`aspect-square w-full max-w-md rounded-lg object-cover transition-[filter] duration-500 ${imgFinal ? "blur-0" : "blur-2xl"}`}
+                />
+              ) : (
+                <div className="flex aspect-square w-full max-w-md items-center justify-center rounded-lg text-xs text-muted-foreground">
+                  {imgBusy ? "Warming up…" : "Draft a post, then generate a matching visual."}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
