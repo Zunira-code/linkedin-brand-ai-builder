@@ -15,7 +15,46 @@ export type Calibration = {
 
 const Input = z.object({
   profileText: z.string().max(20000).optional().default(""),
+  profileUrl: z.string().url().max(500).optional().or(z.literal("")).default(""),
 });
+async function scanLinkedInUrl(url: string): Promise<string> {
+  if (!url) return "";
+  try {
+    const res = await fetch(url, {
+      redirect: "follow",
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; PostpilotBot/1.0; +https://postpilot.app)",
+        Accept: "text/html,application/xhtml+xml",
+      },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return `LinkedIn URL: ${url} (fetch ${res.status})`;
+    const html = await res.text();
+    const pick = (re: RegExp) => {
+      const m = html.match(re);
+      return m?.[1]?.replace(/&amp;/g, "&").replace(/&#x27;/g, "'").replace(/&quot;/g, '"').trim() ?? "";
+    };
+    const title = pick(/<meta property="og:title" content="([^"]+)"/i) || pick(/<title>([^<]+)<\/title>/i);
+    const desc = pick(/<meta property="og:description" content="([^"]+)"/i) ||
+      pick(/<meta name="description" content="([^"]+)"/i);
+    // Vanity name from /in/<slug>
+    const slug = url.match(/\/in\/([^/?#]+)/i)?.[1] ?? "";
+    return [
+      `LinkedIn URL: ${url}`,
+      slug ? `Vanity handle: ${slug}` : "",
+      title ? `Page title: ${title}` : "",
+      desc ? `Page description: ${desc}` : "",
+    ].filter(Boolean).join("\n");
+  } catch (e) {
+    const slug = url.match(/\/in\/([^/?#]+)/i)?.[1] ?? "";
+    return [
+      `LinkedIn URL: ${url}`,
+      slug ? `Vanity handle: ${slug}` : "",
+      `Note: URL was not directly scannable (${e instanceof Error ? e.message : "network"}); infer from handle and any pasted text.`,
+    ].filter(Boolean).join("\n");
+  }
+}
 
 function extractJson(text: string): unknown {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
@@ -45,9 +84,11 @@ export const runCalibration = createServerFn({ method: "POST" })
       /* LinkedIn not connected — proceed with pasted text only */
     }
 
+    const urlSignal = await scanLinkedInUrl(data.profileUrl);
     const source = [
       liName ? `LinkedIn name: ${liName}` : "",
       liEmail ? `Email domain hint: ${liEmail.split("@")[1] ?? ""}` : "",
+      urlSignal,
       data.profileText ? `Profile / recent posts pasted by user:\n${data.profileText}` : "",
     ]
       .filter(Boolean)
@@ -55,7 +96,7 @@ export const runCalibration = createServerFn({ method: "POST" })
 
     if (!source.trim()) {
       throw new Error(
-        "Nothing to calibrate from. Connect LinkedIn or paste your headline, about section, and a few recent posts.",
+        "Nothing to calibrate from. Paste your LinkedIn URL, or your headline / about / a few recent posts.",
       );
     }
 
