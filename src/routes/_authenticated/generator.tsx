@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { savePost, publishPostNow } from "@/lib/posts.functions";
 import { getMyProfile } from "@/lib/profile.functions";
+import { getCalibration } from "@/lib/calibration.functions";
 
 type SearchParams = { topic?: string; hook?: string; template?: string };
 
@@ -38,6 +39,9 @@ function Generator() {
 
   const profileFn = useServerFn(getMyProfile);
   const profile = useQuery({ queryKey: ["profile"], queryFn: () => profileFn() });
+
+  const calibrationFn = useServerFn(getCalibration);
+  const calibration = useQuery({ queryKey: ["calibration"], queryFn: () => calibrationFn() });
 
   const transport = useMemo(
     () =>
@@ -166,6 +170,31 @@ function Generator() {
               <p className="text-xs text-muted-foreground">Using your saved brand voice.</p>
             ) : (
               <p className="text-xs text-muted-foreground">Tip: add your brand voice in Settings for more on-brand drafts.</p>
+            )}
+
+            {calibration.data && calibration.data.topics.length > 0 ? (
+              <div className="rounded-lg border border-border bg-background/50 p-3">
+                <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  <Sparkles className="h-3 w-3 text-brand" />
+                  Viral ideas for {calibration.data.niche || "your niche"}
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {calibration.data.topics.slice(0, 6).map((t, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setTopic(t)}
+                      className="rounded-full border border-border bg-card px-2.5 py-1 text-left text-[11px] leading-snug text-foreground/80 transition-colors hover:border-brand/60 hover:text-brand"
+                    >
+                      {t.length > 90 ? `${t.slice(0, 90)}…` : t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground">
+                Want AI to tailor viral topics to your niche? <a href="/settings" className="text-brand hover:underline">Calibrate from your LinkedIn →</a>
+              </p>
             )}
           </div>
         </div>
