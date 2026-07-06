@@ -98,11 +98,14 @@ export async function publishImagePost(
   const uploadUrl =
     registerData.value.uploadMechanism["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"].uploadUrl;
 
-  // 2) Upload binary — route via connector gateway so it injects the access token.
+  // 2) Upload binary directly to the pre-signed uploadUrl LinkedIn returned.
+  // This URL is host `api.linkedin.com/mediaUpload/...` and expects a PUT with
+  // the OAuth bearer token. Route it via the connector gateway so it injects
+  // the token; the gateway forwards the method as-is.
   const parsed = new URL(uploadUrl);
   const gatewayUploadUrl = `${GATEWAY}${parsed.pathname}${parsed.search}`;
-  const uploadRes = await fetch(gatewayUploadUrl, {
-    method: "POST",
+  let uploadRes = await fetch(gatewayUploadUrl, {
+    method: "PUT",
     headers: {
       Authorization: `Bearer ${process.env.LOVABLE_API_KEY}`,
       "X-Connection-Api-Key": process.env.LINKEDIN_API_KEY!,
@@ -110,6 +113,15 @@ export async function publishImagePost(
     },
     body: imageBytes as BodyInit,
   });
+  if (!uploadRes.ok) {
+    // Fallback: try uploading directly to LinkedIn's returned uploadUrl.
+    // Some registerUpload URLs are pre-signed and accept the binary directly.
+    uploadRes = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": contentType },
+      body: imageBytes as BodyInit,
+    });
+  }
   if (!uploadRes.ok) {
     const t = await uploadRes.text().catch(() => "");
     throw new Error(`LinkedIn image upload ${uploadRes.status}: ${t}`);
