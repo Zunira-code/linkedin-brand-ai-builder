@@ -102,7 +102,7 @@ export async function publishImagePost(
   const parsed = new URL(uploadUrl);
   const gatewayUploadUrl = `${GATEWAY}${parsed.pathname}${parsed.search}`;
   const uploadRes = await fetch(gatewayUploadUrl, {
-    method: "PUT",
+    method: "POST",
     headers: {
       Authorization: `Bearer ${process.env.LOVABLE_API_KEY}`,
       "X-Connection-Api-Key": process.env.LINKEDIN_API_KEY!,
