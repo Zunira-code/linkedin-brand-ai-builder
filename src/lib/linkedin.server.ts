@@ -108,7 +108,7 @@ export async function publishImagePost(
       "X-Connection-Api-Key": process.env.LINKEDIN_API_KEY!,
       "Content-Type": contentType,
     },
-    body: imageBytes,
+    body: imageBytes as BodyInit,
   });
   if (!uploadRes.ok) {
     const t = await uploadRes.text().catch(() => "");
