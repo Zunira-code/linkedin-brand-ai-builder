@@ -62,7 +62,14 @@ export const deletePost = createServerFn({ method: "POST" })
 
 export const publishPostNow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        imageDataUrl: z.string().startsWith("data:image/").optional(),
+      })
+      .parse(input),
+  )
   .handler(async ({ context, data }) => {
     const { data: post, error } = await context.supabase
       .from("posts")
@@ -77,7 +84,7 @@ export const publishPostNow = createServerFn({ method: "POST" })
       .eq("id", context.userId)
       .single();
 
-    const { getUserInfo, publishTextPost } = await import("@/lib/linkedin.server");
+    const { getUserInfo, publishTextPost, publishImagePost } = await import("@/lib/linkedin.server");
     let personSub = profile?.linkedin_urn ?? "";
     if (!personSub) {
       const info = await getUserInfo();
@@ -85,7 +92,16 @@ export const publishPostNow = createServerFn({ method: "POST" })
       await context.supabase.from("profiles").update({ linkedin_urn: personSub }).eq("id", context.userId);
     }
     try {
-      const urn = await publishTextPost(personSub, post.content);
+      let urn: string | null;
+      if (data.imageDataUrl) {
+        const match = data.imageDataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+        if (!match) throw new Error("Invalid image data URL");
+        const contentType = match[1];
+        const bytes = Uint8Array.from(atob(match[2]), (c) => c.charCodeAt(0));
+        urn = await publishImagePost(personSub, post.content, bytes, contentType);
+      } else {
+        urn = await publishTextPost(personSub, post.content);
+      }
       await context.supabase
         .from("posts")
         .update({ status: "posted", posted_at: new Date().toISOString(), linkedin_urn: urn, error: null })
@@ -96,4 +112,38 @@ export const publishPostNow = createServerFn({ method: "POST" })
       await context.supabase.from("posts").update({ status: "failed", error: msg }).eq("id", post.id);
       throw new Error(msg);
     }
+  });
+
+export const generateHashtags = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ content: z.string().min(1).max(10000) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) throw new Error("Missing LOVABLE_API_KEY");
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You generate 4-6 highly relevant LinkedIn hashtags for a post. Return ONLY the hashtags separated by single spaces, each starting with #, camelCase or lowercase, no punctuation, no explanations.",
+          },
+          { role: "user", content: data.content },
+        ],
+        temperature: 0.5,
+      }),
+    });
+    if (!res.ok) {
+      const t = await res.text().catch(() => "");
+      throw new Error(`Hashtag generation failed: ${res.status} ${t}`);
+    }
+    const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    const raw = json.choices?.[0]?.message?.content ?? "";
+    const tags = Array.from(raw.matchAll(/#[A-Za-z0-9_]+/g)).map((m) => m[0]);
+    return { hashtags: tags.slice(0, 6) };
   });
