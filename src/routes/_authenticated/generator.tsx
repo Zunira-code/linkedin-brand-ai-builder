@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { savePost, publishPostNow } from "@/lib/posts.functions";
+import { savePost, publishPostNow, generateHashtags } from "@/lib/posts.functions";
 import { getMyProfile } from "@/lib/profile.functions";
 import { getCalibration } from "@/lib/calibration.functions";
 import { streamImage } from "@/lib/streamImage";
@@ -77,6 +77,7 @@ function Generator() {
   const client = useQueryClient();
   const saveFn = useServerFn(savePost);
   const publishFn = useServerFn(publishPostNow);
+  const hashtagsFn = useServerFn(generateHashtags);
 
   const saveMut = useMutation({
     mutationFn: (input: { status: "draft" | "scheduled"; scheduled_at?: string | null }) =>
@@ -91,8 +92,17 @@ function Generator() {
 
   const publishMut = useMutation({
     mutationFn: async () => {
-      const saved = await saveFn({ data: { content: edited, format, status: "draft" } });
-      return publishFn({ data: { id: saved.id } });
+      let content = edited;
+      if (!/#[A-Za-z0-9_]+/.test(content)) {
+        try {
+          const { hashtags } = await hashtagsFn({ data: { content } });
+          if (hashtags.length) content = `${content.trimEnd()}\n\n${hashtags.join(" ")}`;
+        } catch { /* non-fatal */ }
+      }
+      setEdited(content);
+      const saved = await saveFn({ data: { content, format, status: "draft" } });
+      const imageDataUrl = imgSrc && imgFinal ? imgSrc : undefined;
+      return publishFn({ data: { id: saved.id, imageDataUrl } });
     },
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ["posts"] });
