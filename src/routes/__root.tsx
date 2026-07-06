@@ -81,9 +81,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Grow your LinkedIn brand on autopilot. AI post generator, content calendar, viral post library and personal analytics — in one workspace." },
       { name: "author", content: "Postpilot" },
       { property: "og:title", content: "Postpilot — AI LinkedIn brand builder" },
-      { property: "og:description", content: "AI post generator, scheduling, and viral post library for LinkedIn creators." },
+      { property: "og:description", content: "Grow your LinkedIn brand on autopilot. AI post generator, content calendar, viral post library and personal analytics — in one workspace." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Postpilot — AI LinkedIn brand builder" },
+      { name: "twitter:description", content: "Grow your LinkedIn brand on autopilot. AI post generator, content calendar, viral post library and personal analytics — in one workspace." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/c594cd9b-821e-4d01-a120-d2edf5acd9f6" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/c594cd9b-821e-4d01-a120-d2edf5acd9f6" },
     ],
     links: [
       {
