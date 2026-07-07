@@ -11,13 +11,16 @@ import {
   LogOut,
   Linkedin,
   CheckCircle2,
+  Lock,
 } from "lucide-react";
-import { type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { getLinkedInStatus } from "@/lib/profile.functions";
+import { getMyProfile } from "@/lib/profile.functions";
+import { useQueryClient } from "@tanstack/react-query";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -33,10 +36,57 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   const navigate = useNavigate();
   const getStatus = useServerFn(getLinkedInStatus);
   const { data: status } = useQuery({ queryKey: ["linkedin-status"], queryFn: () => getStatus() });
+  const getProfile = useServerFn(getMyProfile);
+  const profileQ = useQuery({ queryKey: ["profile"], queryFn: () => getProfile() });
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    const uid = profileQ.data?.id;
+    if (!uid) return;
+    const channel = supabase
+      .channel(`profile-approval-${uid}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${uid}` },
+        () => qc.invalidateQueries({ queryKey: ["profile"] }),
+      )
+      .subscribe();
+    const poll = setInterval(() => qc.invalidateQueries({ queryKey: ["profile"] }), 15000);
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(poll);
+    };
+  }, [profileQ.data?.id, qc]);
 
   async function signOut() {
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
+  }
+
+  if (profileQ.data && !profileQ.data.is_approved) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-6 text-foreground">
+        <div className="max-w-lg rounded-2xl border border-border bg-card p-8 text-center shadow-lg">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand/10 text-brand">
+            <Lock className="h-6 w-6" />
+          </div>
+          <h1 className="mt-5 font-display text-2xl font-semibold">Welcome to the Postpilot Beta!</h1>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            🔒 Your account is currently under review. The creator will manually approve
+            your access shortly. If you were invited, please ping them directly to unlock
+            your workspace.
+          </p>
+          <p className="mt-4 text-xs text-muted-foreground">
+            Signed in as <span className="font-medium text-foreground">{profileQ.data.display_name ?? "you"}</span>.
+            This page unlocks automatically once you're approved.
+          </p>
+          <Button variant="ghost" size="sm" className="mt-6 gap-2" onClick={signOut}>
+            <LogOut className="h-4 w-4" />
+            Sign out
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (

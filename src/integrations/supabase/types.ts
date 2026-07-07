@@ -126,6 +126,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          is_approved: boolean
           linkedin_urn: string | null
           timezone: string | null
           updated_at: string
@@ -137,6 +138,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          is_approved?: boolean
           linkedin_urn?: string | null
           timezone?: string | null
           updated_at?: string
@@ -148,6 +150,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_approved?: boolean
           linkedin_urn?: string | null
           timezone?: string | null
           updated_at?: string

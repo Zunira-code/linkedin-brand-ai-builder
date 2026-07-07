@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Sparkles, Calendar, Flame, BarChart3, ArrowRight } from "lucide-react";
+import { Sparkles, Calendar, Flame, BarChart3, ArrowRight, Pencil } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { listPosts } from "@/lib/posts.functions";
@@ -52,6 +52,16 @@ function Dashboard() {
                 <span className="text-xs text-muted-foreground">
                   {new Date(p.created_at).toLocaleDateString()}
                 </span>
+                {p.status !== "posted" && (
+                  <Link
+                    to="/generator"
+                    search={{ postId: p.id }}
+                    title="Edit"
+                    className="text-muted-foreground transition-colors hover:text-brand"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Link>
+                )}
               </div>
             ))}
             {(!posts.data || posts.data.length === 0) && (
