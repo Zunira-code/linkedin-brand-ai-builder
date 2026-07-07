@@ -79,7 +79,7 @@ function CalendarPage() {
                 {items.map((p) => (
                   <div key={p.id} className={`group rounded-md border px-2 py-1 ${statusBg(p.status)}`}>
                     <p className="line-clamp-2 text-[11px] leading-snug">{p.content}</p>
-                    <div className="mt-1 flex items-center justify-between opacity-0 transition-opacity group-hover:opacity-100">
+                    <div className="mt-1 flex items-center justify-between">
                       <span className="text-[9px] uppercase tracking-wide">{p.status}</span>
                       <div className="flex gap-1">
                         {p.status !== "posted" && (
