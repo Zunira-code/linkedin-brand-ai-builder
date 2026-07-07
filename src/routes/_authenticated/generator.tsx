@@ -13,12 +13,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { savePost, publishPostNow, generateHashtags } from "@/lib/posts.functions";
+import { savePost, publishPostNow, generateHashtags, getPost } from "@/lib/posts.functions";
 import { getMyProfile } from "@/lib/profile.functions";
 import { getCalibration } from "@/lib/calibration.functions";
 import { streamImage } from "@/lib/streamImage";
 
-type SearchParams = { topic?: string; hook?: string; template?: string };
+type SearchParams = { topic?: string; hook?: string; template?: string; postId?: string };
 
 export const Route = createFileRoute("/_authenticated/generator")({
   head: () => ({ meta: [{ title: "AI post generator — Postpilot" }] }),
@@ -26,6 +26,7 @@ export const Route = createFileRoute("/_authenticated/generator")({
     topic: typeof s.topic === "string" ? s.topic : undefined,
     hook: typeof s.hook === "string" ? s.hook : undefined,
     template: typeof s.template === "string" ? s.template : undefined,
+    postId: typeof s.postId === "string" ? s.postId : undefined,
   }),
   component: Generator,
 });
@@ -37,6 +38,23 @@ function Generator() {
   const [format, setFormat] = useState(search.hook ? search.hook.toLowerCase() : "story");
   const [length, setLength] = useState("medium");
   const [edited, setEdited] = useState("");
+  const [editingId, setEditingId] = useState<string | undefined>(search.postId);
+  const [scheduleIso, setScheduleIso] = useState<string | null>(null);
+
+  const getPostFn = useServerFn(getPost);
+  const existing = useQuery({
+    queryKey: ["post", search.postId],
+    queryFn: () => getPostFn({ data: { id: search.postId as string } }),
+    enabled: !!search.postId,
+  });
+
+  useEffect(() => {
+    if (!existing.data) return;
+    setEditingId(existing.data.id);
+    setEdited(existing.data.content);
+    setFormat(existing.data.format ?? "story");
+    setScheduleIso(existing.data.scheduled_at ?? null);
+  }, [existing.data]);
 
   const profileFn = useServerFn(getMyProfile);
   const profile = useQuery({ queryKey: ["profile"], queryFn: () => profileFn() });
@@ -81,11 +99,12 @@ function Generator() {
 
   const saveMut = useMutation({
     mutationFn: (input: { status: "draft" | "scheduled"; scheduled_at?: string | null }) =>
-      saveFn({ data: { content: edited, format, status: input.status, scheduled_at: input.scheduled_at ?? null } }),
-    onSuccess: (_d, vars) => {
+      saveFn({ data: { id: editingId, content: edited, format, status: input.status, scheduled_at: input.scheduled_at ?? null } }),
+    onSuccess: (out, vars) => {
+      if (out?.id) setEditingId(out.id);
       client.invalidateQueries({ queryKey: ["posts"] });
       client.invalidateQueries({ queryKey: ["analytics"] });
-      toast.success(vars.status === "scheduled" ? "Scheduled" : "Saved to drafts");
+      toast.success(vars.status === "scheduled" ? (editingId ? "Schedule updated" : "Scheduled") : (editingId ? "Draft updated" : "Saved to drafts"));
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
   });
@@ -100,7 +119,8 @@ function Generator() {
         } catch { /* non-fatal */ }
       }
       setEdited(content);
-      const saved = await saveFn({ data: { content, format, status: "draft" } });
+      const saved = await saveFn({ data: { id: editingId, content, format, status: "draft" } });
+      if (saved?.id) setEditingId(saved.id);
       const imageDataUrl = imgSrc && imgFinal ? imgSrc : undefined;
       return publishFn({ data: { id: saved.id, imageDataUrl } });
     },
@@ -156,6 +176,11 @@ function Generator() {
 
   return (
     <AppShell title="Post generator">
+      {editingId ? (
+        <div className="mb-3 rounded-lg border border-brand/40 bg-brand/5 px-3 py-2 text-xs text-brand">
+          Editing existing post — changes update the saved version.
+        </div>
+      ) : null}
       <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
         <div className="rounded-2xl border border-border bg-card p-6">
           <div className="flex items-center gap-2">
@@ -267,7 +292,11 @@ function Generator() {
             <Button variant="outline" onClick={() => saveMut.mutate({ status: "draft" })} disabled={!edited || saveMut.isPending}>
               <Save className="mr-2 h-4 w-4" /> Save draft
             </Button>
-            <ScheduleControl onSchedule={(iso) => saveMut.mutate({ status: "scheduled", scheduled_at: iso })} disabled={!edited} />
+            <ScheduleControl
+              initialIso={scheduleIso}
+              onSchedule={(iso) => saveMut.mutate({ status: "scheduled", scheduled_at: iso })}
+              disabled={!edited}
+            />
             <Button
               onClick={() => publishMut.mutate()}
               disabled={!edited || publishMut.isPending}
@@ -317,12 +346,19 @@ function Generator() {
   );
 }
 
-function ScheduleControl({ onSchedule, disabled }: { onSchedule: (iso: string) => void; disabled?: boolean }) {
+function ScheduleControl({ onSchedule, disabled, initialIso }: { onSchedule: (iso: string) => void; disabled?: boolean; initialIso?: string | null }) {
   const [dt, setDt] = useState(() => {
     const d = new Date(Date.now() + 60 * 60 * 1000);
     d.setSeconds(0, 0);
     return d.toISOString().slice(0, 16);
   });
+  useEffect(() => {
+    if (initialIso) {
+      const d = new Date(initialIso);
+      d.setSeconds(0, 0);
+      setDt(new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+    }
+  }, [initialIso]);
   return (
     <div className="flex items-center gap-2">
       <Input type="datetime-local" value={dt} onChange={(e) => setDt(e.target.value)} className="w-52" />

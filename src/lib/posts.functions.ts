@@ -13,6 +13,19 @@ export const listPosts = createServerFn({ method: "GET" })
     return data;
   });
 
+export const getPost = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const { data: out, error } = await context.supabase
+      .from("posts")
+      .select("*")
+      .eq("id", data.id)
+      .single();
+    if (error) throw new Error(error.message);
+    return out;
+  });
+
 const SavePostInput = z.object({
   id: z.string().uuid().optional(),
   content: z.string().min(1).max(10000),
