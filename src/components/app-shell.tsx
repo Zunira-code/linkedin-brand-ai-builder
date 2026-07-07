@@ -12,6 +12,7 @@ import {
   Linkedin,
   CheckCircle2,
   Lock,
+  ShieldCheck,
 } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 import { Logo } from "@/components/logo";
@@ -20,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { getLinkedInStatus } from "@/lib/profile.functions";
 import { getMyProfile } from "@/lib/profile.functions";
+import { amIAdmin } from "@/lib/admin.functions";
 import { useQueryClient } from "@tanstack/react-query";
 
 const nav = [
@@ -38,6 +40,8 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   const { data: status } = useQuery({ queryKey: ["linkedin-status"], queryFn: () => getStatus() });
   const getProfile = useServerFn(getMyProfile);
   const profileQ = useQuery({ queryKey: ["profile"], queryFn: () => getProfile() });
+  const checkAdmin = useServerFn(amIAdmin);
+  const adminQ = useQuery({ queryKey: ["am-i-admin"], queryFn: () => checkAdmin() });
   const qc = useQueryClient();
 
   useEffect(() => {
@@ -117,6 +121,20 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
               </Link>
             );
           })}
+          {adminQ.data?.admin && (
+            <Link
+              to="/admin"
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                pathname.startsWith("/admin")
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+              )}
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Admin
+            </Link>
+          )}
         </nav>
         <div className="mt-auto space-y-2">
           <div className="rounded-xl border border-sidebar-border bg-sidebar-accent/40 p-3 text-xs">
