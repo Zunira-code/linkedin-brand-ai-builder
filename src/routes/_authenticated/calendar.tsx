@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Send, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Send, Trash2, Pencil } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { listPosts, publishPostNow, deletePost } from "@/lib/posts.functions";
@@ -82,6 +82,16 @@ function CalendarPage() {
                     <div className="mt-1 flex items-center justify-between opacity-0 transition-opacity group-hover:opacity-100">
                       <span className="text-[9px] uppercase tracking-wide">{p.status}</span>
                       <div className="flex gap-1">
+                        {p.status !== "posted" && (
+                          <Link
+                            to="/generator"
+                            search={{ postId: p.id }}
+                            title="Edit"
+                            className="text-foreground/70 hover:text-brand"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Link>
+                        )}
                         {p.status !== "posted" && (
                           <button title="Publish now" onClick={() => publishMut.mutate(p.id)} className="text-brand hover:opacity-80">
                             <Send className="h-3 w-3" />
