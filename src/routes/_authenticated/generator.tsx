@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Sparkles, Save, Send, Loader2, Wand2, Image as ImageIcon, Download } from "lucide-react";
+import { Sparkles, Save, Send, Loader2, Wand2, Image as ImageIcon, Download, Hash } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -96,6 +96,20 @@ function Generator() {
   const saveFn = useServerFn(savePost);
   const publishFn = useServerFn(publishPostNow);
   const hashtagsFn = useServerFn(generateHashtags);
+
+  const hashtagsMut = useMutation({
+    mutationFn: async () => {
+      const { hashtags } = await hashtagsFn({ data: { content: edited } });
+      return hashtags;
+    },
+    onSuccess: (tags) => {
+      if (!tags.length) return toast.error("No hashtags returned — try again.");
+      const stripped = edited.replace(/\n*(?:#[A-Za-z0-9_]+\s*)+$/g, "").trimEnd();
+      setEdited(`${stripped}\n\n${tags.join(" ")}`);
+      toast.success("Viral hashtags added");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
+  });
 
   const saveMut = useMutation({
     mutationFn: (input: { status: "draft" | "scheduled"; scheduled_at?: string | null }) =>
@@ -291,6 +305,10 @@ function Generator() {
             </Button>
             <Button variant="outline" onClick={() => saveMut.mutate({ status: "draft" })} disabled={!edited || saveMut.isPending}>
               <Save className="mr-2 h-4 w-4" /> Save draft
+            </Button>
+            <Button variant="outline" onClick={() => hashtagsMut.mutate()} disabled={!edited || hashtagsMut.isPending}>
+              {hashtagsMut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Hash className="mr-2 h-4 w-4" />}
+              Viral hashtags
             </Button>
             <ScheduleControl
               initialIso={scheduleIso}
