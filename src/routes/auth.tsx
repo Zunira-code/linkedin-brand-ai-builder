@@ -10,6 +10,9 @@ import { lovable } from "@/integrations/lovable/index";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//") ? s.next : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Sign in — Postpilot" },
@@ -21,6 +24,8 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
+  const returnTo = next ?? "/dashboard";
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,13 +34,13 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+      if (data.session) window.location.replace(returnTo);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) navigate({ to: "/dashboard", replace: true });
+      if (session) window.location.replace(returnTo);
     });
     return () => sub.subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, returnTo]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,7 +50,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin, data: { name } },
+          options: { emailRedirectTo: window.location.origin + returnTo, data: { name } },
         });
         if (error) throw error;
         toast.success("Check your inbox to confirm your email.");
@@ -64,7 +69,7 @@ function AuthPage() {
     setBusy(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: window.location.origin + returnTo,
       });
       if (result.error) toast.error(result.error.message ?? "Google sign-in failed");
     } catch (err) {
