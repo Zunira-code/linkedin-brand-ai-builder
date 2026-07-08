@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Sparkles, Calendar, Flame, BarChart3, ArrowRight, Pencil } from "lucide-react";
+import { toast } from "sonner";
+import { Sparkles, Calendar, Flame, BarChart3, ArrowRight, Pencil, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
-import { listPosts } from "@/lib/posts.functions";
+import { listPosts, deletePost } from "@/lib/posts.functions";
 import { getAnalytics } from "@/lib/analytics.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -17,6 +18,17 @@ function Dashboard() {
   const analyticsFn = useServerFn(getAnalytics);
   const posts = useQuery({ queryKey: ["posts"], queryFn: () => listFn() });
   const analytics = useQuery({ queryKey: ["analytics"], queryFn: () => analyticsFn() });
+  const client = useQueryClient();
+  const delFn = useServerFn(deletePost);
+  const delMut = useMutation({
+    mutationFn: (id: string) => delFn({ data: { id } }),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["posts"] });
+      client.invalidateQueries({ queryKey: ["analytics"] });
+      toast.success("Post deleted");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
+  });
 
   const stats = [
     { label: "Drafts", value: analytics.data?.counts.drafts ?? 0, icon: Sparkles },
@@ -62,6 +74,16 @@ function Dashboard() {
                     <Pencil className="h-3.5 w-3.5" />
                   </Link>
                 )}
+                <button
+                  type="button"
+                  title="Delete"
+                  onClick={() => {
+                    if (confirm("Delete this post?")) delMut.mutate(p.id);
+                  }}
+                  className="text-muted-foreground transition-colors hover:text-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
               </div>
             ))}
             {(!posts.data || posts.data.length === 0) && (
