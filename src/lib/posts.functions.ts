@@ -137,14 +137,18 @@ export const generateHashtags = createServerFn({ method: "POST" })
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Lovable-API-Key": key,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
           {
             role: "system",
             content:
-              "You generate 4-6 highly relevant LinkedIn hashtags for a post. Return ONLY the hashtags separated by single spaces, each starting with #, camelCase or lowercase, no punctuation, no explanations.",
+              "You generate 4-6 highly relevant, high-reach LinkedIn hashtags for a post. Mix 1-2 broad viral tags (e.g. #Leadership, #Startups) with specific niche tags. Return ONLY the hashtags separated by single spaces, each starting with #, camelCase or lowercase, no punctuation, no explanations.",
           },
           { role: "user", content: data.content },
         ],
@@ -153,7 +157,7 @@ export const generateHashtags = createServerFn({ method: "POST" })
     });
     if (!res.ok) {
       const t = await res.text().catch(() => "");
-      throw new Error(`Hashtag generation failed: ${res.status} ${t}`);
+      throw new Error(`Hashtag generation failed (${res.status}): ${t.slice(0, 200)}`);
     }
     const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
     const raw = json.choices?.[0]?.message?.content ?? "";

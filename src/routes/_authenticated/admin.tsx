@@ -165,11 +165,11 @@ function Row({
       </div>
       {profile.is_approved ? (
         <Button variant="outline" size="sm" disabled={busy} onClick={() => onToggle(false)}>
-          Revoke
+          Deactivate
         </Button>
       ) : (
         <Button size="sm" disabled={busy} onClick={() => onToggle(true)}>
-          Approve
+          Activate
         </Button>
       )}
     </div>
