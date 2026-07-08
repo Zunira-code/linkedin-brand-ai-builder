@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://qlesxvhajltpulixjwsw.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "postpilot-mcp",
+      "version": "0.1.0",
+      "title": "Postpilot"
+    },
+    "tools": [
+      {
+        "name": "list_posts",
+        "title": "List my Postpilot posts",
+        "description": "List the signed-in user's LinkedIn posts in Postpilot. Optionally filter by status (draft, scheduled, posted, failed) and cap the number of results.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "status": {
+              "description": "Only return posts with this status.",
+              "type": "string",
+              "enum": [
+                "draft",
+                "scheduled",
+                "posted",
+                "failed"
+              ]
+            },
+            "limit": {
+              "description": "Max rows to return (default 20).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_draft",
+        "title": "Create a Postpilot draft",
+        "description": "Create a new LinkedIn post draft in the signed-in user's Postpilot workspace. Content is stored as-is; the post is not published.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "content": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Full post body text (LinkedIn markdown / plain text)."
+            },
+            "format": {
+              "description": "Format hint. Defaults to 'story'.",
+              "type": "string",
+              "enum": [
+                "story",
+                "listicle",
+                "hook+insight",
+                "question",
+                "framework"
+              ]
+            }
+          },
+          "required": [
+            "content"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "schedule_post",
+        "title": "Schedule a Postpilot post",
+        "description": "Schedule an existing draft to auto-publish to LinkedIn at the given ISO 8601 timestamp. Only the signed-in user's own posts can be scheduled.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Post id (from list_posts or create_draft)."
+            },
+            "scheduled_at": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "description": "Publish time as ISO 8601 UTC timestamp, e.g. 2026-07-10T14:00:00Z."
+            }
+          },
+          "required": [
+            "id",
+            "scheduled_at"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "delete_post",
+        "title": "Delete a Postpilot post",
+        "description": "Delete one of the signed-in user's posts by id. Cannot be undone; already-published LinkedIn posts remain on LinkedIn.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Post id to delete."
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_inspiration_templates",
+        "title": "Browse Postpilot inspiration templates",
+        "description": "List viral LinkedIn hook and post templates from Postpilot's inspiration library. Optional filters for category and hook type.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "category": {
+              "description": "Filter by category (case-sensitive).",
+              "type": "string"
+            },
+            "hook_type": {
+              "description": "Filter by hook type.",
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
