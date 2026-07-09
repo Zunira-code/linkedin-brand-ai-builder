@@ -185,6 +185,32 @@ function Index() {
         </div>
       </section>
 
+      <section id="contact" className="border-t border-border bg-card/40 py-24">
+        <div className="mx-auto max-w-4xl px-6 text-center">
+          <p className="font-display text-sm uppercase tracking-widest text-brand">Contact</p>
+          <h2 className="mt-3 font-display text-4xl font-semibold md:text-5xl">Get in touch</h2>
+          <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
+            Questions, partnerships, or feedback? We'd love to hear from you.
+          </p>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2">
+            <a href="mailto:linkedin@mywork.co.ke" className="group rounded-2xl border border-border bg-background p-6 text-left transition hover:border-brand">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand/15 text-brand">
+                <Mail className="h-5 w-5" />
+              </div>
+              <h3 className="mt-4 font-display text-lg font-semibold">Email us</h3>
+              <p className="mt-1 text-sm text-muted-foreground">linkedin@mywork.co.ke</p>
+            </a>
+            <a href="tel:+254716534393" className="group rounded-2xl border border-border bg-background p-6 text-left transition hover:border-brand">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand/15 text-brand">
+                <Phone className="h-5 w-5" />
+              </div>
+              <h3 className="mt-4 font-display text-lg font-semibold">Call us</h3>
+              <p className="mt-1 text-sm text-muted-foreground">0716 534 393</p>
+            </a>
+          </div>
+        </div>
+      </section>
+
       <footer className="border-t border-border py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 text-xs text-muted-foreground md:flex-row">
           <Logo />
