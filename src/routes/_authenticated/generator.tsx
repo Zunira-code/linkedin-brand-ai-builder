@@ -113,7 +113,16 @@ function Generator() {
 
   const saveMut = useMutation({
     mutationFn: (input: { status: "draft" | "scheduled"; scheduled_at?: string | null }) =>
-      saveFn({ data: { id: editingId, content: edited, format, status: input.status, scheduled_at: input.scheduled_at ?? null } }),
+      saveFn({
+        data: {
+          id: editingId,
+          content: edited,
+          format,
+          status: input.status,
+          scheduled_at: input.scheduled_at ?? null,
+          image_data_url: imgSrc && imgFinal ? imgSrc : null,
+        },
+      }),
     onSuccess: (out, vars) => {
       if (out?.id) setEditingId(out.id);
       client.invalidateQueries({ queryKey: ["posts"] });
