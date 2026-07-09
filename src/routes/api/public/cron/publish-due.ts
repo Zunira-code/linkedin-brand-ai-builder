@@ -9,12 +9,12 @@ export const Route = createFileRoute("/api/public/cron/publish-due")({
           return new Response("Unauthorized", { status: 401 });
         }
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { publishTextPost } = await import("@/lib/linkedin.server");
+        const { publishTextPost, publishImagePost } = await import("@/lib/linkedin.server");
 
         const nowIso = new Date().toISOString();
         const { data: due, error } = await supabaseAdmin
           .from("posts")
-          .select("id, user_id, content")
+          .select("id, user_id, content, image_data_url")
           .eq("status", "scheduled")
           .lte("scheduled_at", nowIso)
           .limit(20);
@@ -29,7 +29,16 @@ export const Route = createFileRoute("/api/public/cron/publish-due")({
               .eq("id", p.user_id)
               .maybeSingle();
             if (!prof?.linkedin_urn) throw new Error("LinkedIn not connected");
-            const urn = await publishTextPost(prof.linkedin_urn, p.content);
+            let urn: string | null;
+            const img = (p as { image_data_url?: string | null }).image_data_url;
+            if (img) {
+              const match = img.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+              if (!match) throw new Error("Invalid stored image data URL");
+              const bytes = Uint8Array.from(atob(match[2]), (c) => c.charCodeAt(0));
+              urn = await publishImagePost(prof.linkedin_urn, p.content, bytes, match[1]);
+            } else {
+              urn = await publishTextPost(prof.linkedin_urn, p.content);
+            }
             await supabaseAdmin
               .from("posts")
               .update({ status: "posted", posted_at: new Date().toISOString(), linkedin_urn: urn })
