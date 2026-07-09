@@ -1,10 +1,13 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Clock, ShieldCheck } from "lucide-react";
-import { amIAdmin, listAllProfiles, setUserApproval } from "@/lib/admin.functions";
+import { Input } from "@/components/ui/input";
+import { CheckCircle2, Clock, Loader2, Mail, ShieldCheck } from "lucide-react";
+import { amIAdmin, listAllProfiles, setUserApproval, inviteUser } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
@@ -21,6 +24,7 @@ function AdminPage() {
   const checkAdmin = useServerFn(amIAdmin);
   const list = useServerFn(listAllProfiles);
   const setApproval = useServerFn(setUserApproval);
+  const invite = useServerFn(inviteUser);
   const qc = useQueryClient();
 
   const meQ = useQuery({ queryKey: ["am-i-admin"], queryFn: () => checkAdmin() });
@@ -34,6 +38,17 @@ function AdminPage() {
     mutationFn: (v: { user_id: string; is_approved: boolean }) =>
       setApproval({ data: v }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles"] }),
+  });
+
+  const [inviteEmail, setInviteEmail] = useState("");
+  const inviteMut = useMutation({
+    mutationFn: (email: string) => invite({ data: { email } }),
+    onSuccess: (r) => {
+      toast.success(`Invite sent to ${r.email}`);
+      setInviteEmail("");
+      qc.invalidateQueries({ queryKey: ["admin-profiles"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
   });
 
   if (meQ.isLoading) {
@@ -61,6 +76,37 @@ function AdminPage() {
             </p>
           </div>
         </header>
+
+        <section className="rounded-xl border border-border bg-card p-4">
+          <div className="mb-3 flex items-center gap-2 text-sm font-medium">
+            <Mail className="h-4 w-4 text-brand" />
+            Invite a user by email
+          </div>
+          <form
+            className="flex flex-wrap items-center gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!inviteEmail.trim()) return;
+              inviteMut.mutate(inviteEmail.trim());
+            }}
+          >
+            <Input
+              type="email"
+              required
+              placeholder="name@example.com"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              className="max-w-xs"
+            />
+            <Button type="submit" disabled={inviteMut.isPending || !inviteEmail.trim()}>
+              {inviteMut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+              Send invite
+            </Button>
+          </form>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Sends a magic sign-in link and pre-approves the account so they land straight in the workspace.
+          </p>
+        </section>
 
         <Section
           title="Pending"

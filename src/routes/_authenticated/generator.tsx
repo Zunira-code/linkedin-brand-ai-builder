@@ -97,6 +97,10 @@ function Generator() {
   const publishFn = useServerFn(publishPostNow);
   const hashtagsFn = useServerFn(generateHashtags);
 
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
+  const [imgFinal, setImgFinal] = useState(false);
+  const [imgBusy, setImgBusy] = useState(false);
+
   const hashtagsMut = useMutation({
     mutationFn: async () => {
       const { hashtags } = await hashtagsFn({ data: { content: edited } });
@@ -113,7 +117,16 @@ function Generator() {
 
   const saveMut = useMutation({
     mutationFn: (input: { status: "draft" | "scheduled"; scheduled_at?: string | null }) =>
-      saveFn({ data: { id: editingId, content: edited, format, status: input.status, scheduled_at: input.scheduled_at ?? null } }),
+      saveFn({
+        data: {
+          id: editingId,
+          content: edited,
+          format,
+          status: input.status,
+          scheduled_at: input.scheduled_at ?? null,
+          image_data_url: imgSrc && imgFinal ? imgSrc : null,
+        },
+      }),
     onSuccess: (out, vars) => {
       if (out?.id) setEditingId(out.id);
       client.invalidateQueries({ queryKey: ["posts"] });
@@ -155,10 +168,6 @@ function Generator() {
   }
 
   const busy = status === "submitted" || status === "streaming";
-
-  const [imgSrc, setImgSrc] = useState<string | null>(null);
-  const [imgFinal, setImgFinal] = useState(false);
-  const [imgBusy, setImgBusy] = useState(false);
 
   async function generateImage() {
     const seed = (edited || topic).trim();

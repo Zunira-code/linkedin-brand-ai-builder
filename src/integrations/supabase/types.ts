@@ -83,6 +83,7 @@ export type Database = {
           error: string | null
           format: string
           id: string
+          image_data_url: string | null
           linkedin_urn: string | null
           posted_at: string | null
           scheduled_at: string | null
@@ -96,6 +97,7 @@ export type Database = {
           error?: string | null
           format?: string
           id?: string
+          image_data_url?: string | null
           linkedin_urn?: string | null
           posted_at?: string | null
           scheduled_at?: string | null
@@ -109,6 +111,7 @@ export type Database = {
           error?: string | null
           format?: string
           id?: string
+          image_data_url?: string | null
           linkedin_urn?: string | null
           posted_at?: string | null
           scheduled_at?: string | null
