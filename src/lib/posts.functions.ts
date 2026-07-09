@@ -39,7 +39,14 @@ export const savePost = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => SavePostInput.parse(input))
   .handler(async ({ context, data }) => {
-    const row: Record<string, unknown> = {
+    const row: {
+      user_id: string;
+      content: string;
+      format: string;
+      status: "draft" | "scheduled";
+      scheduled_at: string | null;
+      image_data_url?: string | null;
+    } = {
       user_id: context.userId,
       content: data.content,
       format: data.format,
