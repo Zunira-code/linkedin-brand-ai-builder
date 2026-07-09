@@ -32,19 +32,23 @@ const SavePostInput = z.object({
   format: z.string().default("story"),
   status: z.enum(["draft", "scheduled"]).default("draft"),
   scheduled_at: z.string().datetime().nullable().optional(),
+  image_data_url: z.string().startsWith("data:image/").nullable().optional(),
 });
 
 export const savePost = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => SavePostInput.parse(input))
   .handler(async ({ context, data }) => {
-    const row = {
+    const row: Record<string, unknown> = {
       user_id: context.userId,
       content: data.content,
       format: data.format,
       status: data.status,
       scheduled_at: data.status === "scheduled" ? data.scheduled_at ?? null : null,
     };
+    if (data.image_data_url !== undefined) {
+      row.image_data_url = data.image_data_url;
+    }
     if (data.id) {
       const { data: out, error } = await context.supabase
         .from("posts")
@@ -86,7 +90,7 @@ export const publishPostNow = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { data: post, error } = await context.supabase
       .from("posts")
-      .select("id, content, user_id")
+      .select("id, content, user_id, image_data_url")
       .eq("id", data.id)
       .single();
     if (error || !post) throw new Error("Post not found");
@@ -106,8 +110,9 @@ export const publishPostNow = createServerFn({ method: "POST" })
     }
     try {
       let urn: string | null;
-      if (data.imageDataUrl) {
-        const match = data.imageDataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+      const imageDataUrl = data.imageDataUrl ?? (post as { image_data_url?: string | null }).image_data_url ?? undefined;
+      if (imageDataUrl) {
+        const match = imageDataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
         if (!match) throw new Error("Invalid image data URL");
         const contentType = match[1];
         const bytes = Uint8Array.from(atob(match[2]), (c) => c.charCodeAt(0));
