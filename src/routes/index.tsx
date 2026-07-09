@@ -9,6 +9,8 @@ import {
   Wand2,
   CheckCircle2,
   ArrowRight,
+  Mail,
+  Phone,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
