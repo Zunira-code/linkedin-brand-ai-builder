@@ -47,3 +47,28 @@ export const setUserApproval = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const inviteUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ email: z.string().email() }).parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const siteUrl =
+      process.env.SITE_URL ||
+      "https://linkedin-brand-ai-builder.lovable.app";
+    const { data: out, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+      data.email,
+      { redirectTo: `${siteUrl}/auth` },
+    );
+    if (error) throw new Error(error.message);
+    // Pre-approve invited users so they get instant access on first sign-in
+    if (out?.user?.id) {
+      await supabaseAdmin
+        .from("profiles")
+        .upsert({ id: out.user.id, is_approved: true }, { onConflict: "id" });
+    }
+    return { ok: true, email: data.email };
+  });
