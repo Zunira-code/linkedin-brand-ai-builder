@@ -97,6 +97,10 @@ function Generator() {
   const publishFn = useServerFn(publishPostNow);
   const hashtagsFn = useServerFn(generateHashtags);
 
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
+  const [imgFinal, setImgFinal] = useState(false);
+  const [imgBusy, setImgBusy] = useState(false);
+
   const hashtagsMut = useMutation({
     mutationFn: async () => {
       const { hashtags } = await hashtagsFn({ data: { content: edited } });
@@ -164,10 +168,6 @@ function Generator() {
   }
 
   const busy = status === "submitted" || status === "streaming";
-
-  const [imgSrc, setImgSrc] = useState<string | null>(null);
-  const [imgFinal, setImgFinal] = useState(false);
-  const [imgBusy, setImgBusy] = useState(false);
 
   async function generateImage() {
     const seed = (edited || topic).trim();
