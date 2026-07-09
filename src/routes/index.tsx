@@ -188,6 +188,14 @@ function Index() {
       <footer className="border-t border-border py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 text-xs text-muted-foreground md:flex-row">
           <Logo />
+          <div className="flex flex-wrap items-center gap-4">
+            <a href="mailto:linkedin@mywork.co.ke" className="inline-flex items-center gap-1 hover:text-foreground">
+              <Mail className="h-3 w-3" /> linkedin@mywork.co.ke
+            </a>
+            <a href="tel:+254716534393" className="inline-flex items-center gap-1 hover:text-foreground">
+              <Phone className="h-3 w-3" /> 0716 534 393
+            </a>
+          </div>
           <p>© {new Date().getFullYear()} Postpilot. Not affiliated with LinkedIn Corp.</p>
         </div>
       </footer>
