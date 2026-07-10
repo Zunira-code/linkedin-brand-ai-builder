@@ -16,8 +16,14 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Sign in — Postpilot" },
-      { name: "description", content: "Sign in to your Postpilot workspace." },
+      { name: "description", content: "Sign in to your Postpilot workspace to manage your AI-powered LinkedIn content, calendar and analytics." },
+      { property: "og:title", content: "Sign in — Postpilot" },
+      { property: "og:description", content: "Sign in to your Postpilot workspace to manage your AI-powered LinkedIn content, calendar and analytics." },
+      { property: "og:url", content: "https://app.mywork.co.ke/auth" },
+      { name: "twitter:title", content: "Sign in — Postpilot" },
+      { name: "twitter:description", content: "Sign in to your Postpilot workspace to manage your AI-powered LinkedIn content, calendar and analytics." },
     ],
+    links: [{ rel: "canonical", href: "https://app.mywork.co.ke/auth" }],
   }),
   component: AuthPage,
 });
@@ -81,7 +87,7 @@ function AuthPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-background px-4">
+    <main className="relative flex min-h-screen items-center justify-center bg-background px-4">
       <div className="absolute inset-0 grid-pattern opacity-30" aria-hidden />
       <div className="absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-brand/20 blur-3xl" aria-hidden />
       <div className="relative w-full max-w-md rounded-3xl border border-border bg-card/80 p-8 backdrop-blur">
@@ -143,6 +149,6 @@ function AuthPage() {
           </button>
         </p>
       </div>
-    </div>
+    </main>
   );
 }
