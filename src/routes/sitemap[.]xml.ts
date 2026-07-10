@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+const BASE_URL = "https://app.mywork.co.ke";
+
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
@@ -9,7 +11,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/auth", changefreq: "monthly", priority: "0.5" },
         ];
         const urls = entries.map(
-          (e) => `  <url><loc>${e.path}</loc><changefreq>${e.changefreq}</changefreq><priority>${e.priority}</priority></url>`,
+          (e) => `  <url><loc>${BASE_URL}${e.path}</loc><changefreq>${e.changefreq}</changefreq><priority>${e.priority}</priority></url>`,
         );
         const xml = [
           `<?xml version="1.0" encoding="UTF-8"?>`,
