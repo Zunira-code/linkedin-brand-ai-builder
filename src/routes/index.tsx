@@ -16,6 +16,26 @@ import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { property: "og:url", content: "https://app.mywork.co.ke/" },
+    ],
+    links: [{ rel: "canonical", href: "https://app.mywork.co.ke/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Service",
+          name: "Postpilot",
+          description: "AI-powered LinkedIn growth workspace with post generator, content calendar, viral inspiration library and personal analytics.",
+          provider: { "@type": "Organization", name: "Postpilot", url: "https://app.mywork.co.ke" },
+          areaServed: "Worldwide",
+          serviceType: "LinkedIn content and growth automation",
+        }),
+      },
+    ],
+  }),
   component: Index,
 });
 
@@ -30,7 +50,7 @@ const features = [
 
 function Index() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <main className="min-h-screen bg-background text-foreground">
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 grid-pattern opacity-40" aria-hidden />
         <div className="absolute -left-40 top-20 h-96 w-96 rounded-full bg-brand/30 blur-3xl" aria-hidden />
@@ -225,7 +245,7 @@ function Index() {
           <p>© {new Date().getFullYear()} Postpilot. Not affiliated with LinkedIn Corp.</p>
         </div>
       </footer>
-    </div>
+    </main>
   );
 }
 

@@ -2,3 +2,5 @@ User-agent: *
 Allow: /
 Disallow: /_authenticated/
 Disallow: /auth
+
+Sitemap: https://app.mywork.co.ke/sitemap.xml
