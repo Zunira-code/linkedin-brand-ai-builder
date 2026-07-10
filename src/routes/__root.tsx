@@ -88,6 +88,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: "Grow your LinkedIn brand on autopilot. AI post generator, content calendar, viral post library and personal analytics — in one workspace." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/c594cd9b-821e-4d01-a120-d2edf5acd9f6" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/c594cd9b-821e-4d01-a120-d2edf5acd9f6" },
+      { property: "og:site_name", content: "Postpilot" },
     ],
     links: [
       {
@@ -95,6 +96,28 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Postpilot",
+          url: "https://app.mywork.co.ke",
+          email: "linkedin@mywork.co.ke",
+          telephone: "+254716534393",
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Postpilot",
+          url: "https://app.mywork.co.ke",
+        }),
+      },
     ],
   }),
   shellComponent: RootShell,
