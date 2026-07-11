@@ -288,7 +288,6 @@ function VoiceTrainingCard({
   const listFn = useServerFn(listVoiceSamples);
   const addFn = useServerFn(addVoiceSamples);
   const delFn = useServerFn(deleteVoiceSample);
-  const importFn = useServerFn(importVoiceSamplesFromLinkedIn);
 
   const samples = useQuery({ queryKey: ["voice-samples"], queryFn: () => listFn() });
   const [raw, setRaw] = useState("");
@@ -301,19 +300,6 @@ function VoiceTrainingCard({
     onSuccess: (out) => {
       toast.success(`Added ${out.added} sample${out.added === 1 ? "" : "s"}`);
       setRaw("");
-      client.invalidateQueries({ queryKey: ["voice-samples"] });
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
-  });
-
-  const importMut = useMutation({
-    mutationFn: () => importFn(),
-    onSuccess: (out) => {
-      toast.success(
-        out.added > 0
-          ? `Imported ${out.added} post${out.added === 1 ? "" : "s"} from LinkedIn`
-          : "No new posts to import — you already have them.",
-      );
       client.invalidateQueries({ queryKey: ["voice-samples"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
