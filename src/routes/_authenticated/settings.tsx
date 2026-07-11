@@ -385,24 +385,20 @@ function VoiceTrainingCard({
               {add.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
               Save samples
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => importMut.mutate()}
-              disabled={importMut.isPending || !linkedInConnected}
-              title={linkedInConnected ? "" : "Connect LinkedIn first"}
-            >
-              {importMut.isPending ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importing…</>
-              ) : (
-                <><Download className="mr-2 h-4 w-4" /> Auto-import from LinkedIn</>
-              )}
-            </Button>
           </div>
-          {!linkedInConnected ? (
-            <p className="text-xs text-muted-foreground">
-              Connect LinkedIn (right column) to enable auto-import of your recent posts.
+          <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+            <p className="font-medium text-foreground/80">Why can't we auto-import from LinkedIn?</p>
+            <p className="mt-1">
+              LinkedIn's API only lets approved Marketing Partners read a member's past posts
+              (<code className="rounded bg-background/60 px-1">r_member_social</code> scope). Our
+              connector can publish on your behalf but can't fetch your history. Paste your posts
+              above — it takes ~2 minutes and gives the model the same signal.
             </p>
-          ) : null}
+            <p className="mt-2">
+              Tip: open your LinkedIn profile → <em>Show all posts</em> → copy the text of your
+              10–20 best-performing posts, one per block.
+            </p>
+          </div>
         </div>
 
         <div className="rounded-xl border border-dashed border-border bg-background/40 p-4">
