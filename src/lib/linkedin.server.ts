@@ -62,6 +62,98 @@ export async function publishTextPost(personSub: string, text: string) {
   return (data.id as string) ?? null;
 }
 
+export async function publishVideoPost(
+  personSub: string,
+  text: string,
+  videoBytes: Uint8Array,
+  contentType = "video/mp4",
+) {
+  const authorUrn = personSub.startsWith("urn:") ? personSub : `urn:li:person:${personSub}`;
+
+  // 1) Register upload for video
+  const register = await fetch(`${GATEWAY}/v2/assets?action=registerUpload`, {
+    method: "POST",
+    headers: { ...headers(), "X-Restli-Protocol-Version": "2.0.0" },
+    body: JSON.stringify({
+      registerUploadRequest: {
+        recipes: ["urn:li:digitalmediaRecipe:feedshare-video"],
+        owner: authorUrn,
+        serviceRelationships: [
+          { relationshipType: "OWNER", identifier: "urn:li:userGeneratedContent" },
+        ],
+      },
+    }),
+  });
+  const registerRaw = await register.text();
+  if (!register.ok) throw new Error(`LinkedIn registerUpload(video) ${register.status}: ${registerRaw}`);
+  const registerData = JSON.parse(registerRaw) as {
+    value: {
+      asset: string;
+      uploadMechanism: {
+        "com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest": { uploadUrl: string };
+      };
+    };
+  };
+  const asset = registerData.value.asset;
+  const uploadUrl =
+    registerData.value.uploadMechanism["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"].uploadUrl;
+
+  // 2) Upload the video bytes. Try via connector gateway first (auth injected),
+  // fall back to direct PUT if the returned URL is pre-signed.
+  const parsed = new URL(uploadUrl);
+  const gatewayUploadUrl = `${GATEWAY}${parsed.pathname}${parsed.search}`;
+  let uploadRes = await fetch(gatewayUploadUrl, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${process.env.LOVABLE_API_KEY}`,
+      "X-Connection-Api-Key": process.env.LINKEDIN_API_KEY!,
+      "Content-Type": contentType,
+    },
+    body: videoBytes as BodyInit,
+  });
+  if (!uploadRes.ok) {
+    uploadRes = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": contentType },
+      body: videoBytes as BodyInit,
+    });
+  }
+  if (!uploadRes.ok) {
+    const t = await uploadRes.text().catch(() => "");
+    throw new Error(`LinkedIn video upload ${uploadRes.status}: ${t}`);
+  }
+
+  // 3) Create UGC post referencing the video asset
+  const body = {
+    author: authorUrn,
+    lifecycleState: "PUBLISHED",
+    specificContent: {
+      "com.linkedin.ugc.ShareContent": {
+        shareCommentary: { text },
+        shareMediaCategory: "VIDEO",
+        media: [
+          {
+            status: "READY",
+            description: { text: "" },
+            media: asset,
+            title: { text: "" },
+          },
+        ],
+      },
+    },
+    visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" },
+  };
+  const res = await fetch(`${GATEWAY}/v2/ugcPosts`, {
+    method: "POST",
+    headers: { ...headers(), "X-Restli-Protocol-Version": "2.0.0" },
+    body: JSON.stringify(body),
+  });
+  const raw = await res.text();
+  if (!res.ok) throw new Error(`LinkedIn publish(video) ${res.status}: ${raw}`);
+  const data = raw ? JSON.parse(raw) : {};
+  return (data.id as string) ?? null;
+}
+
 export async function publishImagePost(
   personSub: string,
   text: string,
