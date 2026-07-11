@@ -245,3 +245,153 @@ export const suggestFirstComment = createServerFn({ method: "POST" })
     const cleaned = raw.replace(/^["'`]+|["'`]+$/g, "").trim();
     return { comment: cleaned };
   });
+
+function stripHtml(html: string): string {
+  // Remove script/style blocks, then all tags, then collapse whitespace.
+  const noScripts = html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ");
+  const noTags = noScripts.replace(/<[^>]+>/g, " ");
+  const decoded = noTags
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+  return decoded.replace(/\s+/g, " ").trim();
+}
+
+const RepurposeInput = z
+  .object({
+    url: z.string().url().optional(),
+    text: z.string().max(50000).optional(),
+    tone: z.string().max(40).optional(),
+  })
+  .refine((v) => Boolean(v.url) || Boolean(v.text && v.text.trim().length >= 50), {
+    message: "Provide a URL or at least 50 characters of text.",
+  });
+
+export const repurposeContent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => RepurposeInput.parse(input))
+  .handler(async ({ context, data }) => {
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) throw new Error("Missing LOVABLE_API_KEY");
+
+    let source = (data.text ?? "").trim();
+    let sourceTitle = "";
+    if (data.url) {
+      try {
+        const res = await fetch(data.url, {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (compatible; PostpilotBot/1.0; +https://postpilot.app)",
+            Accept: "text/html,application/xhtml+xml",
+          },
+          redirect: "follow",
+        });
+        if (!res.ok) throw new Error(`Fetch failed (${res.status})`);
+        const html = await res.text();
+        const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+        if (titleMatch) sourceTitle = stripHtml(titleMatch[1]).slice(0, 200);
+        const extracted = stripHtml(html);
+        source = extracted;
+      } catch (e) {
+        throw new Error(
+          `Couldn't fetch that URL (${e instanceof Error ? e.message : String(e)}). Paste the text instead.`,
+        );
+      }
+    }
+    if (!source || source.length < 50) {
+      throw new Error("Not enough content to repurpose.");
+    }
+    // Cap to keep the prompt tight.
+    const trimmed = source.slice(0, 12000);
+
+    // Load voice samples so drafts sound like the user.
+    const { data: samples } = await context.supabase
+      .from("voice_samples")
+      .select("content")
+      .eq("user_id", context.userId)
+      .order("created_at", { ascending: false })
+      .limit(12);
+    const voiceBlock =
+      samples && samples.length > 0
+        ? `\n\nBelow are ${samples.length} real posts this user has written on LinkedIn. Mirror their vocabulary, sentence length, cadence and opinions in every draft.\n\n${samples
+            .map((s, i) => `--- Sample ${i + 1} ---\n${s.content}`)
+            .join("\n\n")}`
+        : "";
+
+    const toneLine = data.tone ? `\nOverall tone: ${data.tone}.` : "";
+    const system = `You are Postpilot, an expert LinkedIn ghostwriter. You take a long-form source (article, transcript, newsletter) and turn it into 4 DISTINCT LinkedIn post drafts.
+
+Each draft must:
+- take a genuinely different angle or hook from the others (e.g. contrarian take, personal story, tactical listicle, question/poll, framework, bold prediction)
+- open with a scroll-stopping first line, no greetings, no "In today's world"
+- use short lines and generous whitespace (single-sentence paragraphs)
+- stay under 1300 characters
+- end with a question, takeaway, or call-to-comment
+- NOT include hashtags or emojis unless the source clearly warrants it
+
+Return STRICT JSON matching this shape and nothing else:
+{"drafts":[{"angle":"short label of the angle","hook":"first line of the post","content":"full post text with line breaks as \\n"}]}
+
+Return exactly 4 drafts.${toneLine}${voiceBlock}`;
+
+    const userMsg = `Source${sourceTitle ? ` — "${sourceTitle}"` : ""}${
+      data.url ? ` (${data.url})` : ""
+    }:\n\n${trimmed}`;
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Lovable-API-Key": key,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: userMsg },
+        ],
+        temperature: 0.85,
+        response_format: { type: "json_object" },
+      }),
+    });
+    if (!res.ok) {
+      const t = await res.text().catch(() => "");
+      if (res.status === 429) throw new Error("Rate limited — try again in a minute.");
+      if (res.status === 402) throw new Error("AI credits exhausted. Add credits in workspace billing.");
+      throw new Error(`Repurpose failed (${res.status}): ${t.slice(0, 200)}`);
+    }
+    const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    const raw = json.choices?.[0]?.message?.content ?? "";
+    let parsed: { drafts?: Array<{ angle?: string; hook?: string; content?: string }> } = {};
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (match) {
+        try {
+          parsed = JSON.parse(match[0]);
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+    const drafts = (parsed.drafts ?? [])
+      .map((d) => ({
+        angle: (d.angle ?? "").toString().slice(0, 80) || "Draft",
+        hook: (d.hook ?? "").toString().slice(0, 200),
+        content: (d.content ?? "").toString().trim(),
+      }))
+      .filter((d) => d.content.length > 0)
+      .slice(0, 5);
+    if (drafts.length === 0) {
+      throw new Error("AI didn't return usable drafts — try again.");
+    }
+    return { drafts, sourceTitle: sourceTitle || null };
+  });
