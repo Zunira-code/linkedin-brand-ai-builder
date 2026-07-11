@@ -66,6 +66,65 @@ export async function commentOnPost(
   return (data.$URN as string) ?? (data.id as string) ?? null;
 }
 
+/**
+ * Fetch comments on a specific LinkedIn share/ugcPost URN.
+ * Returns raw comment elements from the socialActions API.
+ */
+export async function getPostComments(postUrn: string) {
+  const encoded = encodeURIComponent(postUrn);
+  const res = await fetch(
+    `${GATEWAY}/v2/socialActions/${encoded}/comments?count=100`,
+    { headers: { ...headers(), "X-Restli-Protocol-Version": "2.0.0" } },
+  );
+  const raw = await res.text();
+  if (!res.ok) throw new Error(`LinkedIn getComments ${res.status}: ${raw}`);
+  const data = raw ? JSON.parse(raw) : {};
+  return (data.elements ?? []) as Array<{
+    actor?: string;
+    created?: { time?: number };
+    message?: { text?: string };
+    $URN?: string;
+    id?: string;
+  }>;
+}
+
+/**
+ * Best-effort profile lookup for a LinkedIn person URN. Most member profile
+ * endpoints require Marketing Developer Platform scopes, so this may fail
+ * silently — callers should fall back to a placeholder name/headline.
+ */
+export async function getPersonProfile(personUrn: string): Promise<{
+  name?: string;
+  headline?: string;
+  profileUrl?: string;
+  avatarUrl?: string;
+} | null> {
+  const id = personUrn.replace(/^urn:li:person:/, "");
+  try {
+    const res = await fetch(
+      `${GATEWAY}/v2/people/(id:${encodeURIComponent(id)})?projection=(id,localizedFirstName,localizedLastName,localizedHeadline,vanityName)`,
+      { headers: { ...headers(), "X-Restli-Protocol-Version": "2.0.0" } },
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      localizedFirstName?: string;
+      localizedLastName?: string;
+      localizedHeadline?: string;
+      vanityName?: string;
+    };
+    const name =
+      [data.localizedFirstName, data.localizedLastName].filter(Boolean).join(" ") ||
+      undefined;
+    return {
+      name,
+      headline: data.localizedHeadline,
+      profileUrl: data.vanityName ? `https://www.linkedin.com/in/${data.vanityName}` : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function publishTextPost(personSub: string, text: string) {
   const authorUrn = personSub.startsWith("urn:") ? personSub : `urn:li:person:${personSub}`;
   const body = {
