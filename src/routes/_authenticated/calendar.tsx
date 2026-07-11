@@ -77,22 +77,24 @@ function CalendarPage() {
               <div className="mb-1 text-[10px] text-muted-foreground">{d.date.getDate()}</div>
               <div className="space-y-1">
                 {items.map((p) => (
-                  <div key={p.id} className={`group rounded-md border px-2 py-1 ${statusBg(p.status)}`}>
+                  <div key={p.id} className={`group rounded-md border px-2 py-1 ${statusBg(p.status, p.format)}`}>
                     <p className="line-clamp-2 text-[11px] leading-snug">{p.content}</p>
                     <div className="mt-1 flex items-center justify-between">
-                      <span className="text-[9px] uppercase tracking-wide">{p.status}</span>
+                      <span className="text-[9px] uppercase tracking-wide">
+                        {p.format === "carousel" && p.status !== "posted" ? "manual" : p.status}
+                      </span>
                       <div className="flex gap-1">
                         {p.status !== "posted" && (
                           <Link
-                            to="/generator"
-                            search={{ postId: p.id }}
+                            to={p.format === "carousel" ? "/carousels" : "/generator"}
+                            search={p.format === "carousel" ? {} : { postId: p.id }}
                             title="Edit"
                             className="text-foreground/70 hover:text-brand"
                           >
                             <Pencil className="h-3 w-3" />
                           </Link>
                         )}
-                        {p.status !== "posted" && (
+                        {p.status !== "posted" && p.format !== "carousel" && (
                           <button title="Publish now" onClick={() => publishMut.mutate(p.id)} className="text-brand hover:opacity-80">
                             <Send className="h-3 w-3" />
                           </button>
@@ -117,7 +119,8 @@ function CalendarPage() {
   );
 }
 
-function statusBg(s: string) {
+function statusBg(s: string, format?: string) {
+  if (format === "carousel" && s !== "posted") return "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400";
   if (s === "posted") return "border-success/40 bg-success/10 text-success";
   if (s === "scheduled") return "border-brand/40 bg-brand/10 text-brand";
   if (s === "failed") return "border-destructive/40 bg-destructive/10 text-destructive";
