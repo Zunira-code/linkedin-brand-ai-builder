@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Linkedin, CheckCircle2, Sparkles, Loader2, Wand2, Mic, Trash2, Download } from "lucide-react";
+import { Linkedin, CheckCircle2, Sparkles, Loader2, Wand2, Mic, Trash2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,6 @@ import {
   listVoiceSamples,
   addVoiceSamples,
   deleteVoiceSample,
-  importVoiceSamplesFromLinkedIn,
 } from "@/lib/voice-samples.functions";
 
 export const Route = createFileRoute("/_authenticated/settings")({
