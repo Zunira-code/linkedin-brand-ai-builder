@@ -16,8 +16,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { savePost, publishPostNow, generateHashtags, getPost } from "@/lib/posts.functions";
 import { getMyProfile } from "@/lib/profile.functions";
 import { getCalibration } from "@/lib/calibration.functions";
+import { listVoiceSamples } from "@/lib/voice-samples.functions";
 import { streamImage } from "@/lib/streamImage";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "@tanstack/react-router";
+import { Mic } from "lucide-react";
 
 type SearchParams = { topic?: string; hook?: string; template?: string; postId?: string };
 
@@ -63,15 +66,24 @@ function Generator() {
   const calibrationFn = useServerFn(getCalibration);
   const calibration = useQuery({ queryKey: ["calibration"], queryFn: () => calibrationFn() });
 
+  const voiceFn = useServerFn(listVoiceSamples);
+  const voiceSamples = useQuery({ queryKey: ["voice-samples"], queryFn: () => voiceFn() });
+  const sampleCount = voiceSamples.data?.length ?? 0;
+  const voiceTrained = sampleCount >= 10;
+
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
         api: "/api/chat",
         prepareSendMessagesRequest: ({ messages }) => ({
-          body: { messages, brandVoice: profile.data?.brand_voice ?? "" },
+          body: {
+            messages,
+            brandVoice: profile.data?.brand_voice ?? "",
+            voiceSamples: (voiceSamples.data ?? []).map((s) => s.content),
+          },
         }),
       }),
-    [profile.data?.brand_voice],
+    [profile.data?.brand_voice, voiceSamples.data],
   );
 
   const { messages, sendMessage, status, setMessages } = useChat({ transport });
