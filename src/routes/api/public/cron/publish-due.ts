@@ -14,12 +14,12 @@ export const Route = createFileRoute("/api/public/cron/publish-due")({
           return new Response("Unauthorized", { status: 401 });
         }
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { publishTextPost, publishImagePost, publishVideoPost } = await import("@/lib/linkedin.server");
+        const { publishTextPost, publishImagePost, publishVideoPost, commentOnPost } = await import("@/lib/linkedin.server");
 
         const nowIso = new Date().toISOString();
         const { data: due, error } = await supabaseAdmin
           .from("posts")
-          .select("id, user_id, content, image_data_url, video_url")
+          .select("id, user_id, content, image_data_url, video_url, first_comment")
           .eq("status", "scheduled")
           .lte("scheduled_at", nowIso)
           .limit(20);
@@ -52,9 +52,19 @@ export const Route = createFileRoute("/api/public/cron/publish-due")({
             } else {
               urn = await publishTextPost(prof.linkedin_urn, p.content);
             }
+            const fc = (p as { first_comment?: string | null }).first_comment;
+            const commentDueAt =
+              fc && urn
+                ? new Date(Date.now() + (60 + Math.floor(Math.random() * 61)) * 1000).toISOString()
+                : null;
             await supabaseAdmin
               .from("posts")
-              .update({ status: "posted", posted_at: new Date().toISOString(), linkedin_urn: urn })
+              .update({
+                status: "posted",
+                posted_at: new Date().toISOString(),
+                linkedin_urn: urn,
+                first_comment_scheduled_at: commentDueAt,
+              })
               .eq("id", p.id);
             results.push({ id: p.id, ok: true });
           } catch (e) {
@@ -63,7 +73,58 @@ export const Route = createFileRoute("/api/public/cron/publish-due")({
             results.push({ id: p.id, ok: false, error: msg });
           }
         }
-        return Response.json({ processed: results.length, results });
+
+        // Drain due first comments — posts already published to LinkedIn whose
+        // first_comment_scheduled_at has arrived and haven't been commented on yet.
+        const { data: dueComments } = await supabaseAdmin
+          .from("posts")
+          .select("id, user_id, first_comment, linkedin_urn")
+          .eq("status", "posted")
+          .not("first_comment", "is", null)
+          .not("linkedin_urn", "is", null)
+          .is("first_comment_posted_at", null)
+          .lte("first_comment_scheduled_at", new Date().toISOString())
+          .limit(20);
+
+        const commentResults: Array<{ id: string; ok: boolean; error?: string }> = [];
+        for (const p of dueComments ?? []) {
+          try {
+            const { data: prof } = await supabaseAdmin
+              .from("profiles")
+              .select("linkedin_urn")
+              .eq("id", p.user_id)
+              .maybeSingle();
+            if (!prof?.linkedin_urn) throw new Error("LinkedIn not connected");
+            const commentUrn = await commentOnPost(
+              prof.linkedin_urn,
+              p.linkedin_urn as string,
+              (p.first_comment as string).trim(),
+            );
+            await supabaseAdmin
+              .from("posts")
+              .update({
+                first_comment_posted_at: new Date().toISOString(),
+                first_comment_urn: commentUrn,
+                first_comment_error: null,
+              })
+              .eq("id", p.id);
+            commentResults.push({ id: p.id, ok: true });
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            await supabaseAdmin
+              .from("posts")
+              .update({ first_comment_error: msg })
+              .eq("id", p.id);
+            commentResults.push({ id: p.id, ok: false, error: msg });
+          }
+        }
+
+        return Response.json({
+          processed: results.length,
+          results,
+          comments: commentResults.length,
+          commentResults,
+        });
       },
     },
   },
