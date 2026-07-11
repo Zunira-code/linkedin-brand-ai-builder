@@ -339,9 +339,6 @@ function Editor({ id }: { id: string }) {
           ← Back to library
         </Button>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={downloadAll} disabled={slides.length === 0}>
-            <Download className="mr-2 h-3.5 w-3.5" /> Download PNGs
-          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -350,14 +347,25 @@ function Editor({ id }: { id: string }) {
           >
             <Save className="mr-2 h-3.5 w-3.5" /> Save draft
           </Button>
+          {q.data?.status === "ready" || q.data?.status === "posted" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => markPosted.mutate()}
+              disabled={markPosted.isPending || q.data?.status === "posted"}
+            >
+              <CheckCircle2 className="mr-2 h-3.5 w-3.5" />
+              {q.data?.status === "posted" ? "Posted" : "Mark as posted"}
+            </Button>
+          ) : null}
           <Button
             className="bg-brand-gradient text-brand-foreground"
             size="sm"
-            onClick={() => publish.mutate()}
-            disabled={publish.isPending || slides.length < 2}
+            onClick={() => exportPdf.mutate()}
+            disabled={exportPdf.isPending || slides.length < 2}
           >
-            {publish.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Send className="mr-2 h-3.5 w-3.5" />}
-            Publish now
+            {exportPdf.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Download className="mr-2 h-3.5 w-3.5" />}
+            Download PDF
           </Button>
         </div>
       </div>
