@@ -4,6 +4,13 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type Slide = { title: string; body: string };
 
+/** LinkedIn portrait document post — 4:5. */
+export const CAROUSEL_WIDTH = 1080;
+export const CAROUSEL_HEIGHT = 1350;
+/** Enforced character limits so slides stay readable. */
+export const SLIDE_TITLE_MAX = 60;
+export const SLIDE_BODY_MAX = 180;
+
 export const listCarousels = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -29,7 +36,7 @@ export const getCarousel = createServerFn({ method: "GET" })
   });
 
 const SlideSchema = z.object({
-  title: z.string().max(140),
+  title: z.string().max(200),
   body: z.string().max(600),
 });
 
@@ -38,8 +45,7 @@ const SaveInput = z.object({
   title: z.string().min(1).max(200),
   template: z.enum(["bold", "minimal", "editorial"]).default("bold"),
   slides: z.array(SlideSchema).min(1).max(12),
-  status: z.enum(["draft", "scheduled"]).default("draft"),
-  scheduled_at: z.string().datetime().nullable().optional(),
+  status: z.enum(["draft", "ready", "posted"]).default("draft"),
 });
 
 export const saveCarousel = createServerFn({ method: "POST" })
@@ -52,7 +58,7 @@ export const saveCarousel = createServerFn({ method: "POST" })
       template: data.template,
       slides: data.slides,
       status: data.status,
-      scheduled_at: data.status === "scheduled" ? data.scheduled_at ?? null : null,
+      scheduled_at: null,
     };
     if (data.id) {
       const { data: out, error } = await context.supabase
