@@ -566,39 +566,28 @@ function Editor({ id }: { id: string }) {
               </div>
 
               <div className="rounded-2xl border border-border bg-card p-5">
-                <Tabs defaultValue="caption">
-                  <TabsList>
-                    <TabsTrigger value="caption">Caption</TabsTrigger>
-                    <TabsTrigger value="schedule">Schedule</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="caption" className="pt-3">
-                    <Label className="text-xs">Post caption (shows above the swipeable deck)</Label>
-                    <Textarea
-                      rows={4}
-                      value={caption}
-                      onChange={(e) => setCaption(e.target.value)}
-                      placeholder={`A one-line hook. Then a swipeable ${slides.length}-slide breakdown ↓`}
-                    />
-                  </TabsContent>
-                  <TabsContent value="schedule" className="pt-3">
-                    <Label className="text-xs">Schedule for</Label>
-                    <Input
-                      type="datetime-local"
-                      value={scheduleIso}
-                      onChange={(e) => setScheduleIso(e.target.value)}
-                    />
-                    <Button
-                      className="mt-3 bg-brand-gradient text-brand-foreground"
-                      onClick={() => save.mutate({ status: "scheduled" })}
-                      disabled={save.isPending || !scheduleIso}
-                    >
-                      Schedule carousel
-                    </Button>
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Scheduled carousels appear in your Calendar. They publish automatically at the chosen time.
-                    </p>
-                  </TabsContent>
-                </Tabs>
+                <Label className="text-xs">Post caption (paste this on LinkedIn along with the PDF)</Label>
+                <Textarea
+                  rows={4}
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  placeholder={`A one-line hook. Then a swipeable ${slides.length}-slide breakdown ↓`}
+                />
+              </div>
+
+              <div className="rounded-2xl border border-brand/30 bg-brand/5 p-5">
+                <div className="flex items-start gap-3">
+                  <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-brand" />
+                  <div className="text-sm">
+                    <div className="font-medium">Carousels can&rsquo;t auto-post — that&rsquo;s a LinkedIn limitation, not ours.</div>
+                    <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
+                      <li>Click <span className="font-medium text-foreground">Download PDF</span> above.</li>
+                      <li>On LinkedIn, click <span className="font-medium text-foreground">Start a post</span> → the <span className="font-medium text-foreground">document icon</span> → upload the file.</li>
+                      <li>Paste the caption above, publish, then hit <span className="font-medium text-foreground">Mark as posted</span> here.</li>
+                    </ol>
+                    <div className="mt-2 text-xs text-muted-foreground">Takes about 30 seconds.</div>
+                  </div>
+                </div>
               </div>
             </>
           )}
