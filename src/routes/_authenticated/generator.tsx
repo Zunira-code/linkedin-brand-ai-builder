@@ -107,6 +107,8 @@ function Generator() {
   const [videoPath, setVideoPath] = useState<string | null>(null);
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
   const [videoBusy, setVideoBusy] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     if (!existing.data?.video_url) return;
@@ -220,33 +222,92 @@ function Generator() {
     a.click();
   }
 
+  async function probeDuration(file: File): Promise<number> {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const v = document.createElement("video");
+      v.preload = "metadata";
+      v.onloadedmetadata = () => {
+        const d = v.duration;
+        URL.revokeObjectURL(url);
+        Number.isFinite(d) ? resolve(d) : reject(new Error("Could not read video duration"));
+      };
+      v.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Could not read video metadata"));
+      };
+      v.src = url;
+    });
+  }
+
   async function handleVideoSelected(file: File) {
     if (file.type !== "video/mp4") {
       toast.error("Only MP4 videos are supported.");
       return;
     }
-    const MAX = 200 * 1024 * 1024;
+    const MAX = 5 * 1024 * 1024 * 1024; // 5 GB — LinkedIn native cap
+    const SOFT = 200 * 1024 * 1024;
     if (file.size > MAX) {
-      toast.error("Video must be under 200 MB.");
+      toast.error("Video must be under 5 GB.");
       return;
     }
+    if (file.size > SOFT) {
+      toast.warning("Files under 200MB upload faster and more reliably.");
+    }
+
+    let duration: number;
+    try {
+      duration = await probeDuration(file);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not read video");
+      return;
+    }
+    if (duration > 600) {
+      toast.error("LinkedIn videos must be under 10 minutes.");
+      return;
+    }
+    if (duration < 3) {
+      toast.error("Video must be at least 3 seconds long.");
+      return;
+    }
+
     setVideoBusy(true);
+    setVideoProgress(0);
     try {
       const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) throw new Error("Not signed in");
       const path = `${uid}/${crypto.randomUUID()}.mp4`;
-      const { error } = await supabase.storage
+
+      const { data: signed, error: signErr } = await supabase.storage
         .from("post-videos")
-        .upload(path, file, { contentType: "video/mp4", upsert: false });
-      if (error) throw error;
-      // Remove any previous upload for this draft session.
+        .createSignedUploadUrl(path);
+      if (signErr || !signed) throw signErr ?? new Error("Could not start upload");
+
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("PUT", signed.signedUrl);
+        xhr.setRequestHeader("Content-Type", "video/mp4");
+        xhr.upload.onprogress = (ev) => {
+          if (ev.lengthComputable) {
+            setVideoProgress(Math.round((ev.loaded / ev.total) * 100));
+          }
+        };
+        xhr.onload = () =>
+          xhr.status >= 200 && xhr.status < 300
+            ? resolve()
+            : reject(new Error(`Upload failed (${xhr.status})`));
+        xhr.onerror = () => reject(new Error("Network error during upload"));
+        xhr.send(file);
+      });
+
       if (videoPath && videoPath !== path) {
         await supabase.storage.from("post-videos").remove([videoPath]).catch(() => {});
       }
       setVideoPath(path);
       if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
       setVideoPreviewUrl(URL.createObjectURL(file));
+      setVideoProgress(100);
       toast.success("Video attached");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Video upload failed");
@@ -458,31 +519,66 @@ function Generator() {
                     }}
                     disabled={videoBusy}
                   />
-                  <span className="inline-flex h-9 cursor-pointer items-center rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-accent">
+                  <span className="inline-flex h-9 cursor-pointer items-center whitespace-nowrap rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-accent">
                     {videoBusy ? (
                       <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading…</>
                     ) : (
-                      <><VideoIcon className="mr-2 h-4 w-4" /> {videoPath ? "Replace video" : "Upload MP4"}</>
+                      <><VideoIcon className="mr-2 h-4 w-4" /> {videoPath ? "Replace" : "Upload MP4"}</>
                     )}
                   </span>
                 </label>
                 {videoPath ? (
-                  <Button size="sm" variant="outline" onClick={removeVideo}>
+                  <Button size="sm" variant="outline" onClick={removeVideo} disabled={videoBusy}>
                     <X className="mr-2 h-4 w-4" /> Remove
                   </Button>
                 ) : null}
               </div>
             </div>
-            <div className="mt-4 flex items-center justify-center rounded-xl border border-dashed border-border bg-background/40 p-4">
-              {videoPreviewUrl ? (
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (!videoBusy) setIsDragging(true);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                setIsDragging(false);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragging(false);
+                if (videoBusy) return;
+                const f = e.dataTransfer.files?.[0];
+                if (f) handleVideoSelected(f);
+              }}
+              className={`mt-4 flex items-center justify-center rounded-xl border border-dashed p-4 transition-colors ${
+                isDragging ? "border-brand bg-brand/10" : "border-border bg-background/40"
+              }`}
+            >
+              {videoBusy ? (
+                <div className="flex aspect-video w-full max-w-md flex-col items-center justify-center gap-3 rounded-lg px-6 text-center">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Loader2 className="h-4 w-4 animate-spin text-brand" />
+                    Uploading… {videoProgress}%
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full bg-brand-gradient transition-[width] duration-150"
+                      style={{ width: `${videoProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Please keep this tab open until upload finishes.</p>
+                </div>
+              ) : videoPreviewUrl ? (
                 <video
                   src={videoPreviewUrl}
                   controls
                   className="aspect-video w-full max-w-md rounded-lg bg-black object-contain"
                 />
               ) : (
-                <div className="flex aspect-video w-full max-w-md items-center justify-center rounded-lg text-xs text-muted-foreground">
-                  No video attached yet.
+                <div className="flex aspect-video w-full max-w-md flex-col items-center justify-center gap-1 rounded-lg text-center text-xs text-muted-foreground">
+                  <VideoIcon className="h-6 w-6 opacity-60" />
+                  <div>Drag & drop an MP4 here, or use the button above.</div>
+                  <div className="opacity-70">Max 10 min · up to 5 GB</div>
                 </div>
               )}
             </div>
