@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Sparkles, Save, Send, Loader2, Wand2, Image as ImageIcon, Download, Hash, Video as VideoIcon, X } from "lucide-react";
+import { Sparkles, Save, Send, Loader2, Wand2, Image as ImageIcon, Download, Hash, Video as VideoIcon, X, MessageSquare } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { savePost, publishPostNow, generateHashtags, getPost } from "@/lib/posts.functions";
+import { savePost, publishPostNow, generateHashtags, getPost, suggestFirstComment } from "@/lib/posts.functions";
 import { getMyProfile } from "@/lib/profile.functions";
 import { getCalibration } from "@/lib/calibration.functions";
 import { listVoiceSamples } from "@/lib/voice-samples.functions";
@@ -44,6 +44,7 @@ function Generator() {
   const [edited, setEdited] = useState("");
   const [editingId, setEditingId] = useState<string | undefined>(search.postId);
   const [scheduleIso, setScheduleIso] = useState<string | null>(null);
+  const [firstComment, setFirstComment] = useState("");
 
   const getPostFn = useServerFn(getPost);
   const existing = useQuery({
@@ -58,6 +59,7 @@ function Generator() {
     setEdited(existing.data.content);
     setFormat(existing.data.format ?? "story");
     setScheduleIso(existing.data.scheduled_at ?? null);
+    setFirstComment((existing.data as { first_comment?: string | null }).first_comment ?? "");
   }, [existing.data]);
 
   const profileFn = useServerFn(getMyProfile);
@@ -109,6 +111,7 @@ function Generator() {
   const saveFn = useServerFn(savePost);
   const publishFn = useServerFn(publishPostNow);
   const hashtagsFn = useServerFn(generateHashtags);
+  const suggestCommentFn = useServerFn(suggestFirstComment);
 
   const [imgSrc, setImgSrc] = useState<string | null>(null);
   const [imgFinal, setImgFinal] = useState(false);
@@ -162,6 +165,7 @@ function Generator() {
           scheduled_at: input.scheduled_at ?? null,
           image_data_url: imgSrc && imgFinal ? imgSrc : null,
           video_url: videoPath ?? null,
+          first_comment: firstComment.trim() ? firstComment.trim() : null,
         },
       }),
     onSuccess: (out, vars) => {
@@ -183,7 +187,15 @@ function Generator() {
         } catch { /* non-fatal */ }
       }
       setEdited(content);
-      const saved = await saveFn({ data: { id: editingId, content, format, status: "draft" } });
+      const saved = await saveFn({
+        data: {
+          id: editingId,
+          content,
+          format,
+          status: "draft",
+          first_comment: firstComment.trim() ? firstComment.trim() : null,
+        },
+      });
       if (saved?.id) setEditingId(saved.id);
       const imageDataUrl = imgSrc && imgFinal ? imgSrc : undefined;
       return publishFn({ data: { id: saved.id, imageDataUrl } });
@@ -191,7 +203,24 @@ function Generator() {
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ["posts"] });
       client.invalidateQueries({ queryKey: ["analytics"] });
-      toast.success("Published to LinkedIn 🎉");
+      toast.success(
+        firstComment.trim()
+          ? "Published to LinkedIn 🎉 First comment queued in ~1–2 min"
+          : "Published to LinkedIn 🎉",
+      );
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
+  });
+
+  const suggestCommentMut = useMutation({
+    mutationFn: () => suggestCommentFn({ data: { content: edited } }),
+    onSuccess: (out) => {
+      if (out?.comment) {
+        setFirstComment(out.comment);
+        toast.success("Suggested a first comment");
+      } else {
+        toast.error("Couldn't generate a comment — try again.");
+      }
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
   });
