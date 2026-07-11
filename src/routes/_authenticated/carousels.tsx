@@ -630,22 +630,24 @@ function SlidePreview({
   scale?: number;
   exportSize?: boolean;
 }) {
-  // Fixed 1080x1080 canvas; scaled to fit its parent via CSS transform.
-  const SIZE = 1080;
+  // Fixed portrait canvas at LinkedIn document dimensions.
+  const W = CAROUSEL_WIDTH;
+  const H = CAROUSEL_HEIGHT;
+  const previewW = 440;
+  const scale = previewW / W;
   return (
     <div
       className="relative"
       style={
         exportSize
-          ? { width: SIZE, height: SIZE }
+          ? { width: W, height: H }
           : {
-              width: SIZE,
-              height: SIZE,
-              transform: `scale(${520 / SIZE})`,
+              width: W,
+              height: H,
+              transform: `scale(${scale})`,
               transformOrigin: "top left",
-              // Container is 520x520 (parent aspect-square). Prevent parent overflow.
-              marginRight: -(SIZE - 520),
-              marginBottom: -(SIZE - 520),
+              marginRight: -(W - previewW),
+              marginBottom: -(H - Math.round(H * scale)),
             }
       }
     >
@@ -674,7 +676,7 @@ function TemplateSurface({
     return (
       <div
         className="flex h-full w-full flex-col justify-between p-20"
-        style={{ background: brand.primary, color: brand.secondary, fontFamily: "'Space Grotesk', system-ui, sans-serif" }}
+        style={{ background: brand.primary, color: brand.secondary, fontFamily: fontStack(brand, "'Space Grotesk', system-ui, sans-serif") }}
       >
         <div className="flex items-center justify-between">
           {brand.logo ? (
@@ -708,7 +710,7 @@ function TemplateSurface({
     return (
       <div
         className="flex h-full w-full flex-col justify-between p-24"
-        style={{ background: brand.secondary, color: brand.primary, fontFamily: "Inter, system-ui, sans-serif" }}
+        style={{ background: brand.secondary, color: brand.primary, fontFamily: fontStack(brand, "Inter, system-ui, sans-serif") }}
       >
         <div className="flex items-center justify-between">
           {brand.logo ? (
@@ -738,7 +740,7 @@ function TemplateSurface({
   return (
     <div
       className="flex h-full w-full flex-col justify-between p-24"
-      style={{ background: "#F5F1EA", color: brand.primary, fontFamily: "'Space Grotesk', Georgia, serif" }}
+      style={{ background: "#F5F1EA", color: brand.primary, fontFamily: fontStack(brand, "Georgia, serif") }}
     >
       <div className="flex items-center justify-between">
         <span className="text-lg uppercase tracking-[0.3em]" style={{ color: brand.accent }}>
@@ -749,7 +751,7 @@ function TemplateSurface({
         ) : null}
       </div>
       <div className="max-w-[880px]">
-        <div className="text-[76px] font-semibold leading-[1.08] tracking-tight" style={{ fontFamily: "Georgia, serif" }}>
+        <div className="text-[76px] font-semibold leading-[1.08] tracking-tight" style={{ fontFamily: fontStack(brand, "Georgia, serif") }}>
           {slide.title || "Your headline"}
         </div>
         {slide.body ? (
