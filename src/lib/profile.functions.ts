@@ -26,6 +26,7 @@ export const updateProfile = createServerFn({ method: "POST" })
         brand_primary_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable().optional(),
         brand_secondary_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable().optional(),
         brand_accent_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable().optional(),
+        brand_font: z.enum(["inter", "space-grotesk", "dm-serif", "geist", "georgia"]).nullable().optional(),
       })
       .parse(input),
   )

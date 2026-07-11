@@ -4,6 +4,13 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type Slide = { title: string; body: string };
 
+/** LinkedIn portrait document post — 4:5. */
+export const CAROUSEL_WIDTH = 1080;
+export const CAROUSEL_HEIGHT = 1350;
+/** Enforced character limits so slides stay readable. */
+export const SLIDE_TITLE_MAX = 60;
+export const SLIDE_BODY_MAX = 180;
+
 export const listCarousels = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -29,7 +36,7 @@ export const getCarousel = createServerFn({ method: "GET" })
   });
 
 const SlideSchema = z.object({
-  title: z.string().max(140),
+  title: z.string().max(200),
   body: z.string().max(600),
 });
 
@@ -38,8 +45,7 @@ const SaveInput = z.object({
   title: z.string().min(1).max(200),
   template: z.enum(["bold", "minimal", "editorial"]).default("bold"),
   slides: z.array(SlideSchema).min(1).max(12),
-  status: z.enum(["draft", "scheduled"]).default("draft"),
-  scheduled_at: z.string().datetime().nullable().optional(),
+  status: z.enum(["draft", "ready", "posted"]).default("draft"),
 });
 
 export const saveCarousel = createServerFn({ method: "POST" })
@@ -52,7 +58,7 @@ export const saveCarousel = createServerFn({ method: "POST" })
       template: data.template,
       slides: data.slides,
       status: data.status,
-      scheduled_at: data.status === "scheduled" ? data.scheduled_at ?? null : null,
+      scheduled_at: null,
     };
     if (data.id) {
       const { data: out, error } = await context.supabase
@@ -112,9 +118,10 @@ export const generateCarouselSlides = createServerFn({ method: "POST" })
     const system = `You are Postpilot, an expert LinkedIn ghostwriter turning a topic or long-form text into a scroll-stopping LinkedIn CAROUSEL of exactly ${data.slideCount} slides.
 
 Rules for the deck:
-- Slide 1 is the cover: a 3-8 word hook headline that stops the scroll, plus a 6-14 word subtitle.
-- Slides 2 to ${data.slideCount - 1} each teach ONE idea. Title = 3-8 word punchy label. Body = 1-3 short lines, max ~180 characters, no walls of text.
-- Last slide is a CTA: ask the reader to comment, follow, or DM. Title = short imperative, body = 1 line.
+- Portrait 4:5 slides. Text MUST stay short so it's readable on mobile.
+- Slide 1 is the cover: a 3-8 word hook headline (max ${SLIDE_TITLE_MAX} chars), plus a 6-14 word subtitle (max ${SLIDE_BODY_MAX} chars).
+- Slides 2 to ${data.slideCount - 1} each teach ONE idea. Title = 3-8 word punchy label (max ${SLIDE_TITLE_MAX} chars). Body = 1-2 short lines, max ${SLIDE_BODY_MAX} characters. NEVER exceed this.
+- Last slide is a CTA: ask the reader to comment, follow, or DM. Title = short imperative, body = 1 line under ${SLIDE_BODY_MAX} chars.
 - No hashtags, no emojis, no quotation marks.
 - Plain text only. Use line breaks with \\n inside body strings when needed.
 
@@ -163,8 +170,8 @@ Return exactly ${data.slideCount} slides.${voiceBlock}`;
     }
     const slides = (parsed.slides ?? [])
       .map((s) => ({
-        title: (s.title ?? "").toString().slice(0, 140).trim(),
-        body: (s.body ?? "").toString().slice(0, 600).trim(),
+        title: (s.title ?? "").toString().trim(),
+        body: (s.body ?? "").toString().trim(),
       }))
       .filter((s) => s.title.length > 0 || s.body.length > 0)
       .slice(0, data.slideCount);
@@ -176,62 +183,84 @@ Return exactly ${data.slideCount} slides.${voiceBlock}`;
   });
 
 /**
- * Publish an already-rendered carousel. The client renders each slide to a PNG
- * data URL and posts them here; we upload each to LinkedIn as an image asset
- * and create one multi-image ugcPost.
+ * LinkedIn's API doesn't support publishing document/PDF posts, so carousels
+ * are never auto-posted. Instead we log a row in `posts` with format='carousel'
+ * and status='draft' once the user downloads the PDF, so the deck appears on
+ * the Dashboard/Calendar as "ready to post manually".
  */
-export const publishCarouselNow = createServerFn({ method: "POST" })
+export const saveCarouselAsPost = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
       .object({
         id: z.string().uuid(),
         caption: z.string().max(3000).default(""),
-        imagesDataUrls: z
-          .array(z.string().startsWith("data:image/"))
-          .min(2)
-          .max(12),
       })
       .parse(input),
   )
   .handler(async ({ context, data }) => {
-    const { data: profile } = await context.supabase
-      .from("profiles")
-      .select("linkedin_urn")
-      .eq("id", context.userId)
+    // Look up the carousel to get title (for post content fallback).
+    const { data: carousel, error: cErr } = await context.supabase
+      .from("carousels")
+      .select("title")
+      .eq("id", data.id)
       .single();
-    if (!profile?.linkedin_urn) throw new Error("Connect LinkedIn in Settings first.");
+    if (cErr) throw new Error(cErr.message);
 
-    const images = data.imagesDataUrls.map((dataUrl) => {
-      const m = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
-      if (!m) throw new Error("Invalid image data URL");
-      return {
-        contentType: m[1],
-        bytes: Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0)),
-      };
-    });
+    const content = data.caption.trim() || carousel.title || "New carousel";
 
-    try {
-      const { publishMultiImagePost } = await import("@/lib/linkedin.server");
-      const urn = await publishMultiImagePost(profile.linkedin_urn, data.caption, images);
-      await context.supabase
-        .from("carousels")
-        .update({
-          status: "posted",
-          posted_at: new Date().toISOString(),
-          linkedin_urn: urn,
-          error: null,
-        })
-        .eq("id", data.id);
-      return { ok: true, urn };
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      await context.supabase
-        .from("carousels")
-        .update({ status: "failed", error: msg })
-        .eq("id", data.id);
-      throw new Error(msg);
+    // Upsert: one post row per carousel. Reuse existing if present.
+    const { data: existing } = await context.supabase
+      .from("posts")
+      .select("id, status")
+      .eq("carousel_id", data.id)
+      .maybeSingle();
+
+    if (existing) {
+      // Don't downgrade a "posted" post back to draft.
+      const nextStatus = existing.status === "posted" ? "posted" : "draft";
+      const { error } = await context.supabase
+        .from("posts")
+        .update({ content, format: "carousel", status: nextStatus })
+        .eq("id", existing.id);
+      if (error) throw new Error(error.message);
+      await context.supabase.from("carousels").update({ status: "ready" }).eq("id", data.id);
+      return { ok: true, postId: existing.id };
     }
+
+    const { data: inserted, error } = await context.supabase
+      .from("posts")
+      .insert({
+        user_id: context.userId,
+        content,
+        format: "carousel",
+        status: "draft",
+        carousel_id: data.id,
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    await context.supabase.from("carousels").update({ status: "ready" }).eq("id", data.id);
+    return { ok: true, postId: inserted.id };
+  });
+
+/** User confirms they uploaded the PDF to LinkedIn themselves. */
+export const markCarouselPosted = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const nowIso = new Date().toISOString();
+    const { error: cErr } = await context.supabase
+      .from("carousels")
+      .update({ status: "posted", posted_at: nowIso })
+      .eq("id", data.id);
+    if (cErr) throw new Error(cErr.message);
+    const { error: pErr } = await context.supabase
+      .from("posts")
+      .update({ status: "posted", posted_at: nowIso })
+      .eq("carousel_id", data.id);
+    if (pErr) throw new Error(pErr.message);
+    return { ok: true };
   });
 
 /**

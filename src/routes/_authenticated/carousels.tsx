@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import * as htmlToImage from "html-to-image";
+import jsPDF from "jspdf";
 import {
   Sparkles,
   Loader2,
@@ -12,18 +13,19 @@ import {
   ArrowUp,
   ArrowDown,
   Save,
-  Send,
   Download,
   Images,
   Palette,
   FileText,
+  CheckCircle2,
+  AlertTriangle,
+  Info,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "@tanstack/react-router";
 import {
   listCarousels,
@@ -31,7 +33,12 @@ import {
   saveCarousel,
   deleteCarousel,
   generateCarouselSlides,
-  publishCarouselNow,
+  saveCarouselAsPost,
+  markCarouselPosted,
+  SLIDE_TITLE_MAX,
+  SLIDE_BODY_MAX,
+  CAROUSEL_WIDTH,
+  CAROUSEL_HEIGHT,
   type Slide,
 } from "@/lib/carousels.functions";
 import { getMyProfile } from "@/lib/profile.functions";
@@ -133,8 +140,8 @@ function Library() {
                 search={{ id: c.id }}
                 className="group rounded-2xl border border-border bg-card p-4 transition hover:border-brand/60"
               >
-                <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-muted/40 p-4">
-                  <MiniSlide slide={slides[0] ?? { title: "Empty", body: "" }} template={c.template as Template} brand={{ primary: "#0F172A", secondary: "#FFFFFF", accent: "#3B82F6", logo: null }} />
+                <div className="flex aspect-[4/5] items-center justify-center overflow-hidden rounded-lg bg-muted/40 p-4">
+                  <MiniSlide slide={slides[0] ?? { title: "Empty", body: "" }} template={c.template as Template} brand={{ primary: "#0F172A", secondary: "#FFFFFF", accent: "#3B82F6", logo: null, font: "inter" }} />
                 </div>
                 <div className="mt-3 flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -168,7 +175,20 @@ type Brand = {
   secondary: string;
   accent: string;
   logo: string | null;
+  font: string;
 };
+
+const FONT_STACKS: Record<string, string> = {
+  inter: "Inter, system-ui, sans-serif",
+  "space-grotesk": "'Space Grotesk', system-ui, sans-serif",
+  "dm-serif": "'DM Serif Display', Georgia, serif",
+  geist: "Geist, system-ui, sans-serif",
+  georgia: "Georgia, 'Times New Roman', serif",
+};
+
+function fontStack(brand: Brand, fallback: string) {
+  return FONT_STACKS[brand.font] || fallback;
+}
 
 function Editor({ id }: { id: string }) {
   const client = useQueryClient();
@@ -176,7 +196,8 @@ function Editor({ id }: { id: string }) {
   const getFn = useServerFn(getCarousel);
   const saveFn = useServerFn(saveCarousel);
   const genFn = useServerFn(generateCarouselSlides);
-  const pubFn = useServerFn(publishCarouselNow);
+  const saveAsPostFn = useServerFn(saveCarouselAsPost);
+  const markPostedFn = useServerFn(markCarouselPosted);
   const profileFn = useServerFn(getMyProfile);
 
   const q = useQuery({ queryKey: ["carousel", id], queryFn: () => getFn({ data: { id } }) });
@@ -188,12 +209,14 @@ function Editor({ id }: { id: string }) {
       brand_secondary_color?: string | null;
       brand_accent_color?: string | null;
       brand_logo_url?: string | null;
+      brand_font?: string | null;
     } | undefined;
     return {
       primary: p?.brand_primary_color || "#0F172A",
       secondary: p?.brand_secondary_color || "#FFFFFF",
       accent: p?.brand_accent_color || "#3B82F6",
       logo: p?.brand_logo_url ?? null,
+      font: p?.brand_font || "inter",
     };
   }, [profile.data]);
 
@@ -202,7 +225,6 @@ function Editor({ id }: { id: string }) {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [selected, setSelected] = useState(0);
   const [caption, setCaption] = useState("");
-  const [scheduleIso, setScheduleIso] = useState<string>("");
   const [source, setSource] = useState("");
   const [slideCount, setSlideCount] = useState(6);
 
@@ -211,7 +233,6 @@ function Editor({ id }: { id: string }) {
     setTitle(q.data.title);
     setTemplate((q.data.template as Template) ?? "bold");
     setSlides((q.data.slides as unknown as Slide[]) ?? []);
-    setScheduleIso(q.data.scheduled_at ? new Date(q.data.scheduled_at).toISOString().slice(0, 16) : "");
   }, [q.data]);
 
   const generate = useMutation({
@@ -226,7 +247,7 @@ function Editor({ id }: { id: string }) {
   });
 
   const save = useMutation({
-    mutationFn: (input: { status: "draft" | "scheduled" }) =>
+    mutationFn: (input: { status: "draft" | "ready" | "posted" }) =>
       saveFn({
         data: {
           id,
@@ -234,21 +255,19 @@ function Editor({ id }: { id: string }) {
           template,
           slides,
           status: input.status,
-          scheduled_at:
-            input.status === "scheduled" && scheduleIso ? new Date(scheduleIso).toISOString() : null,
         },
       }),
     onSuccess: (_out, vars) => {
       client.invalidateQueries({ queryKey: ["carousels"] });
       client.invalidateQueries({ queryKey: ["carousel", id] });
-      toast.success(vars.status === "scheduled" ? "Scheduled" : "Saved");
+      toast.success(vars.status === "posted" ? "Marked as posted" : "Saved");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
   });
 
   const slideRefs = useRef<Array<HTMLDivElement | null>>([]);
 
-  async function renderAllToDataUrls(): Promise<string[]> {
+  async function renderAllToPngDataUrls(): Promise<string[]> {
     const urls: string[] = [];
     for (let i = 0; i < slides.length; i++) {
       const node = slideRefs.current[i];
@@ -262,30 +281,45 @@ function Editor({ id }: { id: string }) {
     return urls;
   }
 
-  const publish = useMutation({
+  const exportPdf = useMutation({
     mutationFn: async () => {
       if (slides.length < 2) throw new Error("Add at least 2 slides.");
-      await save.mutateAsync({ status: "draft" });
-      const urls = await renderAllToDataUrls();
-      return pubFn({ data: { id, caption, imagesDataUrls: urls } });
+      await save.mutateAsync({ status: "ready" });
+      const urls = await renderAllToPngDataUrls();
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: [CAROUSEL_WIDTH, CAROUSEL_HEIGHT],
+        hotfixes: ["px_scaling"],
+      });
+      urls.forEach((url, i) => {
+        if (i > 0) pdf.addPage([CAROUSEL_WIDTH, CAROUSEL_HEIGHT], "portrait");
+        pdf.addImage(url, "PNG", 0, 0, CAROUSEL_WIDTH, CAROUSEL_HEIGHT, undefined, "FAST");
+      });
+      const filename = `${(title || "carousel").replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.pdf`;
+      pdf.save(filename);
+      // Log a "ready to post manually" post row so it shows on Dashboard/Calendar.
+      await saveAsPostFn({ data: { id, caption } });
     },
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ["carousels"] });
       client.invalidateQueries({ queryKey: ["carousel", id] });
-      toast.success("Carousel published to LinkedIn 🎉");
+      client.invalidateQueries({ queryKey: ["posts"] });
+      toast.success("PDF downloaded. Upload it on LinkedIn to publish.");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
   });
 
-  async function downloadAll() {
-    const urls = await renderAllToDataUrls();
-    urls.forEach((url, i) => {
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${title.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-slide-${i + 1}.png`;
-      a.click();
-    });
-  }
+  const markPosted = useMutation({
+    mutationFn: () => markPostedFn({ data: { id } }),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["carousels"] });
+      client.invalidateQueries({ queryKey: ["carousel", id] });
+      client.invalidateQueries({ queryKey: ["posts"] });
+      toast.success("Marked as posted — nice work.");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
+  });
 
   function updateSlide(i: number, patch: Partial<Slide>) {
     setSlides((s) => s.map((sl, idx) => (idx === i ? { ...sl, ...patch } : sl)));
@@ -318,9 +352,6 @@ function Editor({ id }: { id: string }) {
           ← Back to library
         </Button>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={downloadAll} disabled={slides.length === 0}>
-            <Download className="mr-2 h-3.5 w-3.5" /> Download PNGs
-          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -329,14 +360,25 @@ function Editor({ id }: { id: string }) {
           >
             <Save className="mr-2 h-3.5 w-3.5" /> Save draft
           </Button>
+          {q.data?.status === "ready" || q.data?.status === "posted" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => markPosted.mutate()}
+              disabled={markPosted.isPending || q.data?.status === "posted"}
+            >
+              <CheckCircle2 className="mr-2 h-3.5 w-3.5" />
+              {q.data?.status === "posted" ? "Posted" : "Mark as posted"}
+            </Button>
+          ) : null}
           <Button
             className="bg-brand-gradient text-brand-foreground"
             size="sm"
-            onClick={() => publish.mutate()}
-            disabled={publish.isPending || slides.length < 2}
+            onClick={() => exportPdf.mutate()}
+            disabled={exportPdf.isPending || slides.length < 2}
           >
-            {publish.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Send className="mr-2 h-3.5 w-3.5" />}
-            Publish now
+            {exportPdf.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Download className="mr-2 h-3.5 w-3.5" />}
+            Download PDF
           </Button>
         </div>
       </div>
@@ -492,7 +534,7 @@ function Editor({ id }: { id: string }) {
           ) : (
             <>
               <div className="rounded-2xl border border-border bg-muted/30 p-6">
-                <div className="mx-auto flex aspect-square w-full max-w-[520px] items-center justify-center overflow-hidden rounded-xl shadow-lg">
+                <div className="mx-auto flex aspect-[4/5] w-full max-w-[440px] items-center justify-center overflow-hidden rounded-xl shadow-lg">
                   <SlidePreview
                     slide={slides[selected]}
                     template={template}
@@ -505,20 +547,27 @@ function Editor({ id }: { id: string }) {
 
                 <div className="mt-4 grid gap-3">
                   <div>
-                    <Label className="text-xs">Slide {selected + 1} title</Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Slide {selected + 1} title</Label>
+                      <CharCount value={slides[selected]?.title ?? ""} max={SLIDE_TITLE_MAX} />
+                    </div>
                     <Input
                       value={slides[selected]?.title ?? ""}
                       onChange={(e) => updateSlide(selected, { title: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label className="text-xs">Body</Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Body</Label>
+                      <CharCount value={slides[selected]?.body ?? ""} max={SLIDE_BODY_MAX} />
+                    </div>
                     <Textarea
                       rows={3}
                       value={slides[selected]?.body ?? ""}
                       onChange={(e) => updateSlide(selected, { body: e.target.value })}
                     />
                   </div>
+                  <SlideOverflowWarnings slides={slides} />
                 </div>
               </div>
 
@@ -537,39 +586,28 @@ function Editor({ id }: { id: string }) {
               </div>
 
               <div className="rounded-2xl border border-border bg-card p-5">
-                <Tabs defaultValue="caption">
-                  <TabsList>
-                    <TabsTrigger value="caption">Caption</TabsTrigger>
-                    <TabsTrigger value="schedule">Schedule</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="caption" className="pt-3">
-                    <Label className="text-xs">Post caption (shows above the swipeable deck)</Label>
-                    <Textarea
-                      rows={4}
-                      value={caption}
-                      onChange={(e) => setCaption(e.target.value)}
-                      placeholder={`A one-line hook. Then a swipeable ${slides.length}-slide breakdown ↓`}
-                    />
-                  </TabsContent>
-                  <TabsContent value="schedule" className="pt-3">
-                    <Label className="text-xs">Schedule for</Label>
-                    <Input
-                      type="datetime-local"
-                      value={scheduleIso}
-                      onChange={(e) => setScheduleIso(e.target.value)}
-                    />
-                    <Button
-                      className="mt-3 bg-brand-gradient text-brand-foreground"
-                      onClick={() => save.mutate({ status: "scheduled" })}
-                      disabled={save.isPending || !scheduleIso}
-                    >
-                      Schedule carousel
-                    </Button>
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Scheduled carousels appear in your Calendar. They publish automatically at the chosen time.
-                    </p>
-                  </TabsContent>
-                </Tabs>
+                <Label className="text-xs">Post caption (paste this on LinkedIn along with the PDF)</Label>
+                <Textarea
+                  rows={4}
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  placeholder={`A one-line hook. Then a swipeable ${slides.length}-slide breakdown ↓`}
+                />
+              </div>
+
+              <div className="rounded-2xl border border-brand/30 bg-brand/5 p-5">
+                <div className="flex items-start gap-3">
+                  <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-brand" />
+                  <div className="text-sm">
+                    <div className="font-medium">Carousels can&rsquo;t auto-post — that&rsquo;s a LinkedIn limitation, not ours.</div>
+                    <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
+                      <li>Click <span className="font-medium text-foreground">Download PDF</span> above.</li>
+                      <li>On LinkedIn, click <span className="font-medium text-foreground">Start a post</span> → the <span className="font-medium text-foreground">document icon</span> → upload the file.</li>
+                      <li>Paste the caption above, publish, then hit <span className="font-medium text-foreground">Mark as posted</span> here.</li>
+                    </ol>
+                    <div className="mt-2 text-xs text-muted-foreground">Takes about 30 seconds.</div>
+                  </div>
+                </div>
               </div>
             </>
           )}
@@ -599,22 +637,24 @@ function SlidePreview({
   scale?: number;
   exportSize?: boolean;
 }) {
-  // Fixed 1080x1080 canvas; scaled to fit its parent via CSS transform.
-  const SIZE = 1080;
+  // Fixed portrait canvas at LinkedIn document dimensions.
+  const W = CAROUSEL_WIDTH;
+  const H = CAROUSEL_HEIGHT;
+  const previewW = 440;
+  const scale = previewW / W;
   return (
     <div
       className="relative"
       style={
         exportSize
-          ? { width: SIZE, height: SIZE }
+          ? { width: W, height: H }
           : {
-              width: SIZE,
-              height: SIZE,
-              transform: `scale(${520 / SIZE})`,
+              width: W,
+              height: H,
+              transform: `scale(${scale})`,
               transformOrigin: "top left",
-              // Container is 520x520 (parent aspect-square). Prevent parent overflow.
-              marginRight: -(SIZE - 520),
-              marginBottom: -(SIZE - 520),
+              marginRight: -(W - previewW),
+              marginBottom: -(H - Math.round(H * scale)),
             }
       }
     >
@@ -643,7 +683,7 @@ function TemplateSurface({
     return (
       <div
         className="flex h-full w-full flex-col justify-between p-20"
-        style={{ background: brand.primary, color: brand.secondary, fontFamily: "'Space Grotesk', system-ui, sans-serif" }}
+        style={{ background: brand.primary, color: brand.secondary, fontFamily: fontStack(brand, "'Space Grotesk', system-ui, sans-serif") }}
       >
         <div className="flex items-center justify-between">
           {brand.logo ? (
@@ -677,7 +717,7 @@ function TemplateSurface({
     return (
       <div
         className="flex h-full w-full flex-col justify-between p-24"
-        style={{ background: brand.secondary, color: brand.primary, fontFamily: "Inter, system-ui, sans-serif" }}
+        style={{ background: brand.secondary, color: brand.primary, fontFamily: fontStack(brand, "Inter, system-ui, sans-serif") }}
       >
         <div className="flex items-center justify-between">
           {brand.logo ? (
@@ -707,7 +747,7 @@ function TemplateSurface({
   return (
     <div
       className="flex h-full w-full flex-col justify-between p-24"
-      style={{ background: "#F5F1EA", color: brand.primary, fontFamily: "'Space Grotesk', Georgia, serif" }}
+      style={{ background: "#F5F1EA", color: brand.primary, fontFamily: fontStack(brand, "Georgia, serif") }}
     >
       <div className="flex items-center justify-between">
         <span className="text-lg uppercase tracking-[0.3em]" style={{ color: brand.accent }}>
@@ -718,7 +758,7 @@ function TemplateSurface({
         ) : null}
       </div>
       <div className="max-w-[880px]">
-        <div className="text-[76px] font-semibold leading-[1.08] tracking-tight" style={{ fontFamily: "Georgia, serif" }}>
+        <div className="text-[76px] font-semibold leading-[1.08] tracking-tight" style={{ fontFamily: fontStack(brand, "Georgia, serif") }}>
           {slide.title || "Your headline"}
         </div>
         {slide.body ? (
@@ -745,6 +785,41 @@ function MiniSlide({ slide, template, brand }: { slide: Slide; template: Templat
     >
       <div className="h-1 w-4 rounded-full" style={{ background: brand.accent }} />
       <div className="line-clamp-3 text-[10px] font-bold leading-tight">{slide.title}</div>
+    </div>
+  );
+}
+
+function CharCount({ value, max }: { value: string; max: number }) {
+  const over = value.length > max;
+  return (
+    <span
+      className={`text-[10px] tabular-nums ${
+        over ? "font-medium text-destructive" : value.length > max * 0.9 ? "text-amber-600" : "text-muted-foreground"
+      }`}
+    >
+      {value.length}/{max}
+    </span>
+  );
+}
+
+function SlideOverflowWarnings({ slides }: { slides: Slide[] }) {
+  const overs = slides
+    .map((s, i) => ({
+      i,
+      title: s.title.length > SLIDE_TITLE_MAX,
+      body: s.body.length > SLIDE_BODY_MAX,
+    }))
+    .filter((x) => x.title || x.body);
+  if (overs.length === 0) return null;
+  return (
+    <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-400">
+      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+      <div>
+        {overs.length === 1
+          ? `Slide ${overs[0].i + 1} is too long`
+          : `${overs.length} slides are too long`}{" "}
+        — text may clip. Trim to keep it readable on mobile.
+      </div>
     </div>
   );
 }

@@ -59,21 +59,31 @@ function Dashboard() {
           <div className="mt-4 divide-y divide-border">
             {(posts.data ?? []).slice(0, 6).map((p) => (
               <div key={p.id} className="flex items-start gap-4 py-3">
-                <StatusChip status={p.status} />
+                <StatusChip status={p.status} format={p.format} />
                 <p className="flex-1 line-clamp-2 text-sm text-foreground/90">{p.content}</p>
                 <span className="text-xs text-muted-foreground">
                   {new Date(p.created_at).toLocaleDateString()}
                 </span>
-                {p.status !== "posted" && (
-                  <Link
-                    to="/generator"
-                    search={{ postId: p.id }}
-                    title="Edit"
-                    className="text-muted-foreground transition-colors hover:text-brand"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Link>
-                )}
+                {p.status !== "posted" &&
+                  (p.format === "carousel" ? (
+                    <Link
+                      to="/carousels"
+                      search={{}}
+                      title="Open in Carousels"
+                      className="text-muted-foreground transition-colors hover:text-brand"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/generator"
+                      search={{ postId: p.id }}
+                      title="Edit"
+                      className="text-muted-foreground transition-colors hover:text-brand"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Link>
+                  ))}
                 <button
                   type="button"
                   title="Delete"
@@ -122,7 +132,14 @@ function ActionCard({ to, icon: Icon, title, desc }: { to: "/generator" | "/insp
   );
 }
 
-function StatusChip({ status }: { status: string }) {
+function StatusChip({ status, format }: { status: string; format?: string }) {
+  if (format === "carousel" && status !== "posted") {
+    return (
+      <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase bg-amber-500/15 text-amber-700 dark:text-amber-400">
+        ready to post
+      </span>
+    );
+  }
   const map: Record<string, string> = {
     draft: "bg-muted text-muted-foreground",
     scheduled: "bg-brand/15 text-brand",

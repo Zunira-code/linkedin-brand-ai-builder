@@ -279,6 +279,7 @@ function BrandKitCard({ className }: { className?: string }) {
   const [secondary, setSecondary] = useState("#FFFFFF");
   const [accent, setAccent] = useState("#3B82F6");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [font, setFont] = useState<string>("inter");
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -287,6 +288,7 @@ function BrandKitCard({ className }: { className?: string }) {
     setSecondary((profile.data as { brand_secondary_color?: string | null }).brand_secondary_color ?? "#FFFFFF");
     setAccent((profile.data as { brand_accent_color?: string | null }).brand_accent_color ?? "#3B82F6");
     setLogoUrl((profile.data as { brand_logo_url?: string | null }).brand_logo_url ?? null);
+    setFont((profile.data as { brand_font?: string | null }).brand_font ?? "inter");
   }, [profile.data]);
 
   const save = useMutation({
@@ -297,6 +299,7 @@ function BrandKitCard({ className }: { className?: string }) {
           brand_secondary_color: secondary,
           brand_accent_color: accent,
           brand_logo_url: logoUrl,
+          brand_font: font as "inter" | "space-grotesk" | "dm-serif" | "geist" | "georgia",
         },
       }),
     onSuccess: () => {
@@ -384,6 +387,31 @@ function BrandKitCard({ className }: { className?: string }) {
             <ColorField label="Primary" value={primary} onChange={setPrimary} />
             <ColorField label="Secondary" value={secondary} onChange={setSecondary} />
             <ColorField label="Accent" value={accent} onChange={setAccent} />
+          </div>
+          <div>
+            <Label>Font</Label>
+            <div className="mt-2 grid grid-cols-5 gap-2">
+              {[
+                { id: "inter", label: "Inter", stack: "Inter, system-ui, sans-serif" },
+                { id: "space-grotesk", label: "Space Grotesk", stack: "'Space Grotesk', system-ui, sans-serif" },
+                { id: "dm-serif", label: "DM Serif", stack: "'DM Serif Display', Georgia, serif" },
+                { id: "geist", label: "Geist", stack: "Geist, system-ui, sans-serif" },
+                { id: "georgia", label: "Georgia", stack: "Georgia, serif" },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setFont(f.id)}
+                  className={`rounded-lg border p-2 text-center transition ${
+                    font === f.id ? "border-brand ring-2 ring-brand/30" : "border-border hover:border-brand/40"
+                  }`}
+                  style={{ fontFamily: f.stack }}
+                >
+                  <div className="text-xl font-semibold leading-tight">Aa</div>
+                  <div className="mt-1 text-[10px] text-muted-foreground">{f.label}</div>
+                </button>
+              ))}
+            </div>
           </div>
           <Button onClick={() => save.mutate()} disabled={save.isPending} className="bg-brand-gradient text-brand-foreground">
             {save.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}

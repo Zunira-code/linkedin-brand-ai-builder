@@ -225,6 +225,7 @@ export type Database = {
       }
       posts: {
         Row: {
+          carousel_id: string | null
           content: string
           created_at: string
           error: string | null
@@ -245,6 +246,7 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          carousel_id?: string | null
           content: string
           created_at?: string
           error?: string | null
@@ -265,6 +267,7 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          carousel_id?: string | null
           content?: string
           created_at?: string
           error?: string | null
@@ -284,12 +287,21 @@ export type Database = {
           user_id?: string
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "posts_carousel_id_fkey"
+            columns: ["carousel_id"]
+            isOneToOne: false
+            referencedRelation: "carousels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
           avatar_url: string | null
           brand_accent_color: string | null
+          brand_font: string | null
           brand_logo_url: string | null
           brand_primary_color: string | null
           brand_secondary_color: string | null
@@ -306,6 +318,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           brand_accent_color?: string | null
+          brand_font?: string | null
           brand_logo_url?: string | null
           brand_primary_color?: string | null
           brand_secondary_color?: string | null
@@ -322,6 +335,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           brand_accent_color?: string | null
+          brand_font?: string | null
           brand_logo_url?: string | null
           brand_primary_color?: string | null
           brand_secondary_color?: string | null
