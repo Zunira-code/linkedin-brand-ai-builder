@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Linkedin, CheckCircle2, Sparkles, Loader2, Wand2, Mic, Trash2, Download } from "lucide-react";
+import { Linkedin, CheckCircle2, Sparkles, Loader2, Wand2, Mic, Trash2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,6 @@ import {
   listVoiceSamples,
   addVoiceSamples,
   deleteVoiceSample,
-  importVoiceSamplesFromLinkedIn,
 } from "@/lib/voice-samples.functions";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -289,7 +288,6 @@ function VoiceTrainingCard({
   const listFn = useServerFn(listVoiceSamples);
   const addFn = useServerFn(addVoiceSamples);
   const delFn = useServerFn(deleteVoiceSample);
-  const importFn = useServerFn(importVoiceSamplesFromLinkedIn);
 
   const samples = useQuery({ queryKey: ["voice-samples"], queryFn: () => listFn() });
   const [raw, setRaw] = useState("");
@@ -302,19 +300,6 @@ function VoiceTrainingCard({
     onSuccess: (out) => {
       toast.success(`Added ${out.added} sample${out.added === 1 ? "" : "s"}`);
       setRaw("");
-      client.invalidateQueries({ queryKey: ["voice-samples"] });
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
-  });
-
-  const importMut = useMutation({
-    mutationFn: () => importFn(),
-    onSuccess: (out) => {
-      toast.success(
-        out.added > 0
-          ? `Imported ${out.added} post${out.added === 1 ? "" : "s"} from LinkedIn`
-          : "No new posts to import — you already have them.",
-      );
       client.invalidateQueries({ queryKey: ["voice-samples"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
@@ -385,24 +370,20 @@ function VoiceTrainingCard({
               {add.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
               Save samples
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => importMut.mutate()}
-              disabled={importMut.isPending || !linkedInConnected}
-              title={linkedInConnected ? "" : "Connect LinkedIn first"}
-            >
-              {importMut.isPending ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importing…</>
-              ) : (
-                <><Download className="mr-2 h-4 w-4" /> Auto-import from LinkedIn</>
-              )}
-            </Button>
           </div>
-          {!linkedInConnected ? (
-            <p className="text-xs text-muted-foreground">
-              Connect LinkedIn (right column) to enable auto-import of your recent posts.
+          <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+            <p className="font-medium text-foreground/80">Why can't we auto-import from LinkedIn?</p>
+            <p className="mt-1">
+              LinkedIn's API only lets approved Marketing Partners read a member's past posts
+              (<code className="rounded bg-background/60 px-1">r_member_social</code> scope). Our
+              connector can publish on your behalf but can't fetch your history. Paste your posts
+              above — it takes ~2 minutes and gives the model the same signal.
             </p>
-          ) : null}
+            <p className="mt-2">
+              Tip: open your LinkedIn profile → <em>Show all posts</em> → copy the text of your
+              10–20 best-performing posts, one per block.
+            </p>
+          </div>
         </div>
 
         <div className="rounded-xl border border-dashed border-border bg-background/40 p-4">
