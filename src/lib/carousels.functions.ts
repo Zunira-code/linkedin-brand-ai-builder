@@ -118,9 +118,10 @@ export const generateCarouselSlides = createServerFn({ method: "POST" })
     const system = `You are Postpilot, an expert LinkedIn ghostwriter turning a topic or long-form text into a scroll-stopping LinkedIn CAROUSEL of exactly ${data.slideCount} slides.
 
 Rules for the deck:
-- Slide 1 is the cover: a 3-8 word hook headline that stops the scroll, plus a 6-14 word subtitle.
-- Slides 2 to ${data.slideCount - 1} each teach ONE idea. Title = 3-8 word punchy label. Body = 1-3 short lines, max ~180 characters, no walls of text.
-- Last slide is a CTA: ask the reader to comment, follow, or DM. Title = short imperative, body = 1 line.
+- Portrait 4:5 slides. Text MUST stay short so it's readable on mobile.
+- Slide 1 is the cover: a 3-8 word hook headline (max ${SLIDE_TITLE_MAX} chars), plus a 6-14 word subtitle (max ${SLIDE_BODY_MAX} chars).
+- Slides 2 to ${data.slideCount - 1} each teach ONE idea. Title = 3-8 word punchy label (max ${SLIDE_TITLE_MAX} chars). Body = 1-2 short lines, max ${SLIDE_BODY_MAX} characters. NEVER exceed this.
+- Last slide is a CTA: ask the reader to comment, follow, or DM. Title = short imperative, body = 1 line under ${SLIDE_BODY_MAX} chars.
 - No hashtags, no emojis, no quotation marks.
 - Plain text only. Use line breaks with \\n inside body strings when needed.
 
@@ -169,8 +170,8 @@ Return exactly ${data.slideCount} slides.${voiceBlock}`;
     }
     const slides = (parsed.slides ?? [])
       .map((s) => ({
-        title: (s.title ?? "").toString().slice(0, 140).trim(),
-        body: (s.body ?? "").toString().slice(0, 600).trim(),
+        title: (s.title ?? "").toString().trim(),
+        body: (s.body ?? "").toString().trim(),
       }))
       .filter((s) => s.title.length > 0 || s.body.length > 0)
       .slice(0, data.slideCount);
