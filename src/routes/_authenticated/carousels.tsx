@@ -183,7 +183,8 @@ function Editor({ id }: { id: string }) {
   const getFn = useServerFn(getCarousel);
   const saveFn = useServerFn(saveCarousel);
   const genFn = useServerFn(generateCarouselSlides);
-  const pubFn = useServerFn(publishCarouselNow);
+  const saveAsPostFn = useServerFn(saveCarouselAsPost);
+  const markPostedFn = useServerFn(markCarouselPosted);
   const profileFn = useServerFn(getMyProfile);
 
   const q = useQuery({ queryKey: ["carousel", id], queryFn: () => getFn({ data: { id } }) });
@@ -195,12 +196,14 @@ function Editor({ id }: { id: string }) {
       brand_secondary_color?: string | null;
       brand_accent_color?: string | null;
       brand_logo_url?: string | null;
+      brand_font?: string | null;
     } | undefined;
     return {
       primary: p?.brand_primary_color || "#0F172A",
       secondary: p?.brand_secondary_color || "#FFFFFF",
       accent: p?.brand_accent_color || "#3B82F6",
       logo: p?.brand_logo_url ?? null,
+      font: p?.brand_font || "inter",
     };
   }, [profile.data]);
 
@@ -209,7 +212,6 @@ function Editor({ id }: { id: string }) {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [selected, setSelected] = useState(0);
   const [caption, setCaption] = useState("");
-  const [scheduleIso, setScheduleIso] = useState<string>("");
   const [source, setSource] = useState("");
   const [slideCount, setSlideCount] = useState(6);
 
@@ -218,7 +220,6 @@ function Editor({ id }: { id: string }) {
     setTitle(q.data.title);
     setTemplate((q.data.template as Template) ?? "bold");
     setSlides((q.data.slides as unknown as Slide[]) ?? []);
-    setScheduleIso(q.data.scheduled_at ? new Date(q.data.scheduled_at).toISOString().slice(0, 16) : "");
   }, [q.data]);
 
   const generate = useMutation({
