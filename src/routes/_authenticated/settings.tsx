@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Linkedin, CheckCircle2, Sparkles, Loader2, Wand2 } from "lucide-react";
+import { Linkedin, CheckCircle2, Sparkles, Loader2, Wand2, Mic, Trash2, Download } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { getMyProfile, updateProfile, connectLinkedIn, getLinkedInStatus } from "@/lib/profile.functions";
 import { runCalibration, getCalibration, type Calibration } from "@/lib/calibration.functions";
+import {
+  listVoiceSamples,
+  addVoiceSamples,
+  deleteVoiceSample,
+  importVoiceSamplesFromLinkedIn,
+} from "@/lib/voice-samples.functions";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Settings — Postpilot" }] }),
@@ -86,6 +92,7 @@ function Settings() {
           running={calibrate.isPending}
           linkedInConnected={!!status.data?.connected}
         />
+        <VoiceTrainingCard className="lg:col-span-2" linkedInConnected={!!status.data?.connected} />
         <div className="rounded-2xl border border-border bg-card p-6">
           <h2 className="font-display text-lg font-semibold">Profile</h2>
           <div className="mt-4 space-y-4">
@@ -267,6 +274,170 @@ function Row({ label, value }: { label: string; value: string }) {
     <div>
       <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="mt-0.5 text-foreground/90">{value}</div>
+    </div>
+  );
+}
+
+function VoiceTrainingCard({
+  className,
+  linkedInConnected,
+}: {
+  className?: string;
+  linkedInConnected: boolean;
+}) {
+  const client = useQueryClient();
+  const listFn = useServerFn(listVoiceSamples);
+  const addFn = useServerFn(addVoiceSamples);
+  const delFn = useServerFn(deleteVoiceSample);
+  const importFn = useServerFn(importVoiceSamplesFromLinkedIn);
+
+  const samples = useQuery({ queryKey: ["voice-samples"], queryFn: () => listFn() });
+  const [raw, setRaw] = useState("");
+
+  const count = samples.data?.length ?? 0;
+  const trained = count >= 10;
+
+  const add = useMutation({
+    mutationFn: () => addFn({ data: { raw, source: "paste" } }),
+    onSuccess: (out) => {
+      toast.success(`Added ${out.added} sample${out.added === 1 ? "" : "s"}`);
+      setRaw("");
+      client.invalidateQueries({ queryKey: ["voice-samples"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
+  });
+
+  const importMut = useMutation({
+    mutationFn: () => importFn(),
+    onSuccess: (out) => {
+      toast.success(
+        out.added > 0
+          ? `Imported ${out.added} post${out.added === 1 ? "" : "s"} from LinkedIn`
+          : "No new posts to import — you already have them.",
+      );
+      client.invalidateQueries({ queryKey: ["voice-samples"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
+  });
+
+  const del = useMutation({
+    mutationFn: (id: string) => delFn({ data: { id } }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["voice-samples"] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
+  });
+
+  const pct = Math.min(100, Math.round((count / 10) * 100));
+
+  return (
+    <div className={`rounded-2xl border border-border bg-card p-6 ${className ?? ""}`}>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
+            <Mic className="h-4 w-4 text-brand" /> Brand voice training
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Give Postpilot 10–20 of your past LinkedIn posts. Every new draft will match your vocabulary,
+            sentence length, and tone — not a generic "professional" voice.
+          </p>
+        </div>
+        {trained ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-1 text-[11px] font-medium text-success">
+            <CheckCircle2 className="h-3.5 w-3.5" /> Voice trained
+          </span>
+        ) : (
+          <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+            {count}/10 samples
+          </span>
+        )}
+      </div>
+
+      <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          className={`h-full transition-[width] duration-300 ${trained ? "bg-success" : "bg-brand-gradient"}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+
+      <div className="mt-5 grid gap-6 lg:grid-cols-2">
+        <div className="space-y-3">
+          <div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="samples">Paste your past posts</Label>
+              <span className="text-[11px] text-muted-foreground">Separate with a blank line or ---</span>
+            </div>
+            <Textarea
+              id="samples"
+              rows={10}
+              value={raw}
+              onChange={(e) => setRaw(e.target.value)}
+              placeholder={`Paste 10–20 of your recent LinkedIn posts here.\n\nSeparate each post with a blank line.\n\n---\n\nOr use --- between them.`}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Each post needs at least 40 characters. Max 40 stored samples.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => add.mutate()}
+              disabled={add.isPending || !raw.trim()}
+              className="bg-brand-gradient text-brand-foreground"
+            >
+              {add.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+              Save samples
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => importMut.mutate()}
+              disabled={importMut.isPending || !linkedInConnected}
+              title={linkedInConnected ? "" : "Connect LinkedIn first"}
+            >
+              {importMut.isPending ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importing…</>
+              ) : (
+                <><Download className="mr-2 h-4 w-4" /> Auto-import from LinkedIn</>
+              )}
+            </Button>
+          </div>
+          {!linkedInConnected ? (
+            <p className="text-xs text-muted-foreground">
+              Connect LinkedIn (right column) to enable auto-import of your recent posts.
+            </p>
+          ) : null}
+        </div>
+
+        <div className="rounded-xl border border-dashed border-border bg-background/40 p-4">
+          {count === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center text-center text-sm text-muted-foreground">
+              <Mic className="mb-2 h-6 w-6 text-brand/60" />
+              Your saved voice samples will appear here.
+            </div>
+          ) : (
+            <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
+              {samples.data!.map((s) => (
+                <div
+                  key={s.id}
+                  className="group rounded-lg border border-border bg-card/60 p-3 text-xs"
+                >
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                      {s.source === "linkedin" ? "LinkedIn" : "Pasted"} · {new Date(s.created_at).toLocaleDateString()}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => del.mutate(s.id)}
+                      className="text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                      aria-label="Delete sample"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <p className="line-clamp-4 whitespace-pre-wrap text-foreground/80">{s.content}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
