@@ -19,6 +19,39 @@ const UpdateLeadInput = z.object({
   note: z.string().max(2000).nullable().optional(),
 });
 
+const AddLeadInput = z.object({
+  name: z.string().trim().min(1).max(200),
+  headline: z.string().trim().max(300).optional().nullable(),
+  profile_url: z.string().trim().url().max(500).optional().nullable(),
+  last_comment_text: z.string().trim().max(2000).optional().nullable(),
+  note: z.string().trim().max(2000).optional().nullable(),
+});
+
+export const addLead = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => AddLeadInput.parse(input))
+  .handler(async ({ context, data }) => {
+    const personUrn = `manual:${crypto.randomUUID()}`;
+    const { data: out, error } = await context.supabase
+      .from("leads")
+      .insert({
+        user_id: context.userId,
+        person_urn: personUrn,
+        name: data.name,
+        headline: data.headline ?? null,
+        profile_url: data.profile_url ?? null,
+        last_comment_text: data.last_comment_text ?? null,
+        last_comment_at: data.last_comment_text ? new Date().toISOString() : null,
+        comment_count: data.last_comment_text ? 1 : 0,
+        note: data.note ?? null,
+        status: "not_contacted",
+      })
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return out;
+  });
+
 export const updateLead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => UpdateLeadInput.parse(input))
