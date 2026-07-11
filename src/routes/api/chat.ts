@@ -19,7 +19,11 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const body = (await request.json()) as { messages?: UIMessage[]; brandVoice?: string };
+        const body = (await request.json()) as {
+          messages?: UIMessage[];
+          brandVoice?: string;
+          voiceSamples?: string[];
+        };
         if (!Array.isArray(body.messages)) {
           return new Response("Messages are required", { status: 400 });
         }
@@ -28,9 +32,22 @@ export const Route = createFileRoute("/api/chat")({
 
         const gateway = createLovableAiGatewayProvider(key);
         const model = gateway("google/gemini-3-flash-preview");
-        const system = body.brandVoice
-          ? `${SYSTEM_PROMPT}\n\nBrand voice guidelines from the user:\n${body.brandVoice}`
-          : SYSTEM_PROMPT;
+
+        let system = SYSTEM_PROMPT;
+        if (body.brandVoice) {
+          system += `\n\nBrand voice guidelines from the user:\n${body.brandVoice}`;
+        }
+        const samples = (body.voiceSamples ?? [])
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .slice(0, 20);
+        if (samples.length > 0) {
+          const formatted = samples
+            .map((s, i) => `--- Sample ${i + 1} ---\n${s}`)
+            .join("\n\n");
+          system +=
+            `\n\nBelow are ${samples.length} real posts the user has actually written on LinkedIn. Study them carefully and mirror the user's vocabulary, sentence length, cadence, punctuation habits, opinions, and recurring themes. Do NOT invent a generic "professional" voice — sound like the same person wrote this new post.\n\n${formatted}`;
+        }
 
         const result = streamText({
           model,
