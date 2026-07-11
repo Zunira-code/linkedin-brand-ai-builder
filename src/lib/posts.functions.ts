@@ -34,6 +34,7 @@ const SavePostInput = z.object({
   scheduled_at: z.string().datetime().nullable().optional(),
   image_data_url: z.string().startsWith("data:image/").nullable().optional(),
   video_url: z.string().nullable().optional(),
+  first_comment: z.string().max(1250).nullable().optional(),
 });
 
 export const savePost = createServerFn({ method: "POST" })
@@ -48,6 +49,7 @@ export const savePost = createServerFn({ method: "POST" })
       scheduled_at: string | null;
       image_data_url?: string | null;
       video_url?: string | null;
+      first_comment?: string | null;
     } = {
       user_id: context.userId,
       content: data.content,
@@ -60,6 +62,10 @@ export const savePost = createServerFn({ method: "POST" })
     }
     if (data.video_url !== undefined) {
       row.video_url = data.video_url;
+    }
+    if (data.first_comment !== undefined) {
+      const trimmed = (data.first_comment ?? "").trim();
+      row.first_comment = trimmed.length > 0 ? trimmed : null;
     }
     if (data.id) {
       const { data: out, error } = await context.supabase
@@ -102,7 +108,7 @@ export const publishPostNow = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { data: post, error } = await context.supabase
       .from("posts")
-      .select("id, content, user_id, image_data_url, video_url")
+      .select("id, content, user_id, image_data_url, video_url, first_comment")
       .eq("id", data.id)
       .single();
     if (error || !post) throw new Error("Post not found");
@@ -143,7 +149,17 @@ export const publishPostNow = createServerFn({ method: "POST" })
       }
       await context.supabase
         .from("posts")
-        .update({ status: "posted", posted_at: new Date().toISOString(), linkedin_urn: urn, error: null })
+        .update({
+          status: "posted",
+          posted_at: new Date().toISOString(),
+          linkedin_urn: urn,
+          error: null,
+          // Queue the first comment for 60–120s from now so it looks organic.
+          first_comment_scheduled_at:
+            (post as { first_comment?: string | null }).first_comment && urn
+              ? new Date(Date.now() + (60 + Math.floor(Math.random() * 61)) * 1000).toISOString()
+              : null,
+        })
         .eq("id", post.id);
       return { ok: true, urn };
     } catch (e) {
