@@ -64,16 +64,26 @@ function Dashboard() {
                 <span className="text-xs text-muted-foreground">
                   {new Date(p.created_at).toLocaleDateString()}
                 </span>
-                {p.status !== "posted" && (
-                  <Link
-                    to={p.format === "carousel" ? "/carousels" : "/generator"}
-                    search={{ postId: p.id }}
-                    title="Edit"
-                    className="text-muted-foreground transition-colors hover:text-brand"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Link>
-                )}
+                {p.status !== "posted" &&
+                  (p.format === "carousel" ? (
+                    <Link
+                      to="/carousels"
+                      search={{}}
+                      title="Open in Carousels"
+                      className="text-muted-foreground transition-colors hover:text-brand"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/generator"
+                      search={{ postId: p.id }}
+                      title="Edit"
+                      className="text-muted-foreground transition-colors hover:text-brand"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Link>
+                  ))}
                 <button
                   type="button"
                   title="Delete"
