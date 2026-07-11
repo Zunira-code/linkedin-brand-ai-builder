@@ -6,18 +6,29 @@ import { toast } from "sonner";
 import {
   Users,
   Sparkles,
-  RefreshCw,
   ExternalLink,
   MessageSquare,
   Loader2,
   CheckCircle2,
   Clock,
+  Plus,
+  Info,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { listLeads, updateLead, syncLeadsFromLinkedIn } from "@/lib/leads.functions";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { listLeads, updateLead, addLead } from "@/lib/leads.functions";
 
 export const Route = createFileRoute("/_authenticated/leads")({
   head: () => ({ meta: [{ title: "Warm leads — Postpilot" }] }),
@@ -41,26 +52,13 @@ type Lead = {
 function LeadsPage() {
   const listFn = useServerFn(listLeads);
   const updateFn = useServerFn(updateLead);
-  const syncFn = useServerFn(syncLeadsFromLinkedIn);
+  const addFn = useServerFn(addLead);
   const qc = useQueryClient();
 
   const leadsQ = useQuery({ queryKey: ["leads"], queryFn: () => listFn() });
   const leads = (leadsQ.data ?? []) as Lead[];
 
-  const syncMut = useMutation({
-    mutationFn: () => syncFn(),
-    onSuccess: (res) => {
-      qc.invalidateQueries({ queryKey: ["leads"] });
-      if (res.error && res.newComments === 0) {
-        toast.error(`Sync issue: ${res.error}`);
-      } else {
-        toast.success(
-          `Synced ${res.syncedPosts} posts — ${res.newLeads} new leads, ${res.newComments} new comments`,
-        );
-      }
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Sync failed"),
-  });
+  const [addOpen, setAddOpen] = useState(false);
 
   const stats = useMemo(() => {
     const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
@@ -75,22 +73,29 @@ function LeadsPage() {
     <AppShell title="Warm leads">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-2xl text-sm text-muted-foreground">
-          People who commented on your published LinkedIn posts. LinkedIn's API doesn't
-          expose individual likers, so only commenters appear here.
+          Track people engaging with your LinkedIn posts. Add them as you spot
+          comments on LinkedIn — auto-sync isn't available (see below).
         </p>
-        <Button
-          size="sm"
-          onClick={() => syncMut.mutate()}
-          disabled={syncMut.isPending}
-          className="gap-2"
-        >
-          {syncMut.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <RefreshCw className="h-4 w-4" />
-          )}
-          Sync now
-        </Button>
+        <AddLeadDialog
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          onSave={async (values) => {
+            await addFn({ data: values });
+            await qc.invalidateQueries({ queryKey: ["leads"] });
+          }}
+        />
+      </div>
+
+      <div className="mt-4 flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-4 text-sm">
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+        <div className="text-muted-foreground">
+          <span className="font-medium text-foreground">Why no auto-sync?</span>{" "}
+          LinkedIn only returns comments on your posts to apps approved for their
+          Marketing Developer Platform (the <code>r_member_social</code> scope),
+          which isn't available through the standard connector. When you see a
+          comment on LinkedIn, click <span className="font-medium">Add lead</span>{" "}
+          to track that person here.
+        </div>
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
@@ -109,7 +114,7 @@ function LeadsPage() {
             <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading…
           </div>
         ) : leads.length === 0 ? (
-          <EmptyState onSync={() => syncMut.mutate()} isSyncing={syncMut.isPending} />
+          <EmptyState onAdd={() => setAddOpen(true)} />
         ) : (
           <ul className="divide-y divide-border">
             {leads.map((lead) => (
@@ -148,20 +153,148 @@ function StatCard({
   );
 }
 
-function EmptyState({ onSync, isSyncing }: { onSync: () => void; isSyncing: boolean }) {
+function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="px-6 py-14 text-center">
       <Users className="mx-auto h-8 w-8 text-muted-foreground" />
       <h3 className="mt-3 font-display text-lg font-semibold">No leads yet</h3>
       <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-        Once people comment on your published LinkedIn posts, they'll appear here. Click
-        Sync now to pull the latest comments.
+        When someone comments on one of your LinkedIn posts, add them here to
+        track follow-ups and draft a reply.
       </p>
-      <Button className="mt-4 gap-2" onClick={onSync} disabled={isSyncing}>
-        {isSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-        Sync from LinkedIn
+      <Button className="mt-4 gap-2" onClick={onAdd}>
+        <Plus className="h-4 w-4" /> Add lead
       </Button>
     </div>
+  );
+}
+
+function AddLeadDialog({
+  open,
+  onOpenChange,
+  onSave,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onSave: (v: {
+    name: string;
+    headline?: string | null;
+    profile_url?: string | null;
+    last_comment_text?: string | null;
+    note?: string | null;
+  }) => Promise<void>;
+}) {
+  const [name, setName] = useState("");
+  const [headline, setHeadline] = useState("");
+  const [profileUrl, setProfileUrl] = useState("");
+  const [comment, setComment] = useState("");
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const reset = () => {
+    setName("");
+    setHeadline("");
+    setProfileUrl("");
+    setComment("");
+    setNote("");
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        onOpenChange(v);
+        if (!v) reset();
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button size="sm" className="gap-2">
+          <Plus className="h-4 w-4" /> Add lead
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add a lead</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor="lead-name">Name</Label>
+            <Input
+              id="lead-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Jane Doe"
+            />
+          </div>
+          <div>
+            <Label htmlFor="lead-headline">Headline (optional)</Label>
+            <Input
+              id="lead-headline"
+              value={headline}
+              onChange={(e) => setHeadline(e.target.value)}
+              placeholder="Head of Growth at Acme"
+            />
+          </div>
+          <div>
+            <Label htmlFor="lead-url">LinkedIn URL (optional)</Label>
+            <Input
+              id="lead-url"
+              value={profileUrl}
+              onChange={(e) => setProfileUrl(e.target.value)}
+              placeholder="https://www.linkedin.com/in/…"
+            />
+          </div>
+          <div>
+            <Label htmlFor="lead-comment">Their comment (optional)</Label>
+            <Textarea
+              id="lead-comment"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Paste the comment they left on your post"
+              className="min-h-[80px]"
+            />
+          </div>
+          <div>
+            <Label htmlFor="lead-note">Note (optional)</Label>
+            <Textarea
+              id="lead-note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="e.g. warm intro, met at conference…"
+              className="min-h-[60px]"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+            Cancel
+          </Button>
+          <Button
+            disabled={!name.trim() || saving}
+            onClick={async () => {
+              setSaving(true);
+              try {
+                await onSave({
+                  name: name.trim(),
+                  headline: headline.trim() || null,
+                  profile_url: profileUrl.trim() || null,
+                  last_comment_text: comment.trim() || null,
+                  note: note.trim() || null,
+                });
+                toast.success("Lead added");
+                onOpenChange(false);
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Failed to add lead");
+              } finally {
+                setSaving(false);
+              }
+            }}
+          >
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add lead"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
