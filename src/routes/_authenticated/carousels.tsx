@@ -140,7 +140,7 @@ function Library() {
                 search={{ id: c.id }}
                 className="group rounded-2xl border border-border bg-card p-4 transition hover:border-brand/60"
               >
-                <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-muted/40 p-4">
+                <div className="flex aspect-[4/5] items-center justify-center overflow-hidden rounded-lg bg-muted/40 p-4">
                   <MiniSlide slide={slides[0] ?? { title: "Empty", body: "" }} template={c.template as Template} brand={{ primary: "#0F172A", secondary: "#FFFFFF", accent: "#3B82F6", logo: null, font: "inter" }} />
                 </div>
                 <div className="mt-3 flex items-start justify-between gap-2">
