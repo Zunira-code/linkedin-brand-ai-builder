@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Linkedin, CheckCircle2, Sparkles, Loader2, Wand2 } from "lucide-react";
+import { Linkedin, CheckCircle2, Sparkles, Loader2, Wand2, Mic, Trash2, Download } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { getMyProfile, updateProfile, connectLinkedIn, getLinkedInStatus } from "@/lib/profile.functions";
 import { runCalibration, getCalibration, type Calibration } from "@/lib/calibration.functions";
+import {
+  listVoiceSamples,
+  addVoiceSamples,
+  deleteVoiceSample,
+  importVoiceSamplesFromLinkedIn,
+} from "@/lib/voice-samples.functions";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Settings — Postpilot" }] }),
@@ -86,6 +92,7 @@ function Settings() {
           running={calibrate.isPending}
           linkedInConnected={!!status.data?.connected}
         />
+        <VoiceTrainingCard className="lg:col-span-2" linkedInConnected={!!status.data?.connected} />
         <div className="rounded-2xl border border-border bg-card p-6">
           <h2 className="font-display text-lg font-semibold">Profile</h2>
           <div className="mt-4 space-y-4">
