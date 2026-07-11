@@ -89,12 +89,9 @@ function LeadsPage() {
       <div className="mt-4 flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-4 text-sm">
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
         <div className="text-muted-foreground">
-          <span className="font-medium text-foreground">Why no auto-sync?</span>{" "}
-          LinkedIn only returns comments on your posts to apps approved for their
-          Marketing Developer Platform (the <code>r_member_social</code> scope),
-          which isn't available through the standard connector. When you see a
-          comment on LinkedIn, click <span className="font-medium">Add lead</span>{" "}
-          to track that person here.
+          <span className="font-medium text-foreground">We don't auto-scrape LinkedIn.</span>{" "}
+          Bulk scraping is what gets accounts banned. Instead, log the people who
+          engage with your posts and we'll help you draft the follow-up.
         </div>
       </div>
 
@@ -159,8 +156,8 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
       <Users className="mx-auto h-8 w-8 text-muted-foreground" />
       <h3 className="mt-3 font-display text-lg font-semibold">No leads yet</h3>
       <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-        When someone comments on one of your LinkedIn posts, add them here to
-        track follow-ups and draft a reply.
+        We don't auto-scrape LinkedIn — that's what gets accounts banned. Log
+        the people who engage, and we'll help you draft the follow-up.
       </p>
       <Button className="mt-4 gap-2" onClick={onAdd}>
         <Plus className="h-4 w-4" /> Add lead
