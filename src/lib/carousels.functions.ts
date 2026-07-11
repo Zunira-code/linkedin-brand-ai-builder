@@ -183,62 +183,84 @@ Return exactly ${data.slideCount} slides.${voiceBlock}`;
   });
 
 /**
- * Publish an already-rendered carousel. The client renders each slide to a PNG
- * data URL and posts them here; we upload each to LinkedIn as an image asset
- * and create one multi-image ugcPost.
+ * LinkedIn's API doesn't support publishing document/PDF posts, so carousels
+ * are never auto-posted. Instead we log a row in `posts` with format='carousel'
+ * and status='draft' once the user downloads the PDF, so the deck appears on
+ * the Dashboard/Calendar as "ready to post manually".
  */
-export const publishCarouselNow = createServerFn({ method: "POST" })
+export const saveCarouselAsPost = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
       .object({
         id: z.string().uuid(),
         caption: z.string().max(3000).default(""),
-        imagesDataUrls: z
-          .array(z.string().startsWith("data:image/"))
-          .min(2)
-          .max(12),
       })
       .parse(input),
   )
   .handler(async ({ context, data }) => {
-    const { data: profile } = await context.supabase
-      .from("profiles")
-      .select("linkedin_urn")
-      .eq("id", context.userId)
+    // Look up the carousel to get title (for post content fallback).
+    const { data: carousel, error: cErr } = await context.supabase
+      .from("carousels")
+      .select("title")
+      .eq("id", data.id)
       .single();
-    if (!profile?.linkedin_urn) throw new Error("Connect LinkedIn in Settings first.");
+    if (cErr) throw new Error(cErr.message);
 
-    const images = data.imagesDataUrls.map((dataUrl) => {
-      const m = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
-      if (!m) throw new Error("Invalid image data URL");
-      return {
-        contentType: m[1],
-        bytes: Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0)),
-      };
-    });
+    const content = data.caption.trim() || carousel.title || "New carousel";
 
-    try {
-      const { publishMultiImagePost } = await import("@/lib/linkedin.server");
-      const urn = await publishMultiImagePost(profile.linkedin_urn, data.caption, images);
-      await context.supabase
-        .from("carousels")
-        .update({
-          status: "posted",
-          posted_at: new Date().toISOString(),
-          linkedin_urn: urn,
-          error: null,
-        })
-        .eq("id", data.id);
-      return { ok: true, urn };
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      await context.supabase
-        .from("carousels")
-        .update({ status: "failed", error: msg })
-        .eq("id", data.id);
-      throw new Error(msg);
+    // Upsert: one post row per carousel. Reuse existing if present.
+    const { data: existing } = await context.supabase
+      .from("posts")
+      .select("id, status")
+      .eq("carousel_id", data.id)
+      .maybeSingle();
+
+    if (existing) {
+      // Don't downgrade a "posted" post back to draft.
+      const nextStatus = existing.status === "posted" ? "posted" : "draft";
+      const { error } = await context.supabase
+        .from("posts")
+        .update({ content, format: "carousel", status: nextStatus })
+        .eq("id", existing.id);
+      if (error) throw new Error(error.message);
+      await context.supabase.from("carousels").update({ status: "ready" }).eq("id", data.id);
+      return { ok: true, postId: existing.id };
     }
+
+    const { data: inserted, error } = await context.supabase
+      .from("posts")
+      .insert({
+        user_id: context.userId,
+        content,
+        format: "carousel",
+        status: "draft",
+        carousel_id: data.id,
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    await context.supabase.from("carousels").update({ status: "ready" }).eq("id", data.id);
+    return { ok: true, postId: inserted.id };
+  });
+
+/** User confirms they uploaded the PDF to LinkedIn themselves. */
+export const markCarouselPosted = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const nowIso = new Date().toISOString();
+    const { error: cErr } = await context.supabase
+      .from("carousels")
+      .update({ status: "posted", posted_at: nowIso })
+      .eq("id", data.id);
+    if (cErr) throw new Error(cErr.message);
+    const { error: pErr } = await context.supabase
+      .from("posts")
+      .update({ status: "posted", posted_at: nowIso })
+      .eq("carousel_id", data.id);
+    if (pErr) throw new Error(pErr.message);
+    return { ok: true };
   });
 
 /**
