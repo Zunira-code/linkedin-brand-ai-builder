@@ -175,7 +175,20 @@ type Brand = {
   secondary: string;
   accent: string;
   logo: string | null;
+  font: string;
 };
+
+const FONT_STACKS: Record<string, string> = {
+  inter: "Inter, system-ui, sans-serif",
+  "space-grotesk": "'Space Grotesk', system-ui, sans-serif",
+  "dm-serif": "'DM Serif Display', Georgia, serif",
+  geist: "Geist, system-ui, sans-serif",
+  georgia: "Georgia, 'Times New Roman', serif",
+};
+
+function fontStack(brand: Brand, fallback: string) {
+  return FONT_STACKS[brand.font] || fallback;
+}
 
 function Editor({ id }: { id: string }) {
   const client = useQueryClient();
