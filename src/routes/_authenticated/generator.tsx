@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Sparkles, Save, Send, Loader2, Wand2, Image as ImageIcon, Download, Hash, Video as VideoIcon, X, MessageSquare } from "lucide-react";
+import { Sparkles, Save, Send, Loader2, Wand2, Image as ImageIcon, Download, Hash, Video as VideoIcon, X, MessageSquare, Recycle, Link2, ChevronLeft, ChevronRight } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { savePost, publishPostNow, generateHashtags, getPost, suggestFirstComment } from "@/lib/posts.functions";
+import { savePost, publishPostNow, generateHashtags, getPost, suggestFirstComment, repurposeContent } from "@/lib/posts.functions";
 import { getMyProfile } from "@/lib/profile.functions";
 import { getCalibration } from "@/lib/calibration.functions";
 import { listVoiceSamples } from "@/lib/voice-samples.functions";
@@ -21,6 +21,8 @@ import { streamImage } from "@/lib/streamImage";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "@tanstack/react-router";
 import { Mic } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type SearchParams = { topic?: string; hook?: string; template?: string; postId?: string; prompt?: string };
 
