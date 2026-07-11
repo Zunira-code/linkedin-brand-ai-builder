@@ -719,3 +719,196 @@ function ScheduleControl({ onSchedule, disabled, initialIso }: { onSchedule: (is
     </div>
   );
 }
+
+type RepurposedDraft = { angle: string; hook: string; content: string };
+
+function RepurposeDialog({ onPick }: { onPick: (content: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<"url" | "text">("url");
+  const [url, setUrl] = useState("");
+  const [text, setText] = useState("");
+  const [drafts, setDrafts] = useState<RepurposedDraft[]>([]);
+  const [active, setActive] = useState(0);
+  const [sourceTitle, setSourceTitle] = useState<string | null>(null);
+
+  const repurposeFn = useServerFn(repurposeContent);
+  const mut = useMutation({
+    mutationFn: () =>
+      repurposeFn({
+        data:
+          mode === "url"
+            ? { url: url.trim() }
+            : { text: text.trim() },
+      }),
+    onSuccess: (out) => {
+      setDrafts(out.drafts);
+      setSourceTitle(out.sourceTitle);
+      setActive(0);
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
+  });
+
+  function reset() {
+    setDrafts([]);
+    setSourceTitle(null);
+    setActive(0);
+  }
+
+  const canGenerate =
+    (mode === "url" && /^https?:\/\/\S+\.\S+/.test(url.trim())) ||
+    (mode === "text" && text.trim().length >= 50);
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) {
+          reset();
+          mut.reset();
+        }
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button variant="outline" className="w-full">
+          <Recycle className="mr-2 h-4 w-4" /> Repurpose content
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Recycle className="h-4 w-4 text-brand" /> Repurpose into LinkedIn posts
+          </DialogTitle>
+          <DialogDescription>
+            Paste a URL or long-form text — we'll generate 4 distinct post drafts in your voice.
+          </DialogDescription>
+        </DialogHeader>
+
+        {drafts.length === 0 ? (
+          <>
+            <Tabs value={mode} onValueChange={(v) => setMode(v as "url" | "text")}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="url">
+                  <Link2 className="mr-2 h-3.5 w-3.5" /> URL
+                </TabsTrigger>
+                <TabsTrigger value="text">Paste text</TabsTrigger>
+              </TabsList>
+              <TabsContent value="url" className="mt-4">
+                <Label htmlFor="repurpose-url">Article / blog post URL</Label>
+                <Input
+                  id="repurpose-url"
+                  type="url"
+                  placeholder="https://…"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Works best with public blog posts, articles, and newsletters. Paywalled or JS-heavy pages may fail — paste the text instead.
+                </p>
+              </TabsContent>
+              <TabsContent value="text" className="mt-4">
+                <Label htmlFor="repurpose-text">Transcript, newsletter, notes…</Label>
+                <Textarea
+                  id="repurpose-text"
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  rows={10}
+                  placeholder="Paste the full source content here (min 50 characters, up to ~50k)."
+                />
+                <p className="mt-1 text-right text-[11px] text-muted-foreground">{text.length} chars</p>
+              </TabsContent>
+            </Tabs>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button
+                onClick={() => mut.mutate()}
+                disabled={!canGenerate || mut.isPending}
+                className="bg-brand-gradient text-brand-foreground"
+              >
+                {mut.isPending ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating 4 angles…</>
+                ) : (
+                  <><Sparkles className="mr-2 h-4 w-4" /> Generate drafts</>
+                )}
+              </Button>
+            </DialogFooter>
+          </>
+        ) : (
+          <div className="space-y-4">
+            {sourceTitle ? (
+              <div className="text-xs text-muted-foreground">
+                Source: <span className="text-foreground/80">{sourceTitle}</span>
+              </div>
+            ) : null}
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Draft {active + 1} of {drafts.length}
+              </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  disabled={active === 0}
+                  onClick={() => setActive((i) => Math.max(0, i - 1))}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  disabled={active === drafts.length - 1}
+                  onClick={() => setActive((i) => Math.min(drafts.length - 1, i + 1))}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="rounded-xl border border-border bg-background/50 p-4">
+              <div className="mb-2 inline-flex rounded-full border border-brand/40 bg-brand/10 px-2.5 py-0.5 text-[11px] font-medium text-brand">
+                {drafts[active].angle}
+              </div>
+              <div className="whitespace-pre-wrap font-display text-sm leading-relaxed">
+                {drafts[active].content}
+              </div>
+              <div className="mt-3 text-[11px] text-muted-foreground">
+                {drafts[active].content.length} chars
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {drafts.map((d, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setActive(i)}
+                  className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                    i === active
+                      ? "border-brand bg-brand/10 text-brand"
+                      : "border-border text-muted-foreground hover:border-brand/50 hover:text-foreground"
+                  }`}
+                >
+                  {i + 1}. {d.angle}
+                </button>
+              ))}
+            </div>
+            <DialogFooter className="gap-2 sm:justify-between">
+              <Button variant="ghost" onClick={reset}>
+                <Recycle className="mr-2 h-4 w-4" /> Start over
+              </Button>
+              <Button
+                className="bg-brand-gradient text-brand-foreground"
+                onClick={() => {
+                  onPick(drafts[active].content);
+                  setOpen(false);
+                  reset();
+                  mut.reset();
+                }}
+              >
+                <Save className="mr-2 h-4 w-4" /> Use this draft
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
