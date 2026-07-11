@@ -22,6 +22,7 @@ import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedInspirationRouteImport } from './routes/_authenticated/inspiration'
 import { Route as AuthenticatedGeneratorRouteImport } from './routes/_authenticated/generator'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedCarouselsRouteImport } from './routes/_authenticated/carousels'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -96,6 +97,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCarouselsRoute = AuthenticatedCarouselsRouteImport.update({
+  id: '/carousels',
+  path: '/carousels',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -151,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
+  '/carousels': typeof AuthenticatedCarouselsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/generator': typeof AuthenticatedGeneratorRoute
   '/inspiration': typeof AuthenticatedInspirationRoute
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
+  '/carousels': typeof AuthenticatedCarouselsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/generator': typeof AuthenticatedGeneratorRoute
   '/inspiration': typeof AuthenticatedInspirationRoute
@@ -197,6 +205,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
+  '/_authenticated/carousels': typeof AuthenticatedCarouselsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/generator': typeof AuthenticatedGeneratorRoute
   '/_authenticated/inspiration': typeof AuthenticatedInspirationRoute
@@ -221,6 +230,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/analytics'
     | '/calendar'
+    | '/carousels'
     | '/dashboard'
     | '/generator'
     | '/inspiration'
@@ -243,6 +253,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/analytics'
     | '/calendar'
+    | '/carousels'
     | '/dashboard'
     | '/generator'
     | '/inspiration'
@@ -266,6 +277,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/analytics'
     | '/_authenticated/calendar'
+    | '/_authenticated/carousels'
     | '/_authenticated/dashboard'
     | '/_authenticated/generator'
     | '/_authenticated/inspiration'
@@ -387,6 +399,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/carousels': {
+      id: '/_authenticated/carousels'
+      path: '/carousels'
+      fullPath: '/carousels'
+      preLoaderRoute: typeof AuthenticatedCarouselsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/calendar': {
       id: '/_authenticated/calendar'
       path: '/calendar'
@@ -450,6 +469,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
+  AuthenticatedCarouselsRoute: typeof AuthenticatedCarouselsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedGeneratorRoute: typeof AuthenticatedGeneratorRoute
   AuthenticatedInspirationRoute: typeof AuthenticatedInspirationRoute
@@ -461,6 +481,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
+  AuthenticatedCarouselsRoute: AuthenticatedCarouselsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedGeneratorRoute: AuthenticatedGeneratorRoute,
   AuthenticatedInspirationRoute: AuthenticatedInspirationRoute,

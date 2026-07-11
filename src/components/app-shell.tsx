@@ -9,6 +9,7 @@ import {
   BarChart3,
   Users,
   Settings,
+  Images,
   LogOut,
   Linkedin,
   CheckCircle2,
@@ -32,6 +33,7 @@ const nav = [
   { to: "/inspiration", label: "Inspiration", icon: Flame },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/leads", label: "Warm leads", icon: Users },
+  { to: "/carousels", label: "Carousels", icon: Images },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 

@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      carousels: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          linkedin_urn: string | null
+          posted_at: string | null
+          scheduled_at: string | null
+          slides: Json
+          status: string
+          template: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          linkedin_urn?: string | null
+          posted_at?: string | null
+          scheduled_at?: string | null
+          slides?: Json
+          status?: string
+          template?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          linkedin_urn?: string | null
+          posted_at?: string | null
+          scheduled_at?: string | null
+          slides?: Json
+          status?: string
+          template?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       inspiration_templates: {
         Row: {
           category: string
@@ -244,6 +289,10 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          brand_accent_color: string | null
+          brand_logo_url: string | null
+          brand_primary_color: string | null
+          brand_secondary_color: string | null
           brand_voice: string | null
           calibration: Json | null
           created_at: string
@@ -256,6 +305,10 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          brand_accent_color?: string | null
+          brand_logo_url?: string | null
+          brand_primary_color?: string | null
+          brand_secondary_color?: string | null
           brand_voice?: string | null
           calibration?: Json | null
           created_at?: string
@@ -268,6 +321,10 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          brand_accent_color?: string | null
+          brand_logo_url?: string | null
+          brand_primary_color?: string | null
+          brand_secondary_color?: string | null
           brand_voice?: string | null
           calibration?: Json | null
           created_at?: string

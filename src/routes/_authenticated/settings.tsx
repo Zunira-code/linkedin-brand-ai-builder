@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Linkedin, CheckCircle2, Sparkles, Loader2, Wand2, Mic, Trash2 } from "lucide-react";
+import { Linkedin, CheckCircle2, Sparkles, Loader2, Wand2, Mic, Trash2, Palette, Upload, Image as ImageIcon } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   addVoiceSamples,
   deleteVoiceSample,
 } from "@/lib/voice-samples.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Settings — Postpilot" }] }),
@@ -92,6 +93,7 @@ function Settings() {
           linkedInConnected={!!status.data?.connected}
         />
         <VoiceTrainingCard className="lg:col-span-2" linkedInConnected={!!status.data?.connected} />
+        <BrandKitCard className="lg:col-span-2" />
         <div className="rounded-2xl border border-border bg-card p-6">
           <h2 className="font-display text-lg font-semibold">Profile</h2>
           <div className="mt-4 space-y-4">
@@ -262,6 +264,173 @@ function CalibrationCard({
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function BrandKitCard({ className }: { className?: string }) {
+  const client = useQueryClient();
+  const profileFn = useServerFn(getMyProfile);
+  const updateFn = useServerFn(updateProfile);
+  const profile = useQuery({ queryKey: ["profile"], queryFn: () => profileFn() });
+
+  const [primary, setPrimary] = useState("#0F172A");
+  const [secondary, setSecondary] = useState("#FFFFFF");
+  const [accent, setAccent] = useState("#3B82F6");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    if (!profile.data) return;
+    setPrimary((profile.data as { brand_primary_color?: string | null }).brand_primary_color ?? "#0F172A");
+    setSecondary((profile.data as { brand_secondary_color?: string | null }).brand_secondary_color ?? "#FFFFFF");
+    setAccent((profile.data as { brand_accent_color?: string | null }).brand_accent_color ?? "#3B82F6");
+    setLogoUrl((profile.data as { brand_logo_url?: string | null }).brand_logo_url ?? null);
+  }, [profile.data]);
+
+  const save = useMutation({
+    mutationFn: () =>
+      updateFn({
+        data: {
+          brand_primary_color: primary,
+          brand_secondary_color: secondary,
+          brand_accent_color: accent,
+          brand_logo_url: logoUrl,
+        },
+      }),
+    onSuccess: () => {
+      toast.success("Brand kit saved");
+      client.invalidateQueries({ queryKey: ["profile"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
+  });
+
+  async function onLogoSelected(file: File) {
+    if (!file.type.startsWith("image/")) return toast.error("Logo must be an image");
+    if (file.size > 2 * 1024 * 1024) return toast.error("Logo must be under 2 MB");
+    setUploading(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) throw new Error("Not signed in");
+      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+      const path = `${uid}/logo-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("brand-assets")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: signed } = await supabase.storage
+        .from("brand-assets")
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
+      setLogoUrl(signed?.signedUrl ?? path);
+      toast.success("Logo uploaded — click Save brand kit");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className={`rounded-2xl border border-border bg-card p-6 ${className ?? ""}`}>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
+            <Palette className="h-4 w-4 text-brand" /> Brand kit
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Upload your logo and pick brand colors once. Postpilot reuses them on every carousel you build.
+          </p>
+        </div>
+      </div>
+      <div className="mt-5 grid gap-6 lg:grid-cols-2">
+        <div className="space-y-4">
+          <div>
+            <Label>Logo</Label>
+            <div className="mt-2 flex items-center gap-4">
+              <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted/40">
+                {logoUrl ? (
+                  <img src={logoUrl} alt="Brand logo" className="max-h-full max-w-full object-contain" />
+                ) : (
+                  <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                )}
+              </div>
+              <div className="flex-1 space-y-2">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-sm hover:bg-accent">
+                  <Upload className="h-3.5 w-3.5" /> {uploading ? "Uploading…" : logoUrl ? "Replace logo" : "Upload logo"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploading}
+                    onChange={(e) => e.target.files?.[0] && onLogoSelected(e.target.files[0])}
+                  />
+                </label>
+                {logoUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setLogoUrl(null)}
+                    className="ml-2 text-xs text-muted-foreground hover:text-destructive"
+                  >
+                    Remove
+                  </button>
+                )}
+                <p className="text-xs text-muted-foreground">PNG or SVG on transparent background works best. Max 2 MB.</p>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <ColorField label="Primary" value={primary} onChange={setPrimary} />
+            <ColorField label="Secondary" value={secondary} onChange={setSecondary} />
+            <ColorField label="Accent" value={accent} onChange={setAccent} />
+          </div>
+          <Button onClick={() => save.mutate()} disabled={save.isPending} className="bg-brand-gradient text-brand-foreground">
+            {save.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Save brand kit
+          </Button>
+        </div>
+        <div className="rounded-xl border border-dashed border-border p-4">
+          <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Preview</div>
+          <div
+            className="mt-3 aspect-square w-full overflow-hidden rounded-lg p-6"
+            style={{ background: primary, color: secondary }}
+          >
+            <div className="flex h-full flex-col justify-between">
+              {logoUrl ? (
+                <img src={logoUrl} alt="" className="h-8 w-auto max-w-[60%] object-contain" style={{ filter: "brightness(0) invert(1)" }} />
+              ) : (
+                <div className="text-xs opacity-70">Your logo</div>
+              )}
+              <div>
+                <div className="text-2xl font-bold leading-tight">3 lessons from year one.</div>
+                <div className="mt-3 h-1 w-12 rounded-full" style={{ background: accent }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <Label className="text-xs">{label}</Label>
+      <div className="mt-1 flex items-center gap-2 rounded-md border border-border bg-background px-2 py-1">
+        <input
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-7 w-9 cursor-pointer rounded border-0 bg-transparent p-0"
+        />
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full bg-transparent text-xs outline-none"
+        />
       </div>
     </div>
   );

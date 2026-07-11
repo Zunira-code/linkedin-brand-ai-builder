@@ -336,3 +336,108 @@ export async function publishImagePost(
   const data = raw ? JSON.parse(raw) : {};
   return (data.id as string) ?? null;
 }
+
+/**
+ * Register + upload a single image asset and return its LinkedIn asset URN.
+ * Extracted so multi-image (carousel) posts can register all images before
+ * creating one ugcPost that references every asset.
+ */
+async function registerAndUploadImage(
+  authorUrn: string,
+  imageBytes: Uint8Array,
+  contentType: string,
+): Promise<string> {
+  const register = await fetch(`${GATEWAY}/v2/assets?action=registerUpload`, {
+    method: "POST",
+    headers: { ...headers(), "X-Restli-Protocol-Version": "2.0.0" },
+    body: JSON.stringify({
+      registerUploadRequest: {
+        recipes: ["urn:li:digitalmediaRecipe:feedshare-image"],
+        owner: authorUrn,
+        serviceRelationships: [
+          { relationshipType: "OWNER", identifier: "urn:li:userGeneratedContent" },
+        ],
+      },
+    }),
+  });
+  const registerRaw = await register.text();
+  if (!register.ok) throw new Error(`LinkedIn registerUpload ${register.status}: ${registerRaw}`);
+  const registerData = JSON.parse(registerRaw) as {
+    value: {
+      asset: string;
+      uploadMechanism: {
+        "com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest": { uploadUrl: string };
+      };
+    };
+  };
+  const asset = registerData.value.asset;
+  const uploadUrl =
+    registerData.value.uploadMechanism["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"].uploadUrl;
+  const parsed = new URL(uploadUrl);
+  const gatewayUploadUrl = `${GATEWAY}${parsed.pathname}${parsed.search}`;
+  let uploadRes = await fetch(gatewayUploadUrl, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${process.env.LOVABLE_API_KEY}`,
+      "X-Connection-Api-Key": process.env.LINKEDIN_API_KEY!,
+      "Content-Type": contentType,
+    },
+    body: imageBytes as BodyInit,
+  });
+  if (!uploadRes.ok) {
+    uploadRes = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": contentType },
+      body: imageBytes as BodyInit,
+    });
+  }
+  if (!uploadRes.ok) {
+    const t = await uploadRes.text().catch(() => "");
+    throw new Error(`LinkedIn image upload ${uploadRes.status}: ${t}`);
+  }
+  return asset;
+}
+
+/**
+ * Publish a carousel-style multi-image post. Each slide is uploaded as its own
+ * image asset and referenced from a single ugcPost. Viewers swipe through the
+ * slides in-feed.
+ */
+export async function publishMultiImagePost(
+  personSub: string,
+  text: string,
+  images: Array<{ bytes: Uint8Array; contentType: string }>,
+) {
+  if (images.length === 0) throw new Error("No slides to publish");
+  const authorUrn = personSub.startsWith("urn:") ? personSub : `urn:li:person:${personSub}`;
+  const assets: string[] = [];
+  for (const img of images) {
+    assets.push(await registerAndUploadImage(authorUrn, img.bytes, img.contentType));
+  }
+  const body = {
+    author: authorUrn,
+    lifecycleState: "PUBLISHED",
+    specificContent: {
+      "com.linkedin.ugc.ShareContent": {
+        shareCommentary: { text },
+        shareMediaCategory: "IMAGE",
+        media: assets.map((asset) => ({
+          status: "READY",
+          description: { text: "" },
+          media: asset,
+          title: { text: "" },
+        })),
+      },
+    },
+    visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" },
+  };
+  const res = await fetch(`${GATEWAY}/v2/ugcPosts`, {
+    method: "POST",
+    headers: { ...headers(), "X-Restli-Protocol-Version": "2.0.0" },
+    body: JSON.stringify(body),
+  });
+  const raw = await res.text();
+  if (!res.ok) throw new Error(`LinkedIn publish(carousel) ${res.status}: ${raw}`);
+  const data = raw ? JSON.parse(raw) : {};
+  return (data.id as string) ?? null;
+}
