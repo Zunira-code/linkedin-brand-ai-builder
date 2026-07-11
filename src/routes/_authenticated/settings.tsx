@@ -279,6 +279,7 @@ function BrandKitCard({ className }: { className?: string }) {
   const [secondary, setSecondary] = useState("#FFFFFF");
   const [accent, setAccent] = useState("#3B82F6");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [font, setFont] = useState<string>("inter");
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -287,6 +288,7 @@ function BrandKitCard({ className }: { className?: string }) {
     setSecondary((profile.data as { brand_secondary_color?: string | null }).brand_secondary_color ?? "#FFFFFF");
     setAccent((profile.data as { brand_accent_color?: string | null }).brand_accent_color ?? "#3B82F6");
     setLogoUrl((profile.data as { brand_logo_url?: string | null }).brand_logo_url ?? null);
+    setFont((profile.data as { brand_font?: string | null }).brand_font ?? "inter");
   }, [profile.data]);
 
   const save = useMutation({
@@ -297,6 +299,7 @@ function BrandKitCard({ className }: { className?: string }) {
           brand_secondary_color: secondary,
           brand_accent_color: accent,
           brand_logo_url: logoUrl,
+          brand_font: font as "inter" | "space-grotesk" | "dm-serif" | "geist" | "georgia",
         },
       }),
     onSuccess: () => {
