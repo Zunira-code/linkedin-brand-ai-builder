@@ -234,7 +234,7 @@ function Editor({ id }: { id: string }) {
   });
 
   const save = useMutation({
-    mutationFn: (input: { status: "draft" | "scheduled" }) =>
+    mutationFn: (input: { status: "draft" | "ready" | "posted" }) =>
       saveFn({
         data: {
           id,
@@ -242,21 +242,19 @@ function Editor({ id }: { id: string }) {
           template,
           slides,
           status: input.status,
-          scheduled_at:
-            input.status === "scheduled" && scheduleIso ? new Date(scheduleIso).toISOString() : null,
         },
       }),
     onSuccess: (_out, vars) => {
       client.invalidateQueries({ queryKey: ["carousels"] });
       client.invalidateQueries({ queryKey: ["carousel", id] });
-      toast.success(vars.status === "scheduled" ? "Scheduled" : "Saved");
+      toast.success(vars.status === "posted" ? "Marked as posted" : "Saved");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
   });
 
   const slideRefs = useRef<Array<HTMLDivElement | null>>([]);
 
-  async function renderAllToDataUrls(): Promise<string[]> {
+  async function renderAllToPngDataUrls(): Promise<string[]> {
     const urls: string[] = [];
     for (let i = 0; i < slides.length; i++) {
       const node = slideRefs.current[i];
@@ -270,30 +268,45 @@ function Editor({ id }: { id: string }) {
     return urls;
   }
 
-  const publish = useMutation({
+  const exportPdf = useMutation({
     mutationFn: async () => {
       if (slides.length < 2) throw new Error("Add at least 2 slides.");
-      await save.mutateAsync({ status: "draft" });
-      const urls = await renderAllToDataUrls();
-      return pubFn({ data: { id, caption, imagesDataUrls: urls } });
+      await save.mutateAsync({ status: "ready" });
+      const urls = await renderAllToPngDataUrls();
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: [CAROUSEL_WIDTH, CAROUSEL_HEIGHT],
+        hotfixes: ["px_scaling"],
+      });
+      urls.forEach((url, i) => {
+        if (i > 0) pdf.addPage([CAROUSEL_WIDTH, CAROUSEL_HEIGHT], "portrait");
+        pdf.addImage(url, "PNG", 0, 0, CAROUSEL_WIDTH, CAROUSEL_HEIGHT, undefined, "FAST");
+      });
+      const filename = `${(title || "carousel").replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.pdf`;
+      pdf.save(filename);
+      // Log a "ready to post manually" post row so it shows on Dashboard/Calendar.
+      await saveAsPostFn({ data: { id, caption } });
     },
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ["carousels"] });
       client.invalidateQueries({ queryKey: ["carousel", id] });
-      toast.success("Carousel published to LinkedIn 🎉");
+      client.invalidateQueries({ queryKey: ["posts"] });
+      toast.success("PDF downloaded. Upload it on LinkedIn to publish.");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
   });
 
-  async function downloadAll() {
-    const urls = await renderAllToDataUrls();
-    urls.forEach((url, i) => {
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${title.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-slide-${i + 1}.png`;
-      a.click();
-    });
-  }
+  const markPosted = useMutation({
+    mutationFn: () => markPostedFn({ data: { id } }),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["carousels"] });
+      client.invalidateQueries({ queryKey: ["carousel", id] });
+      client.invalidateQueries({ queryKey: ["posts"] });
+      toast.success("Marked as posted — nice work.");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
+  });
 
   function updateSlide(i: number, patch: Partial<Slide>) {
     setSlides((s) => s.map((sl, idx) => (idx === i ? { ...sl, ...patch } : sl)));
