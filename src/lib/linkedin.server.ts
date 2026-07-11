@@ -38,6 +38,34 @@ export async function getUserInfo() {
   }>;
 }
 
+/**
+ * Post a comment on an existing LinkedIn share/ugcPost.
+ * `postUrn` is the URN returned by publishTextPost/publishImagePost/publishVideoPost
+ * (e.g. "urn:li:share:12345" or "urn:li:ugcPost:12345").
+ */
+export async function commentOnPost(
+  personSub: string,
+  postUrn: string,
+  text: string,
+) {
+  const actorUrn = personSub.startsWith("urn:") ? personSub : `urn:li:person:${personSub}`;
+  const encoded = encodeURIComponent(postUrn);
+  const body = {
+    actor: actorUrn,
+    object: postUrn,
+    message: { text },
+  };
+  const res = await fetch(`${GATEWAY}/v2/socialActions/${encoded}/comments`, {
+    method: "POST",
+    headers: { ...headers(), "X-Restli-Protocol-Version": "2.0.0" },
+    body: JSON.stringify(body),
+  });
+  const raw = await res.text();
+  if (!res.ok) throw new Error(`LinkedIn comment ${res.status}: ${raw}`);
+  const data = raw ? JSON.parse(raw) : {};
+  return (data.$URN as string) ?? (data.id as string) ?? null;
+}
+
 export async function publishTextPost(personSub: string, text: string) {
   const authorUrn = personSub.startsWith("urn:") ? personSub : `urn:li:person:${personSub}`;
   const body = {

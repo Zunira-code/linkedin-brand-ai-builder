@@ -81,6 +81,11 @@ export type Database = {
           content: string
           created_at: string
           error: string | null
+          first_comment: string | null
+          first_comment_error: string | null
+          first_comment_posted_at: string | null
+          first_comment_scheduled_at: string | null
+          first_comment_urn: string | null
           format: string
           id: string
           image_data_url: string | null
@@ -96,6 +101,11 @@ export type Database = {
           content: string
           created_at?: string
           error?: string | null
+          first_comment?: string | null
+          first_comment_error?: string | null
+          first_comment_posted_at?: string | null
+          first_comment_scheduled_at?: string | null
+          first_comment_urn?: string | null
           format?: string
           id?: string
           image_data_url?: string | null
@@ -111,6 +121,11 @@ export type Database = {
           content?: string
           created_at?: string
           error?: string | null
+          first_comment?: string | null
+          first_comment_error?: string | null
+          first_comment_posted_at?: string | null
+          first_comment_scheduled_at?: string | null
+          first_comment_urn?: string | null
           format?: string
           id?: string
           image_data_url?: string | null

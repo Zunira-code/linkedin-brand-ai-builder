@@ -34,6 +34,7 @@ const SavePostInput = z.object({
   scheduled_at: z.string().datetime().nullable().optional(),
   image_data_url: z.string().startsWith("data:image/").nullable().optional(),
   video_url: z.string().nullable().optional(),
+  first_comment: z.string().max(1250).nullable().optional(),
 });
 
 export const savePost = createServerFn({ method: "POST" })
@@ -48,6 +49,7 @@ export const savePost = createServerFn({ method: "POST" })
       scheduled_at: string | null;
       image_data_url?: string | null;
       video_url?: string | null;
+      first_comment?: string | null;
     } = {
       user_id: context.userId,
       content: data.content,
@@ -60,6 +62,10 @@ export const savePost = createServerFn({ method: "POST" })
     }
     if (data.video_url !== undefined) {
       row.video_url = data.video_url;
+    }
+    if (data.first_comment !== undefined) {
+      const trimmed = (data.first_comment ?? "").trim();
+      row.first_comment = trimmed.length > 0 ? trimmed : null;
     }
     if (data.id) {
       const { data: out, error } = await context.supabase
@@ -102,7 +108,7 @@ export const publishPostNow = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { data: post, error } = await context.supabase
       .from("posts")
-      .select("id, content, user_id, image_data_url, video_url")
+      .select("id, content, user_id, image_data_url, video_url, first_comment")
       .eq("id", data.id)
       .single();
     if (error || !post) throw new Error("Post not found");
@@ -143,7 +149,17 @@ export const publishPostNow = createServerFn({ method: "POST" })
       }
       await context.supabase
         .from("posts")
-        .update({ status: "posted", posted_at: new Date().toISOString(), linkedin_urn: urn, error: null })
+        .update({
+          status: "posted",
+          posted_at: new Date().toISOString(),
+          linkedin_urn: urn,
+          error: null,
+          // Queue the first comment for 60–120s from now so it looks organic.
+          first_comment_scheduled_at:
+            (post as { first_comment?: string | null }).first_comment && urn
+              ? new Date(Date.now() + (60 + Math.floor(Math.random() * 61)) * 1000).toISOString()
+              : null,
+        })
         .eq("id", post.id);
       return { ok: true, urn };
     } catch (e) {
@@ -189,4 +205,43 @@ export const generateHashtags = createServerFn({ method: "POST" })
     const raw = json.choices?.[0]?.message?.content ?? "";
     const tags = Array.from(raw.matchAll(/#[A-Za-z0-9_]+/g)).map((m) => m[0]);
     return { hashtags: tags.slice(0, 6) };
+  });
+
+export const suggestFirstComment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ content: z.string().min(1).max(10000) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) throw new Error("Missing LOVABLE_API_KEY");
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Lovable-API-Key": key,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You write the AUTHOR's own first comment on their LinkedIn post — the reply they leave under their own post 1-2 min after publishing. Goals: 1) add ONE concrete extra insight, resource, or CTA the post itself doesn't already say, 2) invite discussion with a specific, easy-to-answer question, 3) sound like the author, not a marketer. Rules: 60-220 characters, plain text, no hashtags, no emojis except at most one, no quotation marks, no 'Great post!' style. Return ONLY the comment text.",
+          },
+          { role: "user", content: data.content },
+        ],
+        temperature: 0.8,
+      }),
+    });
+    if (!res.ok) {
+      const t = await res.text().catch(() => "");
+      throw new Error(`Comment suggestion failed (${res.status}): ${t.slice(0, 200)}`);
+    }
+    const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    const raw = (json.choices?.[0]?.message?.content ?? "").trim();
+    // Strip wrapping quotes if the model added them.
+    const cleaned = raw.replace(/^["'`]+|["'`]+$/g, "").trim();
+    return { comment: cleaned };
   });
