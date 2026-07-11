@@ -534,7 +534,7 @@ function Editor({ id }: { id: string }) {
           ) : (
             <>
               <div className="rounded-2xl border border-border bg-muted/30 p-6">
-                <div className="mx-auto flex aspect-square w-full max-w-[520px] items-center justify-center overflow-hidden rounded-xl shadow-lg">
+                <div className="mx-auto flex aspect-[4/5] w-full max-w-[440px] items-center justify-center overflow-hidden rounded-xl shadow-lg">
                   <SlidePreview
                     slide={slides[selected]}
                     template={template}
@@ -547,20 +547,27 @@ function Editor({ id }: { id: string }) {
 
                 <div className="mt-4 grid gap-3">
                   <div>
-                    <Label className="text-xs">Slide {selected + 1} title</Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Slide {selected + 1} title</Label>
+                      <CharCount value={slides[selected]?.title ?? ""} max={SLIDE_TITLE_MAX} />
+                    </div>
                     <Input
                       value={slides[selected]?.title ?? ""}
                       onChange={(e) => updateSlide(selected, { title: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label className="text-xs">Body</Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">Body</Label>
+                      <CharCount value={slides[selected]?.body ?? ""} max={SLIDE_BODY_MAX} />
+                    </div>
                     <Textarea
                       rows={3}
                       value={slides[selected]?.body ?? ""}
                       onChange={(e) => updateSlide(selected, { body: e.target.value })}
                     />
                   </div>
+                  <SlideOverflowWarnings slides={slides} />
                 </div>
               </div>
 
