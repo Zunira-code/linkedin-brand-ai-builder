@@ -388,6 +388,31 @@ function BrandKitCard({ className }: { className?: string }) {
             <ColorField label="Secondary" value={secondary} onChange={setSecondary} />
             <ColorField label="Accent" value={accent} onChange={setAccent} />
           </div>
+          <div>
+            <Label>Font</Label>
+            <div className="mt-2 grid grid-cols-5 gap-2">
+              {[
+                { id: "inter", label: "Inter", stack: "Inter, system-ui, sans-serif" },
+                { id: "space-grotesk", label: "Space Grotesk", stack: "'Space Grotesk', system-ui, sans-serif" },
+                { id: "dm-serif", label: "DM Serif", stack: "'DM Serif Display', Georgia, serif" },
+                { id: "geist", label: "Geist", stack: "Geist, system-ui, sans-serif" },
+                { id: "georgia", label: "Georgia", stack: "Georgia, serif" },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setFont(f.id)}
+                  className={`rounded-lg border p-2 text-center transition ${
+                    font === f.id ? "border-brand ring-2 ring-brand/30" : "border-border hover:border-brand/40"
+                  }`}
+                  style={{ fontFamily: f.stack }}
+                >
+                  <div className="text-xl font-semibold leading-tight">Aa</div>
+                  <div className="mt-1 text-[10px] text-muted-foreground">{f.label}</div>
+                </button>
+              ))}
+            </div>
+          </div>
           <Button onClick={() => save.mutate()} disabled={save.isPending} className="bg-brand-gradient text-brand-foreground">
             {save.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Save brand kit
