@@ -788,3 +788,38 @@ function MiniSlide({ slide, template, brand }: { slide: Slide; template: Templat
     </div>
   );
 }
+
+function CharCount({ value, max }: { value: string; max: number }) {
+  const over = value.length > max;
+  return (
+    <span
+      className={`text-[10px] tabular-nums ${
+        over ? "font-medium text-destructive" : value.length > max * 0.9 ? "text-amber-600" : "text-muted-foreground"
+      }`}
+    >
+      {value.length}/{max}
+    </span>
+  );
+}
+
+function SlideOverflowWarnings({ slides }: { slides: Slide[] }) {
+  const overs = slides
+    .map((s, i) => ({
+      i,
+      title: s.title.length > SLIDE_TITLE_MAX,
+      body: s.body.length > SLIDE_BODY_MAX,
+    }))
+    .filter((x) => x.title || x.body);
+  if (overs.length === 0) return null;
+  return (
+    <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-400">
+      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+      <div>
+        {overs.length === 1
+          ? `Slide ${overs[0].i + 1} is too long`
+          : `${overs.length} slides are too long`}{" "}
+        — text may clip. Trim to keep it readable on mobile.
+      </div>
+    </div>
+  );
+}
