@@ -9,12 +9,12 @@ export const Route = createFileRoute("/api/public/cron/publish-due")({
           return new Response("Unauthorized", { status: 401 });
         }
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { publishTextPost, publishImagePost } = await import("@/lib/linkedin.server");
+        const { publishTextPost, publishImagePost, publishVideoPost } = await import("@/lib/linkedin.server");
 
         const nowIso = new Date().toISOString();
         const { data: due, error } = await supabaseAdmin
           .from("posts")
-          .select("id, user_id, content, image_data_url")
+          .select("id, user_id, content, image_data_url, video_url")
           .eq("status", "scheduled")
           .lte("scheduled_at", nowIso)
           .limit(20);
@@ -31,7 +31,15 @@ export const Route = createFileRoute("/api/public/cron/publish-due")({
             if (!prof?.linkedin_urn) throw new Error("LinkedIn not connected");
             let urn: string | null;
             const img = (p as { image_data_url?: string | null }).image_data_url;
-            if (img) {
+            const vid = (p as { video_url?: string | null }).video_url;
+            if (vid) {
+              const { data: blob, error: dlErr } = await supabaseAdmin.storage
+                .from("post-videos")
+                .download(vid);
+              if (dlErr || !blob) throw new Error(`Could not read video: ${dlErr?.message ?? "no blob"}`);
+              const buf = new Uint8Array(await blob.arrayBuffer());
+              urn = await publishVideoPost(prof.linkedin_urn, p.content, buf, blob.type || "video/mp4");
+            } else if (img) {
               const match = img.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
               if (!match) throw new Error("Invalid stored image data URL");
               const bytes = Uint8Array.from(atob(match[2]), (c) => c.charCodeAt(0));

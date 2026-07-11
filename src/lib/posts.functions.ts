@@ -33,6 +33,7 @@ const SavePostInput = z.object({
   status: z.enum(["draft", "scheduled"]).default("draft"),
   scheduled_at: z.string().datetime().nullable().optional(),
   image_data_url: z.string().startsWith("data:image/").nullable().optional(),
+  video_url: z.string().nullable().optional(),
 });
 
 export const savePost = createServerFn({ method: "POST" })
@@ -46,6 +47,7 @@ export const savePost = createServerFn({ method: "POST" })
       status: "draft" | "scheduled";
       scheduled_at: string | null;
       image_data_url?: string | null;
+      video_url?: string | null;
     } = {
       user_id: context.userId,
       content: data.content,
@@ -55,6 +57,9 @@ export const savePost = createServerFn({ method: "POST" })
     };
     if (data.image_data_url !== undefined) {
       row.image_data_url = data.image_data_url;
+    }
+    if (data.video_url !== undefined) {
+      row.video_url = data.video_url;
     }
     if (data.id) {
       const { data: out, error } = await context.supabase
@@ -97,7 +102,7 @@ export const publishPostNow = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { data: post, error } = await context.supabase
       .from("posts")
-      .select("id, content, user_id, image_data_url")
+      .select("id, content, user_id, image_data_url, video_url")
       .eq("id", data.id)
       .single();
     if (error || !post) throw new Error("Post not found");
@@ -108,7 +113,7 @@ export const publishPostNow = createServerFn({ method: "POST" })
       .eq("id", context.userId)
       .single();
 
-    const { getUserInfo, publishTextPost, publishImagePost } = await import("@/lib/linkedin.server");
+    const { getUserInfo, publishTextPost, publishImagePost, publishVideoPost } = await import("@/lib/linkedin.server");
     let personSub = profile?.linkedin_urn ?? "";
     if (!personSub) {
       const info = await getUserInfo();
@@ -118,7 +123,16 @@ export const publishPostNow = createServerFn({ method: "POST" })
     try {
       let urn: string | null;
       const imageDataUrl = data.imageDataUrl ?? (post as { image_data_url?: string | null }).image_data_url ?? undefined;
-      if (imageDataUrl) {
+      const videoUrl = (post as { video_url?: string | null }).video_url ?? undefined;
+      if (videoUrl) {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: blob, error: dlErr } = await supabaseAdmin.storage
+          .from("post-videos")
+          .download(videoUrl);
+        if (dlErr || !blob) throw new Error(`Could not read video: ${dlErr?.message ?? "no blob"}`);
+        const buf = new Uint8Array(await blob.arrayBuffer());
+        urn = await publishVideoPost(personSub, post.content, buf, blob.type || "video/mp4");
+      } else if (imageDataUrl) {
         const match = imageDataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
         if (!match) throw new Error("Invalid image data URL");
         const contentType = match[1];

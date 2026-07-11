@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Sparkles, Save, Send, Loader2, Wand2, Image as ImageIcon, Download, Hash } from "lucide-react";
+import { Sparkles, Save, Send, Loader2, Wand2, Image as ImageIcon, Download, Hash, Video as VideoIcon, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { savePost, publishPostNow, generateHashtags, getPost } from "@/lib/posts
 import { getMyProfile } from "@/lib/profile.functions";
 import { getCalibration } from "@/lib/calibration.functions";
 import { streamImage } from "@/lib/streamImage";
+import { supabase } from "@/integrations/supabase/client";
 
 type SearchParams = { topic?: string; hook?: string; template?: string; postId?: string };
 
@@ -101,6 +102,27 @@ function Generator() {
   const [imgFinal, setImgFinal] = useState(false);
   const [imgBusy, setImgBusy] = useState(false);
 
+  // Video state — `videoPath` is the storage key (persisted); `videoPreviewUrl`
+  // is a local object URL (or signed URL when loading an existing post).
+  const [videoPath, setVideoPath] = useState<string | null>(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
+  const [videoBusy, setVideoBusy] = useState(false);
+
+  useEffect(() => {
+    if (!existing.data?.video_url) return;
+    setVideoPath(existing.data.video_url);
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.storage
+        .from("post-videos")
+        .createSignedUrl(existing.data!.video_url as string, 3600);
+      if (!cancelled && data?.signedUrl) setVideoPreviewUrl(data.signedUrl);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [existing.data]);
+
   const hashtagsMut = useMutation({
     mutationFn: async () => {
       const { hashtags } = await hashtagsFn({ data: { content: edited } });
@@ -125,6 +147,7 @@ function Generator() {
           status: input.status,
           scheduled_at: input.scheduled_at ?? null,
           image_data_url: imgSrc && imgFinal ? imgSrc : null,
+          video_url: videoPath ?? null,
         },
       }),
     onSuccess: (out, vars) => {
@@ -195,6 +218,50 @@ function Generator() {
     a.href = imgSrc;
     a.download = `postpilot-${Date.now()}.png`;
     a.click();
+  }
+
+  async function handleVideoSelected(file: File) {
+    if (file.type !== "video/mp4") {
+      toast.error("Only MP4 videos are supported.");
+      return;
+    }
+    const MAX = 200 * 1024 * 1024;
+    if (file.size > MAX) {
+      toast.error("Video must be under 200 MB.");
+      return;
+    }
+    setVideoBusy(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) throw new Error("Not signed in");
+      const path = `${uid}/${crypto.randomUUID()}.mp4`;
+      const { error } = await supabase.storage
+        .from("post-videos")
+        .upload(path, file, { contentType: "video/mp4", upsert: false });
+      if (error) throw error;
+      // Remove any previous upload for this draft session.
+      if (videoPath && videoPath !== path) {
+        await supabase.storage.from("post-videos").remove([videoPath]).catch(() => {});
+      }
+      setVideoPath(path);
+      if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
+      setVideoPreviewUrl(URL.createObjectURL(file));
+      toast.success("Video attached");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Video upload failed");
+    } finally {
+      setVideoBusy(false);
+    }
+  }
+
+  async function removeVideo() {
+    if (videoPath) {
+      await supabase.storage.from("post-videos").remove([videoPath]).catch(() => {});
+    }
+    if (videoPreviewUrl?.startsWith("blob:")) URL.revokeObjectURL(videoPreviewUrl);
+    setVideoPath(null);
+    setVideoPreviewUrl(null);
   }
 
   return (
@@ -366,6 +433,64 @@ function Generator() {
                 </div>
               )}
             </div>
+          </div>
+
+          <div className="mt-6 border-t border-border pt-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h3 className="flex items-center gap-2 font-display text-sm font-semibold">
+                  <VideoIcon className="h-4 w-4 text-brand" /> Video for this post
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Upload an MP4 (max 200 MB). It will publish to LinkedIn with your caption at the scheduled time.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <label>
+                  <input
+                    type="file"
+                    accept="video/mp4"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleVideoSelected(f);
+                      e.target.value = "";
+                    }}
+                    disabled={videoBusy}
+                  />
+                  <span className="inline-flex h-9 cursor-pointer items-center rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-accent">
+                    {videoBusy ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading…</>
+                    ) : (
+                      <><VideoIcon className="mr-2 h-4 w-4" /> {videoPath ? "Replace video" : "Upload MP4"}</>
+                    )}
+                  </span>
+                </label>
+                {videoPath ? (
+                  <Button size="sm" variant="outline" onClick={removeVideo}>
+                    <X className="mr-2 h-4 w-4" /> Remove
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+            <div className="mt-4 flex items-center justify-center rounded-xl border border-dashed border-border bg-background/40 p-4">
+              {videoPreviewUrl ? (
+                <video
+                  src={videoPreviewUrl}
+                  controls
+                  className="aspect-video w-full max-w-md rounded-lg bg-black object-contain"
+                />
+              ) : (
+                <div className="flex aspect-video w-full max-w-md items-center justify-center rounded-lg text-xs text-muted-foreground">
+                  No video attached yet.
+                </div>
+              )}
+            </div>
+            {videoPath ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                When published, your caption above becomes the LinkedIn post text and the MP4 is attached as the video.
+              </p>
+            ) : null}
           </div>
         </div>
       </div>
