@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import * as htmlToImage from "html-to-image";
+import jsPDF from "jspdf";
 import {
   Sparkles,
   Loader2,
@@ -12,18 +13,19 @@ import {
   ArrowUp,
   ArrowDown,
   Save,
-  Send,
   Download,
   Images,
   Palette,
   FileText,
+  CheckCircle2,
+  AlertTriangle,
+  Info,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "@tanstack/react-router";
 import {
   listCarousels,
@@ -31,7 +33,12 @@ import {
   saveCarousel,
   deleteCarousel,
   generateCarouselSlides,
-  publishCarouselNow,
+  saveCarouselAsPost,
+  markCarouselPosted,
+  SLIDE_TITLE_MAX,
+  SLIDE_BODY_MAX,
+  CAROUSEL_WIDTH,
+  CAROUSEL_HEIGHT,
   type Slide,
 } from "@/lib/carousels.functions";
 import { getMyProfile } from "@/lib/profile.functions";
