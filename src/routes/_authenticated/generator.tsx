@@ -434,6 +434,64 @@ function Generator() {
               )}
             </div>
           </div>
+
+          <div className="mt-6 border-t border-border pt-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h3 className="flex items-center gap-2 font-display text-sm font-semibold">
+                  <VideoIcon className="h-4 w-4 text-brand" /> Video for this post
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Upload an MP4 (max 200 MB). It will publish to LinkedIn with your caption at the scheduled time.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <label>
+                  <input
+                    type="file"
+                    accept="video/mp4"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleVideoSelected(f);
+                      e.target.value = "";
+                    }}
+                    disabled={videoBusy}
+                  />
+                  <span className="inline-flex h-9 cursor-pointer items-center rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-accent">
+                    {videoBusy ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading…</>
+                    ) : (
+                      <><VideoIcon className="mr-2 h-4 w-4" /> {videoPath ? "Replace video" : "Upload MP4"}</>
+                    )}
+                  </span>
+                </label>
+                {videoPath ? (
+                  <Button size="sm" variant="outline" onClick={removeVideo}>
+                    <X className="mr-2 h-4 w-4" /> Remove
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+            <div className="mt-4 flex items-center justify-center rounded-xl border border-dashed border-border bg-background/40 p-4">
+              {videoPreviewUrl ? (
+                <video
+                  src={videoPreviewUrl}
+                  controls
+                  className="aspect-video w-full max-w-md rounded-lg bg-black object-contain"
+                />
+              ) : (
+                <div className="flex aspect-video w-full max-w-md items-center justify-center rounded-lg text-xs text-muted-foreground">
+                  No video attached yet.
+                </div>
+              )}
+            </div>
+            {videoPath ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                When published, your caption above becomes the LinkedIn post text and the MP4 is attached as the video.
+              </p>
+            ) : null}
+          </div>
         </div>
       </div>
     </AppShell>
