@@ -41,6 +41,108 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_comments: {
+        Row: {
+          comment_text: string | null
+          comment_urn: string
+          commented_at: string | null
+          created_at: string
+          id: string
+          lead_id: string
+          post_id: string | null
+          post_urn: string
+          user_id: string
+        }
+        Insert: {
+          comment_text?: string | null
+          comment_urn: string
+          commented_at?: string | null
+          created_at?: string
+          id?: string
+          lead_id: string
+          post_id?: string | null
+          post_urn: string
+          user_id: string
+        }
+        Update: {
+          comment_text?: string | null
+          comment_urn?: string
+          commented_at?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string
+          post_id?: string | null
+          post_urn?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_comments_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          avatar_url: string | null
+          comment_count: number
+          created_at: string
+          headline: string | null
+          id: string
+          last_comment_at: string | null
+          last_comment_text: string | null
+          name: string | null
+          note: string | null
+          person_urn: string
+          profile_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          comment_count?: number
+          created_at?: string
+          headline?: string | null
+          id?: string
+          last_comment_at?: string | null
+          last_comment_text?: string | null
+          name?: string | null
+          note?: string | null
+          person_urn: string
+          profile_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          comment_count?: number
+          created_at?: string
+          headline?: string | null
+          id?: string
+          last_comment_at?: string | null
+          last_comment_text?: string | null
+          name?: string | null
+          note?: string | null
+          person_urn?: string
+          profile_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       post_metrics: {
         Row: {
           comments: number | null

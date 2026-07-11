@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "@tanstack/react-router";
 import { Mic } from "lucide-react";
 
-type SearchParams = { topic?: string; hook?: string; template?: string; postId?: string };
+type SearchParams = { topic?: string; hook?: string; template?: string; postId?: string; prompt?: string };
 
 export const Route = createFileRoute("/_authenticated/generator")({
   head: () => ({ meta: [{ title: "AI post generator — Postpilot" }] }),
@@ -31,13 +31,14 @@ export const Route = createFileRoute("/_authenticated/generator")({
     hook: typeof s.hook === "string" ? s.hook : undefined,
     template: typeof s.template === "string" ? s.template : undefined,
     postId: typeof s.postId === "string" ? s.postId : undefined,
+    prompt: typeof s.prompt === "string" ? s.prompt : undefined,
   }),
   component: Generator,
 });
 
 function Generator() {
   const search = useSearch({ from: "/_authenticated/generator" });
-  const [topic, setTopic] = useState(search.topic ?? "");
+  const [topic, setTopic] = useState(search.topic ?? search.prompt ?? "");
   const [tone, setTone] = useState("insightful");
   const [format, setFormat] = useState(search.hook ? search.hook.toLowerCase() : "story");
   const [length, setLength] = useState("medium");
