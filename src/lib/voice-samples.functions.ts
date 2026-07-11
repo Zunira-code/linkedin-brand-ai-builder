@@ -147,5 +147,34 @@ export const importVoiceSamplesFromLinkedIn = createServerFn({ method: "POST" })
       throw new Error("LinkedIn returned no recent posts. Paste your posts below instead.");
     }
 
-    return addVoiceSamples({ data: { samples: texts, source: "linkedin" } });
+    // Dedupe against what's already stored.
+    const { data: existing } = await context.supabase
+      .from("voice_samples")
+      .select("content")
+      .eq("user_id", context.userId);
+    const existingKeys = new Set((existing ?? []).map((r) => r.content.slice(0, 200)));
+    const fresh = texts.filter((t) => !existingKeys.has(t.slice(0, 200)));
+
+    const { count } = await context.supabase
+      .from("voice_samples")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", context.userId);
+    const remaining = MAX_TOTAL - (count ?? 0);
+    if (remaining <= 0) {
+      throw new Error(`Voice sample limit reached (${MAX_TOTAL}). Delete some to add more.`);
+    }
+    const toInsert = fresh.slice(0, remaining).map((content) => ({
+      user_id: context.userId,
+      content,
+      source: "linkedin" as const,
+    }));
+    if (toInsert.length === 0) {
+      return { added: 0, skipped: fresh.length };
+    }
+    const { data: inserted, error } = await context.supabase
+      .from("voice_samples")
+      .insert(toInsert)
+      .select("id");
+    if (error) throw new Error(error.message);
+    return { added: inserted?.length ?? 0, skipped: fresh.length - (inserted?.length ?? 0) };
   });
