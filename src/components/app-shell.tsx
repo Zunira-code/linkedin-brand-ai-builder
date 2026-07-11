@@ -173,7 +173,14 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
           <div className="flex items-center justify-between">
             <h1 className="font-display text-xl font-semibold">{title}</h1>
             <div className="text-xs text-muted-foreground">
-              {status?.connected ? "LinkedIn ready" : "Standalone mode"}
+              {status?.connected ? (
+                <span className="inline-flex items-center gap-1.5 text-success">
+                  <CheckCircle2 className="h-3 w-3" />
+                  LinkedIn Connected via OAuth
+                </span>
+              ) : (
+                "LinkedIn not connected"
+              )}
             </div>
           </div>
         </header>

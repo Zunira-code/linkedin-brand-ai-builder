@@ -687,11 +687,26 @@ function Generator() {
                 </div>
               )}
             </div>
-            {videoPath ? (
-              <p className="mt-2 text-xs text-muted-foreground">
-                When published, your caption above becomes the LinkedIn post text and the MP4 is attached as the video.
+            <div className="mt-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="video-caption" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Video caption
+                </Label>
+                <span className="text-[11px] text-muted-foreground">{edited.length}/3000</span>
+              </div>
+              <Textarea
+                id="video-caption"
+                value={edited}
+                onChange={(e) => setEdited(e.target.value)}
+                rows={4}
+                maxLength={3000}
+                placeholder="Write the caption that will appear above your video on LinkedIn…"
+                className="mt-1 resize-y"
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                This is the same draft above — edits sync. When published, this becomes the LinkedIn post text and the MP4 attaches as the video.
               </p>
-            ) : null}
+            </div>
           </div>
         </div>
       </div>
