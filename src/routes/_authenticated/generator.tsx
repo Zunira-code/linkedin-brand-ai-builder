@@ -518,6 +518,46 @@ function Generator() {
           </div>
 
           <div className="mt-6 border-t border-border pt-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h3 className="flex items-center gap-2 font-display text-sm font-semibold">
+                  <MessageSquare className="h-4 w-4 text-brand" /> First comment
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Optional
+                  </span>
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Auto-posted as a comment 1–2 minutes after your post goes live. Great for links, CTAs, or a discussion prompt.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => suggestCommentMut.mutate()}
+                disabled={!edited || suggestCommentMut.isPending}
+              >
+                {suggestCommentMut.isPending ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Thinking…</>
+                ) : (
+                  <><Sparkles className="mr-2 h-4 w-4" /> Suggest</>
+                )}
+              </Button>
+            </div>
+            <Textarea
+              value={firstComment}
+              onChange={(e) => setFirstComment(e.target.value)}
+              rows={3}
+              maxLength={1250}
+              className="mt-3 resize-y"
+              placeholder="e.g. Curious — which of these have you actually tried? Drop your take below 👇"
+            />
+            <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+              <span>Leave blank to skip. Posts ~60–120s after publish so it looks natural.</span>
+              <span>{firstComment.length}/1250</span>
+            </div>
+          </div>
+
+          <div className="mt-6 border-t border-border pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="flex items-center gap-2 font-display text-sm font-semibold">
