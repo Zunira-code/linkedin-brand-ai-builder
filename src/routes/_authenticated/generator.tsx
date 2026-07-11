@@ -397,10 +397,24 @@ function Generator() {
             <Button onClick={generate} disabled={busy} className="w-full bg-brand-gradient text-brand-foreground">
               {busy ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Writing…</> : <><Sparkles className="mr-2 h-4 w-4" />Generate</>}
             </Button>
-            {profile.data?.brand_voice ? (
-              <p className="text-xs text-muted-foreground">Using your saved brand voice.</p>
+            {voiceTrained ? (
+              <p className="flex items-center gap-1.5 text-xs text-success">
+                <Mic className="h-3 w-3" /> Voice trained on {sampleCount} of your posts.
+              </p>
             ) : (
-              <p className="text-xs text-muted-foreground">Tip: add your brand voice in Settings for more on-brand drafts.</p>
+              <Link
+                to="/settings"
+                className="block rounded-lg border border-brand/40 bg-brand/5 p-3 text-xs text-brand hover:bg-brand/10"
+              >
+                <div className="flex items-center gap-1.5 font-medium">
+                  <Mic className="h-3.5 w-3.5" /> Train your voice for better drafts →
+                </div>
+                <div className="mt-1 text-brand/80">
+                  {sampleCount === 0
+                    ? "Paste 10–20 of your past posts so drafts sound like you, not a generic AI."
+                    : `${sampleCount}/10 samples added. Add ${10 - sampleCount} more to unlock full voice matching.`}
+                </div>
+              </Link>
             )}
 
             {calibration.data && calibration.data.topics.length > 0 ? (
