@@ -11,6 +11,10 @@ import {
   ArrowRight,
   Mail,
   Phone,
+  Images,
+  Video,
+  Users,
+  Palette,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -40,12 +44,16 @@ export const Route = createFileRoute("/")({
 });
 
 const features = [
-  { icon: Sparkles, title: "AI post generator", desc: "Turn a topic into a scroll-stopping post in seconds. Trained on hooks that convert." },
-  { icon: Calendar, title: "Content calendar", desc: "Plan a week of posts. We publish them to LinkedIn automatically when the time comes." },
-  { icon: Flame, title: "Viral inspiration", desc: "A curated library of proven post patterns you can remix with one click." },
+  { icon: Sparkles, title: "AI post generator", desc: "Turn a topic into a scroll-stopping text post in seconds. Trained on hooks that convert." },
+  { icon: Video, title: "AI video posts", desc: "Generate a short vertical video from a prompt, add your caption, and publish straight to LinkedIn." },
+  { icon: Images, title: "Carousel builder", desc: "Turn any topic or long-form text into a 5–8 slide branded carousel — download the PDF and upload to LinkedIn." },
+  { icon: Calendar, title: "Content calendar", desc: "Plan a week of posts. We auto-publish text & video posts to LinkedIn when the time comes." },
+  { icon: Flame, title: "Viral inspiration", desc: "A curated library of proven post patterns you can remix into your own draft with one click." },
   { icon: BarChart3, title: "Personal analytics", desc: "Track followers, reach and post performance right next to your drafts." },
+  { icon: Users, title: "Warm leads", desc: "See who's engaging with your posts so you can turn interactions into conversations." },
   { icon: Wand2, title: "Your brand voice", desc: "Teach Postpilot how you write once. Every draft sounds like you, not like AI." },
-  { icon: Zap, title: "One-click publish", desc: "Connect LinkedIn and ship posts without leaving the app. Or schedule for peak hours." },
+  { icon: Palette, title: "Brand kit", desc: "Save your logo, colors and fonts once — reused across every carousel and visual you generate." },
+  { icon: Zap, title: "One-click publish", desc: "Connect LinkedIn via OAuth and ship posts without leaving the app. Or schedule for peak hours." },
 ];
 
 function Index() {
