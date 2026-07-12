@@ -251,6 +251,3 @@ function Row({
     </div>
   );
 }
-    </div>
-  );
-}
