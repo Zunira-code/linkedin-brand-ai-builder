@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Check, Sparkles, Zap, Building2 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
