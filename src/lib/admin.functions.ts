@@ -27,7 +27,7 @@ export const listAllProfiles = createServerFn({ method: "GET" })
     await assertAdmin(context);
     const { data, error } = await context.supabase
       .from("profiles")
-      .select("id, display_name, avatar_url, is_approved, created_at, linkedin_urn")
+      .select("id, display_name, avatar_url, is_approved, created_at, linkedin_urn, subscription_tier")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
@@ -36,13 +36,25 @@ export const listAllProfiles = createServerFn({ method: "GET" })
 export const setUserApproval = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ user_id: z.string().uuid(), is_approved: z.boolean() }).parse(input),
+    z
+      .object({
+        user_id: z.string().uuid(),
+        is_approved: z.boolean(),
+        subscription_tier: z.enum(["starter", "growth", "agency"]).optional(),
+      })
+      .parse(input),
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context);
+    const update: { is_approved: boolean; subscription_tier?: "starter" | "growth" | "agency" } = {
+      is_approved: data.is_approved,
+    };
+    if (data.is_approved && data.subscription_tier) {
+      update.subscription_tier = data.subscription_tier;
+    }
     const { error } = await context.supabase
       .from("profiles")
-      .update({ is_approved: data.is_approved })
+      .update(update)
       .eq("id", data.user_id);
     if (error) throw new Error(error.message);
     return { ok: true };

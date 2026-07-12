@@ -312,6 +312,7 @@ export type Database = {
           id: string
           is_approved: boolean
           linkedin_urn: string | null
+          subscription_tier: Database["public"]["Enums"]["subscription_tier"]
           timezone: string | null
           updated_at: string
         }
@@ -329,6 +330,7 @@ export type Database = {
           id: string
           is_approved?: boolean
           linkedin_urn?: string | null
+          subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           timezone?: string | null
           updated_at?: string
         }
@@ -346,6 +348,7 @@ export type Database = {
           id?: string
           is_approved?: boolean
           linkedin_urn?: string | null
+          subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           timezone?: string | null
           updated_at?: string
         }
@@ -412,6 +415,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       post_status: "draft" | "scheduled" | "posted" | "failed"
+      subscription_tier: "starter" | "growth" | "agency"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -541,6 +545,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       post_status: ["draft", "scheduled", "posted", "failed"],
+      subscription_tier: ["starter", "growth", "agency"],
     },
   },
 } as const

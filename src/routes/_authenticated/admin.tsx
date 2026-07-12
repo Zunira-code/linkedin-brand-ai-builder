@@ -35,7 +35,7 @@ function AdminPage() {
   });
 
   const mut = useMutation({
-    mutationFn: (v: { user_id: string; is_approved: boolean }) =>
+    mutationFn: (v: { user_id: string; is_approved: boolean; subscription_tier?: "starter" | "growth" | "agency" }) =>
       setApproval({ data: v }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-profiles"] }),
   });
@@ -119,7 +119,8 @@ function AdminPage() {
               key={p.id}
               profile={p}
               busy={mut.isPending && mut.variables?.user_id === p.id}
-              onToggle={(v) => mut.mutate({ user_id: p.id, is_approved: v })}
+              onActivate={(tier) => mut.mutate({ user_id: p.id, is_approved: true, subscription_tier: tier })}
+              onDeactivate={() => mut.mutate({ user_id: p.id, is_approved: false })}
             />
           ))}
         </Section>
@@ -135,7 +136,8 @@ function AdminPage() {
               key={p.id}
               profile={p}
               busy={mut.isPending && mut.variables?.user_id === p.id}
-              onToggle={(v) => mut.mutate({ user_id: p.id, is_approved: v })}
+              onActivate={(tier) => mut.mutate({ user_id: p.id, is_approved: true, subscription_tier: tier })}
+              onDeactivate={() => mut.mutate({ user_id: p.id, is_approved: false })}
             />
           ))}
         </Section>
@@ -178,7 +180,8 @@ function Section({
 function Row({
   profile,
   busy,
-  onToggle,
+  onActivate,
+  onDeactivate,
 }: {
   profile: {
     id: string;
@@ -187,12 +190,14 @@ function Row({
     is_approved: boolean;
     created_at: string;
     linkedin_urn: string | null;
+    subscription_tier?: "starter" | "growth" | "agency" | null;
   };
   busy: boolean;
-  onToggle: (v: boolean) => void;
+  onActivate: (tier: "starter" | "growth" | "agency") => void;
+  onDeactivate: () => void;
 }) {
   return (
-    <div className="flex items-center gap-4 p-4">
+    <div className="flex flex-wrap items-center gap-4 p-4">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-sm font-medium">
         {profile.avatar_url ? (
           <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
@@ -207,17 +212,42 @@ function Row({
         <div className="truncate text-xs text-muted-foreground">
           Joined {new Date(profile.created_at).toLocaleDateString()}
           {profile.linkedin_urn ? " · LinkedIn connected" : ""}
+          {profile.is_approved && profile.subscription_tier
+            ? ` · Tier: ${profile.subscription_tier}`
+            : ""}
         </div>
       </div>
-      {profile.is_approved ? (
-        <Button variant="outline" size="sm" disabled={busy} onClick={() => onToggle(false)}>
-          Deactivate
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          size="sm"
+          variant={profile.is_approved && profile.subscription_tier === "starter" ? "default" : "outline"}
+          disabled={busy}
+          onClick={() => onActivate("starter")}
+        >
+          {profile.is_approved ? "Set Starter" : "Activate: Starter"}
         </Button>
-      ) : (
-        <Button size="sm" disabled={busy} onClick={() => onToggle(true)}>
-          Activate
+        <Button
+          size="sm"
+          variant={profile.is_approved && profile.subscription_tier === "growth" ? "default" : "outline"}
+          disabled={busy}
+          onClick={() => onActivate("growth")}
+        >
+          {profile.is_approved ? "Set Growth" : "Activate: Growth"}
         </Button>
-      )}
+        <Button
+          size="sm"
+          variant={profile.is_approved && profile.subscription_tier === "agency" ? "default" : "outline"}
+          disabled={busy}
+          onClick={() => onActivate("agency")}
+        >
+          {profile.is_approved ? "Set Agency" : "Activate: Agency"}
+        </Button>
+        {profile.is_approved && (
+          <Button variant="ghost" size="sm" disabled={busy} onClick={onDeactivate}>
+            Deactivate
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
