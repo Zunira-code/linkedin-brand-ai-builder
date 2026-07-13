@@ -15,7 +15,10 @@ export type Calibration = {
 
 const Input = z.object({
   profileText: z.string().max(20000).optional().default(""),
-  profileUrl: z.string().url().max(500).optional().or(z.literal("")).default(""),
+  profileUrl: z
+    .preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+      z.string().url().max(500).optional())
+    .transform((v) => v ?? ""),
 });
 async function scanLinkedInUrl(url: string): Promise<string> {
   if (!url) return "";
