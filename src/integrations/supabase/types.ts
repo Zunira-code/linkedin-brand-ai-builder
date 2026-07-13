@@ -188,6 +188,123 @@ export type Database = {
         }
         Relationships: []
       }
+      linkedin_connections: {
+        Row: {
+          access_token: string | null
+          created_at: string
+          id: string
+          linkedin_profile_id: string | null
+          refresh_token: string | null
+          scope: string | null
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string
+          id?: string
+          linkedin_profile_id?: string | null
+          refresh_token?: string | null
+          scope?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string
+          id?: string
+          linkedin_profile_id?: string | null
+          refresh_token?: string | null
+          scope?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      linkedin_daily_metrics: {
+        Row: {
+          created_at: string
+          engagement_rate: number
+          followers: number
+          followers_gained: number
+          id: string
+          metric_date: string
+          post_impressions: number
+          profile_views: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          engagement_rate?: number
+          followers?: number
+          followers_gained?: number
+          id?: string
+          metric_date: string
+          post_impressions?: number
+          profile_views?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          engagement_rate?: number
+          followers?: number
+          followers_gained?: number
+          id?: string
+          metric_date?: string
+          post_impressions?: number
+          profile_views?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      linkedin_posts_metrics: {
+        Row: {
+          comments: number
+          content: string | null
+          created_at: string
+          id: string
+          impressions: number
+          post_urn: string
+          published_at: string | null
+          reactions: number
+          shares: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comments?: number
+          content?: string | null
+          created_at?: string
+          id?: string
+          impressions?: number
+          post_urn: string
+          published_at?: string | null
+          reactions?: number
+          shares?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comments?: number
+          content?: string | null
+          created_at?: string
+          id?: string
+          impressions?: number
+          post_urn?: string
+          published_at?: string | null
+          reactions?: number
+          shares?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       post_metrics: {
         Row: {
           comments: number | null
