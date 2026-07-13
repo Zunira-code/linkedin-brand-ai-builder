@@ -67,18 +67,10 @@ export const getAnalytics = createServerFn({ method: "GET" })
     });
 
     // Check LinkedIn OAuth connection in cached table
-    const sb = context.supabase as unknown as {
-      from: (t: string) => {
-        select: (c: string, o?: unknown) => Promise<{ data: unknown; count?: number | null }> & {
-          eq: (col: string, val: string) => unknown;
-          gte: (col: string, val: string) => unknown;
-          order: (col: string, o: { ascending: boolean }) => unknown;
-          limit: (n: number) => unknown;
-          maybeSingle: () => Promise<{ data: unknown }>;
-        };
-      };
-    };
-    const connRes = await (context.supabase as any)
+    // (types will be regenerated after this migration; using loose access here)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = context.supabase as any;
+    const connRes = await sb
       .from("linkedin_connections")
       .select("linkedin_profile_id, token_expires_at, scope")
       .eq("user_id", context.userId)
@@ -95,7 +87,7 @@ export const getAnalytics = createServerFn({ method: "GET" })
     sincePrev.setDate(now.getDate() - rangeDays * 2);
     const isoDate = (d: Date) => d.toISOString().slice(0, 10);
 
-    const dailyRes = await (context.supabase as any)
+    const dailyRes = await sb
       .from("linkedin_daily_metrics")
       .select("metric_date, profile_views, post_impressions, followers, followers_gained, engagement_rate")
       .eq("user_id", context.userId)
@@ -157,7 +149,7 @@ export const getAnalytics = createServerFn({ method: "GET" })
       months[months.length - 1].followers - (months.find((m) => m.followers > 0)?.followers ?? 0);
 
     // Top performing posts
-    const topRes = await (context.supabase as any)
+    const topRes = await sb
       .from("linkedin_posts_metrics")
       .select("post_urn, content, impressions, comments, reactions, published_at")
       .eq("user_id", context.userId)
