@@ -41,32 +41,23 @@ export const updateProfile = createServerFn({ method: "POST" })
     return out;
   });
 
-export const connectLinkedIn = createServerFn({ method: "POST" })
+/**
+ * Kick off the per-user LinkedIn OAuth flow. Returns an authorize URL the
+ * browser opens in a popup. The callback route completes the exchange and
+ * stores tokens keyed by user id.
+ */
+export const startLinkedInOAuth = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { getUserInfo } = await import("@/lib/linkedin.server");
-    let info;
-    try {
-      info = await getUserInfo();
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      throw new Error(
-        `Could not reach LinkedIn. ${msg}. Ask an admin to reconnect the LinkedIn connector with the openid, profile, and email scopes.`,
-      );
-    }
-    if (!info?.sub) {
-      throw new Error("LinkedIn returned no profile. Please reconnect the LinkedIn connector.");
-    }
-    const { error } = await context.supabase
-      .from("profiles")
-      .update({
-        linkedin_urn: info.sub,
-        display_name: info.name ?? undefined,
-        avatar_url: info.picture ?? undefined,
-      })
-      .eq("id", context.userId);
-    if (error) throw new Error(error.message);
-    return info;
+  .inputValidator((input: unknown) =>
+    z.object({ origin: z.string().url() }).parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    const { signState, buildAuthorizeUrl } = await import("@/lib/linkedin-auth.server");
+    const nonce = crypto.randomUUID();
+    const state = signState({ userId: context.userId, origin: data.origin, nonce });
+    const redirectUri = `${data.origin}/api/public/linkedin/callback`;
+    const authorizationUrl = buildAuthorizeUrl({ redirectUri, state });
+    return { authorizationUrl };
   });
 
 export const disconnectLinkedIn = createServerFn({ method: "POST" })
@@ -77,6 +68,8 @@ export const disconnectLinkedIn = createServerFn({ method: "POST" })
       .update({ linkedin_urn: null })
       .eq("id", context.userId);
     if (error) throw new Error(error.message);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("linkedin_connections").delete().eq("user_id", context.userId);
     return { ok: true };
   });
 
