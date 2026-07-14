@@ -112,6 +112,9 @@ export const importVoiceSamplesFromLinkedIn = createServerFn({ method: "POST" })
       throw new Error("Connect LinkedIn first, then try again.");
     }
     const { linkedInGet } = await import("@/lib/linkedin.server");
+    const { getLinkedInAuthForUser } = await import("@/lib/linkedin-auth.server");
+    const auth = await getLinkedInAuthForUser(context.userId);
+    if (!auth) throw new Error("Connect LinkedIn first, then try again.");
     const authorUrn = profile.linkedin_urn.startsWith("urn:")
       ? profile.linkedin_urn
       : `urn:li:person:${profile.linkedin_urn}`;
@@ -123,6 +126,7 @@ export const importVoiceSamplesFromLinkedIn = createServerFn({ method: "POST" })
     try {
       const encoded = encodeURIComponent(authorUrn);
       payload = await linkedInGet(
+        auth.accessToken,
         `/v2/ugcPosts?q=authors&authors=List(${encoded})&count=20&sortBy=LAST_MODIFIED`,
       );
     } catch (e) {
