@@ -51,7 +51,7 @@ const PLANS: Array<{
 function UpgradePage() {
   const search = useSearch({ from: "/_authenticated/upgrade" });
   const { tier: currentTier } = useTier();
-  const highlight = search.tier ?? "growth";
+  const highlight: Tier = search.tier ?? "growth";
 
   return (
     <AppShell title="Upgrade plan">
