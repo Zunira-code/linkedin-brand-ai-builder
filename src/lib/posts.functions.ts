@@ -113,19 +113,11 @@ export const publishPostNow = createServerFn({ method: "POST" })
       .single();
     if (error || !post) throw new Error("Post not found");
 
-    const { data: profile } = await context.supabase
-      .from("profiles")
-      .select("linkedin_urn")
-      .eq("id", context.userId)
-      .single();
-
-    const { getUserInfo, publishTextPost, publishImagePost, publishVideoPost } = await import("@/lib/linkedin.server");
-    let personSub = profile?.linkedin_urn ?? "";
-    if (!personSub) {
-      const info = await getUserInfo();
-      personSub = info.sub;
-      await context.supabase.from("profiles").update({ linkedin_urn: personSub }).eq("id", context.userId);
-    }
+    const { getLinkedInAuthForUser } = await import("@/lib/linkedin-auth.server");
+    const auth = await getLinkedInAuthForUser(context.userId);
+    if (!auth) throw new Error("Connect your LinkedIn account in Settings first.");
+    const { publishTextPost, publishImagePost, publishVideoPost } = await import("@/lib/linkedin.server");
+    const personSub = auth.urn;
     try {
       let urn: string | null;
       const imageDataUrl = data.imageDataUrl ?? (post as { image_data_url?: string | null }).image_data_url ?? undefined;
@@ -137,15 +129,15 @@ export const publishPostNow = createServerFn({ method: "POST" })
           .download(videoUrl);
         if (dlErr || !blob) throw new Error(`Could not read video: ${dlErr?.message ?? "no blob"}`);
         const buf = new Uint8Array(await blob.arrayBuffer());
-        urn = await publishVideoPost(personSub, post.content, buf, blob.type || "video/mp4");
+        urn = await publishVideoPost(auth.accessToken, personSub, post.content, buf, blob.type || "video/mp4");
       } else if (imageDataUrl) {
         const match = imageDataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
         if (!match) throw new Error("Invalid image data URL");
         const contentType = match[1];
         const bytes = Uint8Array.from(atob(match[2]), (c) => c.charCodeAt(0));
-        urn = await publishImagePost(personSub, post.content, bytes, contentType);
+        urn = await publishImagePost(auth.accessToken, personSub, post.content, bytes, contentType);
       } else {
-        urn = await publishTextPost(personSub, post.content);
+        urn = await publishTextPost(auth.accessToken, personSub, post.content);
       }
       await context.supabase
         .from("posts")
