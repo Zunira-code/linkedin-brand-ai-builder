@@ -18,6 +18,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiGeneratePostImageRouteImport } from './routes/api/generate-post-image'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as AuthenticatedUpgradeRouteImport } from './routes/_authenticated/upgrade'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedInspirationRouteImport } from './routes/_authenticated/inspiration'
@@ -76,6 +77,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedUpgradeRoute = AuthenticatedUpgradeRouteImport.update({
+  id: '/upgrade',
+  path: '/upgrade',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
@@ -170,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/inspiration': typeof AuthenticatedInspirationRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/upgrade': typeof AuthenticatedUpgradeRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-post-image': typeof ApiGeneratePostImageRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/inspiration': typeof AuthenticatedInspirationRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/upgrade': typeof AuthenticatedUpgradeRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-post-image': typeof ApiGeneratePostImageRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -220,6 +228,7 @@ export interface FileRoutesById {
   '/_authenticated/inspiration': typeof AuthenticatedInspirationRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/upgrade': typeof AuthenticatedUpgradeRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-post-image': typeof ApiGeneratePostImageRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -246,6 +255,7 @@ export interface FileRouteTypes {
     | '/inspiration'
     | '/leads'
     | '/settings'
+    | '/upgrade'
     | '/api/chat'
     | '/api/generate-post-image'
     | '/.lovable/oauth/consent'
@@ -270,6 +280,7 @@ export interface FileRouteTypes {
     | '/inspiration'
     | '/leads'
     | '/settings'
+    | '/upgrade'
     | '/api/chat'
     | '/api/generate-post-image'
     | '/.lovable/oauth/consent'
@@ -295,6 +306,7 @@ export interface FileRouteTypes {
     | '/_authenticated/inspiration'
     | '/_authenticated/leads'
     | '/_authenticated/settings'
+    | '/_authenticated/upgrade'
     | '/api/chat'
     | '/api/generate-post-image'
     | '/.lovable/oauth/consent'
@@ -383,6 +395,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/chat'
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/upgrade': {
+      id: '/_authenticated/upgrade'
+      path: '/upgrade'
+      fullPath: '/upgrade'
+      preLoaderRoute: typeof AuthenticatedUpgradeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
@@ -495,6 +514,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInspirationRoute: typeof AuthenticatedInspirationRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedUpgradeRoute: typeof AuthenticatedUpgradeRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -507,6 +527,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInspirationRoute: AuthenticatedInspirationRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedUpgradeRoute: AuthenticatedUpgradeRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
