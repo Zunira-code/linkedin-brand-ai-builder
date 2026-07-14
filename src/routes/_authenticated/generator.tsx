@@ -616,6 +616,11 @@ function Generator() {
           </div>
 
           <div className="mt-6 border-t border-border pt-6">
+          <RequireTier
+            tier="growth"
+            feature="Video publishing"
+            fallback={<UpgradePaywall compact requiredTier="growth" feature="Video publishing" />}
+          >
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h3 className="flex items-center gap-2 font-display text-sm font-semibold">
@@ -721,6 +726,7 @@ function Generator() {
                 This is the same draft above — edits sync. When published, this becomes the LinkedIn post text and the MP4 attaches as the video.
               </p>
             </div>
+          </RequireTier>
           </div>
         </div>
       </div>
