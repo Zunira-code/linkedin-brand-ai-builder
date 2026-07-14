@@ -22,6 +22,7 @@ import {
   Info,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { RequireTier, UpgradePaywall } from "@/components/tier-gate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
