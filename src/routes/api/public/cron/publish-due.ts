@@ -15,6 +15,7 @@ export const Route = createFileRoute("/api/public/cron/publish-due")({
         }
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { publishTextPost, publishImagePost, publishVideoPost, commentOnPost } = await import("@/lib/linkedin.server");
+        const { getLinkedInAuthForUser } = await import("@/lib/linkedin-auth.server");
 
         const nowIso = new Date().toISOString();
         const { data: due, error } = await supabaseAdmin
@@ -28,12 +29,8 @@ export const Route = createFileRoute("/api/public/cron/publish-due")({
         const results: Array<{ id: string; ok: boolean; error?: string }> = [];
         for (const p of due ?? []) {
           try {
-            const { data: prof } = await supabaseAdmin
-              .from("profiles")
-              .select("linkedin_urn")
-              .eq("id", p.user_id)
-              .maybeSingle();
-            if (!prof?.linkedin_urn) throw new Error("LinkedIn not connected");
+            const auth = await getLinkedInAuthForUser(p.user_id);
+            if (!auth) throw new Error("LinkedIn not connected");
             let urn: string | null;
             const img = (p as { image_data_url?: string | null }).image_data_url;
             const vid = (p as { video_url?: string | null }).video_url;
@@ -43,14 +40,14 @@ export const Route = createFileRoute("/api/public/cron/publish-due")({
                 .download(vid);
               if (dlErr || !blob) throw new Error(`Could not read video: ${dlErr?.message ?? "no blob"}`);
               const buf = new Uint8Array(await blob.arrayBuffer());
-              urn = await publishVideoPost(prof.linkedin_urn, p.content, buf, blob.type || "video/mp4");
+              urn = await publishVideoPost(auth.accessToken, auth.urn, p.content, buf, blob.type || "video/mp4");
             } else if (img) {
               const match = img.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
               if (!match) throw new Error("Invalid stored image data URL");
               const bytes = Uint8Array.from(atob(match[2]), (c) => c.charCodeAt(0));
-              urn = await publishImagePost(prof.linkedin_urn, p.content, bytes, match[1]);
+              urn = await publishImagePost(auth.accessToken, auth.urn, p.content, bytes, match[1]);
             } else {
-              urn = await publishTextPost(prof.linkedin_urn, p.content);
+              urn = await publishTextPost(auth.accessToken, auth.urn, p.content);
             }
             const fc = (p as { first_comment?: string | null }).first_comment;
             const commentDueAt =
@@ -89,14 +86,11 @@ export const Route = createFileRoute("/api/public/cron/publish-due")({
         const commentResults: Array<{ id: string; ok: boolean; error?: string }> = [];
         for (const p of dueComments ?? []) {
           try {
-            const { data: prof } = await supabaseAdmin
-              .from("profiles")
-              .select("linkedin_urn")
-              .eq("id", p.user_id)
-              .maybeSingle();
-            if (!prof?.linkedin_urn) throw new Error("LinkedIn not connected");
+            const auth = await getLinkedInAuthForUser(p.user_id);
+            if (!auth) throw new Error("LinkedIn not connected");
             const commentUrn = await commentOnPost(
-              prof.linkedin_urn,
+              auth.accessToken,
+              auth.urn,
               p.linkedin_urn as string,
               (p.first_comment as string).trim(),
             );
