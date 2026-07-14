@@ -62,7 +62,19 @@ const TEMPLATES: Array<{ id: Template; label: string; description: string }> = [
 
 function CarouselsPage() {
   const search = useSearch({ from: "/_authenticated/carousels" });
-  return search.id ? <Editor id={search.id} /> : <Library />;
+  return (
+    <RequireTier
+      tier="growth"
+      feature="Carousel builder"
+      fallback={
+        <AppShell title="Carousels">
+          <UpgradePaywall requiredTier="growth" feature="Carousel builder" />
+        </AppShell>
+      }
+    >
+      {search.id ? <Editor id={search.id} /> : <Library />}
+    </RequireTier>
+  );
 }
 
 function Library() {
