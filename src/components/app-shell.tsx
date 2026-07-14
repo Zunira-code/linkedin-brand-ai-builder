@@ -25,16 +25,17 @@ import { getLinkedInStatus } from "@/lib/profile.functions";
 import { getMyProfile } from "@/lib/profile.functions";
 import { amIAdmin } from "@/lib/admin.functions";
 import { useQueryClient } from "@tanstack/react-query";
+import { tierMeets, type Tier } from "@/lib/tier";
 
 const nav = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/generator", label: "Post generator", icon: Sparkles },
-  { to: "/calendar", label: "Calendar", icon: Calendar },
-  { to: "/inspiration", label: "Inspiration", icon: Flame },
-  { to: "/analytics", label: "Analytics", icon: BarChart3 },
-  { to: "/leads", label: "Warm leads", icon: Users },
-  { to: "/carousels", label: "Carousels", icon: Images },
-  { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, minTier: "starter" as Tier },
+  { to: "/generator", label: "Post generator", icon: Sparkles, minTier: "starter" as Tier },
+  { to: "/calendar", label: "Calendar", icon: Calendar, minTier: "starter" as Tier },
+  { to: "/inspiration", label: "Inspiration", icon: Flame, minTier: "starter" as Tier },
+  { to: "/analytics", label: "Analytics", icon: BarChart3, minTier: "starter" as Tier },
+  { to: "/leads", label: "Warm leads", icon: Users, minTier: "growth" as Tier },
+  { to: "/carousels", label: "Carousels", icon: Images, minTier: "growth" as Tier },
+  { to: "/settings", label: "Settings", icon: Settings, minTier: "starter" as Tier },
 ] as const;
 
 export function AppShell({ children, title }: { children: ReactNode; title?: string }) {
@@ -109,10 +110,14 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
           {nav.map((item) => {
             const active = pathname.startsWith(item.to);
             const Icon = item.icon;
+            const currentTier = (profileQ.data?.subscription_tier ?? null) as Tier | null;
+            const allowed = tierMeets(currentTier, item.minTier);
+            const target = allowed ? item.to : "/upgrade";
             return (
               <Link
                 key={item.to}
-                to={item.to}
+                to={target}
+                search={allowed ? undefined : { tier: item.minTier, feature: item.label }}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   active
@@ -121,7 +126,8 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
                 )}
               >
                 <Icon className="h-4 w-4" />
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {!allowed && <Lock className="h-3 w-3 opacity-60" />}
               </Link>
             );
           })}
