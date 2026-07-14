@@ -9,7 +9,6 @@ import { Sparkles, Save, Send, Loader2, Wand2, Image as ImageIcon, Download, Has
 import ReactMarkdown from "react-markdown";
 import { AppShell } from "@/components/app-shell";
 import { RequireTier, UpgradePaywall } from "@/components/tier-gate";
-import { useTier } from "@/lib/tier";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
