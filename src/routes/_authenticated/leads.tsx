@@ -15,6 +15,7 @@ import {
   Info,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { RequireTier, UpgradePaywall } from "@/components/tier-gate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,8 +33,24 @@ import { listLeads, updateLead, addLead } from "@/lib/leads.functions";
 
 export const Route = createFileRoute("/_authenticated/leads")({
   head: () => ({ meta: [{ title: "Warm leads — Postpilot" }] }),
-  component: LeadsPage,
+  component: LeadsPageGated,
 });
+
+function LeadsPageGated() {
+  return (
+    <RequireTier
+      tier="growth"
+      feature="Warm leads"
+      fallback={
+        <AppShell title="Warm leads">
+          <UpgradePaywall requiredTier="growth" feature="Warm leads" />
+        </AppShell>
+      }
+    >
+      <LeadsPage />
+    </RequireTier>
+  );
+}
 
 type Lead = {
   id: string;
