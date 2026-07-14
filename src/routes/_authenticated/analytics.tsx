@@ -14,6 +14,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { useTier } from "@/lib/tier";
+import { UpgradePaywall } from "@/components/tier-gate";
 import { Button } from "@/components/ui/button";
 import { getAnalytics } from "@/lib/analytics.functions";
 import {
@@ -42,6 +44,8 @@ const RANGE_OPTIONS = [
 function Analytics() {
   const fn = useServerFn(getAnalytics);
   const [rangeDays, setRangeDays] = useState(30);
+  const { has } = useTier();
+  const fullAnalytics = has("growth");
   const q = useQuery({
     queryKey: ["analytics", rangeDays],
     queryFn: () => fn({ data: { rangeDays } }),
