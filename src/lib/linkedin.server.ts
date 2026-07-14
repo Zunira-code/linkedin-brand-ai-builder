@@ -1,27 +1,23 @@
-const GATEWAY = "https://connector-gateway.lovable.dev/linkedin";
+const LINKEDIN_API = "https://api.linkedin.com";
 
-function headers() {
-  const key = process.env.LOVABLE_API_KEY;
-  const conn = process.env.LINKEDIN_API_KEY;
-  if (!key || !conn) throw new Error("LinkedIn connector not configured");
+function authHeaders(accessToken: string): Record<string, string> {
   return {
-    Authorization: `Bearer ${key}`,
-    "X-Connection-Api-Key": conn,
+    Authorization: `Bearer ${accessToken}`,
     "Content-Type": "application/json",
-  } as Record<string, string>;
+  };
 }
 
-export async function linkedInGet(path: string) {
-  const res = await fetch(`${GATEWAY}${path}`, { headers: headers() });
+export async function linkedInGet(accessToken: string, path: string) {
+  const res = await fetch(`${LINKEDIN_API}${path}`, { headers: authHeaders(accessToken) });
   const text = await res.text();
   if (!res.ok) throw new Error(`LinkedIn ${res.status}: ${text}`);
   return text ? JSON.parse(text) : {};
 }
 
-export async function linkedInPost(path: string, body: unknown) {
-  const res = await fetch(`${GATEWAY}${path}`, {
+export async function linkedInPost(accessToken: string, path: string, body: unknown) {
+  const res = await fetch(`${LINKEDIN_API}${path}`, {
     method: "POST",
-    headers: headers(),
+    headers: authHeaders(accessToken),
     body: JSON.stringify(body),
   });
   const text = await res.text();
@@ -29,8 +25,8 @@ export async function linkedInPost(path: string, body: unknown) {
   return text ? JSON.parse(text) : {};
 }
 
-export async function getUserInfo() {
-  return linkedInGet("/v2/userinfo") as Promise<{
+export async function getUserInfo(accessToken: string) {
+  return linkedInGet(accessToken, "/v2/userinfo") as Promise<{
     sub: string;
     name?: string;
     picture?: string;
@@ -44,6 +40,7 @@ export async function getUserInfo() {
  * (e.g. "urn:li:share:12345" or "urn:li:ugcPost:12345").
  */
 export async function commentOnPost(
+  accessToken: string,
   personSub: string,
   postUrn: string,
   text: string,
@@ -55,9 +52,9 @@ export async function commentOnPost(
     object: postUrn,
     message: { text },
   };
-  const res = await fetch(`${GATEWAY}/v2/socialActions/${encoded}/comments`, {
+  const res = await fetch(`${LINKEDIN_API}/v2/socialActions/${encoded}/comments`, {
     method: "POST",
-    headers: { ...headers(), "X-Restli-Protocol-Version": "2.0.0" },
+    headers: { ...authHeaders(accessToken), "X-Restli-Protocol-Version": "2.0.0" },
     body: JSON.stringify(body),
   });
   const raw = await res.text();
@@ -70,11 +67,11 @@ export async function commentOnPost(
  * Fetch comments on a specific LinkedIn share/ugcPost URN.
  * Returns raw comment elements from the socialActions API.
  */
-export async function getPostComments(postUrn: string) {
+export async function getPostComments(accessToken: string, postUrn: string) {
   const encoded = encodeURIComponent(postUrn);
   const res = await fetch(
-    `${GATEWAY}/v2/socialActions/${encoded}/comments?count=100`,
-    { headers: { ...headers(), "X-Restli-Protocol-Version": "2.0.0" } },
+    `${LINKEDIN_API}/v2/socialActions/${encoded}/comments?count=100`,
+    { headers: { ...authHeaders(accessToken), "X-Restli-Protocol-Version": "2.0.0" } },
   );
   const raw = await res.text();
   if (!res.ok) throw new Error(`LinkedIn getComments ${res.status}: ${raw}`);
@@ -93,7 +90,7 @@ export async function getPostComments(postUrn: string) {
  * endpoints require Marketing Developer Platform scopes, so this may fail
  * silently — callers should fall back to a placeholder name/headline.
  */
-export async function getPersonProfile(personUrn: string): Promise<{
+export async function getPersonProfile(accessToken: string, personUrn: string): Promise<{
   name?: string;
   headline?: string;
   profileUrl?: string;
@@ -102,8 +99,8 @@ export async function getPersonProfile(personUrn: string): Promise<{
   const id = personUrn.replace(/^urn:li:person:/, "");
   try {
     const res = await fetch(
-      `${GATEWAY}/v2/people/(id:${encodeURIComponent(id)})?projection=(id,localizedFirstName,localizedLastName,localizedHeadline,vanityName)`,
-      { headers: { ...headers(), "X-Restli-Protocol-Version": "2.0.0" } },
+      `${LINKEDIN_API}/v2/people/(id:${encodeURIComponent(id)})?projection=(id,localizedFirstName,localizedLastName,localizedHeadline,vanityName)`,
+      { headers: { ...authHeaders(accessToken), "X-Restli-Protocol-Version": "2.0.0" } },
     );
     if (!res.ok) return null;
     const data = (await res.json()) as {
@@ -125,7 +122,7 @@ export async function getPersonProfile(personUrn: string): Promise<{
   }
 }
 
-export async function publishTextPost(personSub: string, text: string) {
+export async function publishTextPost(accessToken: string, personSub: string, text: string) {
   const authorUrn = personSub.startsWith("urn:") ? personSub : `urn:li:person:${personSub}`;
   const body = {
     author: authorUrn,
@@ -138,9 +135,9 @@ export async function publishTextPost(personSub: string, text: string) {
     },
     visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" },
   };
-  const res = await fetch(`${GATEWAY}/v2/ugcPosts`, {
+  const res = await fetch(`${LINKEDIN_API}/v2/ugcPosts`, {
     method: "POST",
-    headers: { ...headers(), "X-Restli-Protocol-Version": "2.0.0" },
+    headers: { ...authHeaders(accessToken), "X-Restli-Protocol-Version": "2.0.0" },
     body: JSON.stringify(body),
   });
   const raw = await res.text();
@@ -150,6 +147,7 @@ export async function publishTextPost(personSub: string, text: string) {
 }
 
 export async function publishVideoPost(
+  accessToken: string,
   personSub: string,
   text: string,
   videoBytes: Uint8Array,
@@ -158,9 +156,9 @@ export async function publishVideoPost(
   const authorUrn = personSub.startsWith("urn:") ? personSub : `urn:li:person:${personSub}`;
 
   // 1) Register upload for video
-  const register = await fetch(`${GATEWAY}/v2/assets?action=registerUpload`, {
+  const register = await fetch(`${LINKEDIN_API}/v2/assets?action=registerUpload`, {
     method: "POST",
-    headers: { ...headers(), "X-Restli-Protocol-Version": "2.0.0" },
+    headers: { ...authHeaders(accessToken), "X-Restli-Protocol-Version": "2.0.0" },
     body: JSON.stringify({
       registerUploadRequest: {
         recipes: ["urn:li:digitalmediaRecipe:feedshare-video"],
@@ -185,26 +183,15 @@ export async function publishVideoPost(
   const uploadUrl =
     registerData.value.uploadMechanism["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"].uploadUrl;
 
-  // 2) Upload the video bytes. Try via connector gateway first (auth injected),
-  // fall back to direct PUT if the returned URL is pre-signed.
-  const parsed = new URL(uploadUrl);
-  const gatewayUploadUrl = `${GATEWAY}${parsed.pathname}${parsed.search}`;
-  let uploadRes = await fetch(gatewayUploadUrl, {
+  // 2) Upload the video bytes directly to LinkedIn's returned upload URL.
+  const uploadRes = await fetch(uploadUrl, {
     method: "PUT",
     headers: {
-      Authorization: `Bearer ${process.env.LOVABLE_API_KEY}`,
-      "X-Connection-Api-Key": process.env.LINKEDIN_API_KEY!,
+      Authorization: `Bearer ${accessToken}`,
       "Content-Type": contentType,
     },
     body: videoBytes as BodyInit,
   });
-  if (!uploadRes.ok) {
-    uploadRes = await fetch(uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": contentType },
-      body: videoBytes as BodyInit,
-    });
-  }
   if (!uploadRes.ok) {
     const t = await uploadRes.text().catch(() => "");
     throw new Error(`LinkedIn video upload ${uploadRes.status}: ${t}`);
@@ -230,9 +217,9 @@ export async function publishVideoPost(
     },
     visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" },
   };
-  const res = await fetch(`${GATEWAY}/v2/ugcPosts`, {
+  const res = await fetch(`${LINKEDIN_API}/v2/ugcPosts`, {
     method: "POST",
-    headers: { ...headers(), "X-Restli-Protocol-Version": "2.0.0" },
+    headers: { ...authHeaders(accessToken), "X-Restli-Protocol-Version": "2.0.0" },
     body: JSON.stringify(body),
   });
   const raw = await res.text();
@@ -242,6 +229,7 @@ export async function publishVideoPost(
 }
 
 export async function publishImagePost(
+  accessToken: string,
   personSub: string,
   text: string,
   imageBytes: Uint8Array,
@@ -250,9 +238,9 @@ export async function publishImagePost(
   const authorUrn = personSub.startsWith("urn:") ? personSub : `urn:li:person:${personSub}`;
 
   // 1) Register upload
-  const register = await fetch(`${GATEWAY}/v2/assets?action=registerUpload`, {
+  const register = await fetch(`${LINKEDIN_API}/v2/assets?action=registerUpload`, {
     method: "POST",
-    headers: { ...headers(), "X-Restli-Protocol-Version": "2.0.0" },
+    headers: { ...authHeaders(accessToken), "X-Restli-Protocol-Version": "2.0.0" },
     body: JSON.stringify({
       registerUploadRequest: {
         recipes: ["urn:li:digitalmediaRecipe:feedshare-image"],
@@ -278,29 +266,14 @@ export async function publishImagePost(
     registerData.value.uploadMechanism["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"].uploadUrl;
 
   // 2) Upload binary directly to the pre-signed uploadUrl LinkedIn returned.
-  // This URL is host `api.linkedin.com/mediaUpload/...` and expects a PUT with
-  // the OAuth bearer token. Route it via the connector gateway so it injects
-  // the token; the gateway forwards the method as-is.
-  const parsed = new URL(uploadUrl);
-  const gatewayUploadUrl = `${GATEWAY}${parsed.pathname}${parsed.search}`;
-  let uploadRes = await fetch(gatewayUploadUrl, {
+  const uploadRes = await fetch(uploadUrl, {
     method: "PUT",
     headers: {
-      Authorization: `Bearer ${process.env.LOVABLE_API_KEY}`,
-      "X-Connection-Api-Key": process.env.LINKEDIN_API_KEY!,
+      Authorization: `Bearer ${accessToken}`,
       "Content-Type": contentType,
     },
     body: imageBytes as BodyInit,
   });
-  if (!uploadRes.ok) {
-    // Fallback: try uploading directly to LinkedIn's returned uploadUrl.
-    // Some registerUpload URLs are pre-signed and accept the binary directly.
-    uploadRes = await fetch(uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": contentType },
-      body: imageBytes as BodyInit,
-    });
-  }
   if (!uploadRes.ok) {
     const t = await uploadRes.text().catch(() => "");
     throw new Error(`LinkedIn image upload ${uploadRes.status}: ${t}`);
@@ -326,9 +299,9 @@ export async function publishImagePost(
     },
     visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" },
   };
-  const res = await fetch(`${GATEWAY}/v2/ugcPosts`, {
+  const res = await fetch(`${LINKEDIN_API}/v2/ugcPosts`, {
     method: "POST",
-    headers: { ...headers(), "X-Restli-Protocol-Version": "2.0.0" },
+    headers: { ...authHeaders(accessToken), "X-Restli-Protocol-Version": "2.0.0" },
     body: JSON.stringify(body),
   });
   const raw = await res.text();
@@ -343,13 +316,14 @@ export async function publishImagePost(
  * creating one ugcPost that references every asset.
  */
 async function registerAndUploadImage(
+  accessToken: string,
   authorUrn: string,
   imageBytes: Uint8Array,
   contentType: string,
 ): Promise<string> {
-  const register = await fetch(`${GATEWAY}/v2/assets?action=registerUpload`, {
+  const register = await fetch(`${LINKEDIN_API}/v2/assets?action=registerUpload`, {
     method: "POST",
-    headers: { ...headers(), "X-Restli-Protocol-Version": "2.0.0" },
+    headers: { ...authHeaders(accessToken), "X-Restli-Protocol-Version": "2.0.0" },
     body: JSON.stringify({
       registerUploadRequest: {
         recipes: ["urn:li:digitalmediaRecipe:feedshare-image"],
@@ -373,24 +347,14 @@ async function registerAndUploadImage(
   const asset = registerData.value.asset;
   const uploadUrl =
     registerData.value.uploadMechanism["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"].uploadUrl;
-  const parsed = new URL(uploadUrl);
-  const gatewayUploadUrl = `${GATEWAY}${parsed.pathname}${parsed.search}`;
-  let uploadRes = await fetch(gatewayUploadUrl, {
+  const uploadRes = await fetch(uploadUrl, {
     method: "PUT",
     headers: {
-      Authorization: `Bearer ${process.env.LOVABLE_API_KEY}`,
-      "X-Connection-Api-Key": process.env.LINKEDIN_API_KEY!,
+      Authorization: `Bearer ${accessToken}`,
       "Content-Type": contentType,
     },
     body: imageBytes as BodyInit,
   });
-  if (!uploadRes.ok) {
-    uploadRes = await fetch(uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": contentType },
-      body: imageBytes as BodyInit,
-    });
-  }
   if (!uploadRes.ok) {
     const t = await uploadRes.text().catch(() => "");
     throw new Error(`LinkedIn image upload ${uploadRes.status}: ${t}`);
@@ -404,6 +368,7 @@ async function registerAndUploadImage(
  * slides in-feed.
  */
 export async function publishMultiImagePost(
+  accessToken: string,
   personSub: string,
   text: string,
   images: Array<{ bytes: Uint8Array; contentType: string }>,
@@ -412,7 +377,7 @@ export async function publishMultiImagePost(
   const authorUrn = personSub.startsWith("urn:") ? personSub : `urn:li:person:${personSub}`;
   const assets: string[] = [];
   for (const img of images) {
-    assets.push(await registerAndUploadImage(authorUrn, img.bytes, img.contentType));
+    assets.push(await registerAndUploadImage(accessToken, authorUrn, img.bytes, img.contentType));
   }
   const body = {
     author: authorUrn,
@@ -431,9 +396,9 @@ export async function publishMultiImagePost(
     },
     visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" },
   };
-  const res = await fetch(`${GATEWAY}/v2/ugcPosts`, {
+  const res = await fetch(`${LINKEDIN_API}/v2/ugcPosts`, {
     method: "POST",
-    headers: { ...headers(), "X-Restli-Protocol-Version": "2.0.0" },
+    headers: { ...authHeaders(accessToken), "X-Restli-Protocol-Version": "2.0.0" },
     body: JSON.stringify(body),
   });
   const raw = await res.text();
