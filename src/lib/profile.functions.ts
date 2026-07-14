@@ -45,8 +45,19 @@ export const connectLinkedIn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { getUserInfo } = await import("@/lib/linkedin.server");
-    const info = await getUserInfo();
-    await context.supabase
+    let info;
+    try {
+      info = await getUserInfo();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      throw new Error(
+        `Could not reach LinkedIn. ${msg}. Ask an admin to reconnect the LinkedIn connector with the openid, profile, and email scopes.`,
+      );
+    }
+    if (!info?.sub) {
+      throw new Error("LinkedIn returned no profile. Please reconnect the LinkedIn connector.");
+    }
+    const { error } = await context.supabase
       .from("profiles")
       .update({
         linkedin_urn: info.sub,
@@ -54,7 +65,19 @@ export const connectLinkedIn = createServerFn({ method: "POST" })
         avatar_url: info.picture ?? undefined,
       })
       .eq("id", context.userId);
+    if (error) throw new Error(error.message);
     return info;
+  });
+
+export const disconnectLinkedIn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { error } = await context.supabase
+      .from("profiles")
+      .update({ linkedin_urn: null })
+      .eq("id", context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 export const getLinkedInStatus = createServerFn({ method: "GET" })
