@@ -78,7 +78,13 @@ export const getAnalytics = createServerFn({ method: "GET" })
     const connection = connRes.data as
       | { linkedin_profile_id: string | null; token_expires_at: string | null; scope: string | null }
       | null;
-    const isConnected = Boolean(connection && (!connection.token_expires_at || new Date(connection.token_expires_at) > new Date()));
+    // Fall back to profiles.linkedin_urn (set by the existing OAuth connect flow)
+    // so users who connected before the linkedin_connections cache existed still
+    // see analytics. A cached connection row with a valid token also counts.
+    const hasValidCachedConnection = Boolean(
+      connection && (!connection.token_expires_at || new Date(connection.token_expires_at) > new Date()),
+    );
+    const isConnected = hasValidCachedConnection || Boolean(profile?.linkedin_urn);
 
     // Cached daily metrics (range)
     const sinceDate = new Date(now);
