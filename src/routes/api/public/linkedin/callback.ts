@@ -72,10 +72,14 @@ export const Route = createFileRoute("/api/public/linkedin/callback")({
             );
           if (connErr) throw new Error(connErr.message);
 
-          const profilePatch: Record<string, string> = { linkedin_urn: info.sub };
-          if (info.name) profilePatch.display_name = info.name;
-          if (info.picture) profilePatch.avatar_url = info.picture;
-          await supabaseAdmin.from("profiles").update(profilePatch).eq("id", parsed.userId);
+          await supabaseAdmin
+            .from("profiles")
+            .update({
+              linkedin_urn: info.sub,
+              ...(info.name ? { display_name: info.name } : {}),
+              ...(info.picture ? { avatar_url: info.picture } : {}),
+            })
+            .eq("id", parsed.userId);
 
           return respond({ success: true, name: info.name ?? null });
         } catch (e) {
