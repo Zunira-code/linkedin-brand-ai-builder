@@ -34,8 +34,12 @@ export const getAnalytics = createServerFn({ method: "GET" })
     let linkedInError: string | null = null;
     if (profile?.linkedin_urn) {
       try {
-        const { getUserInfo } = await import("@/lib/linkedin.server");
-        linkedInProfile = await getUserInfo();
+        const { getLinkedInAuthForUser } = await import("@/lib/linkedin-auth.server");
+        const auth = await getLinkedInAuthForUser(context.userId);
+        if (auth) {
+          const { getUserInfo } = await import("@/lib/linkedin.server");
+          linkedInProfile = await getUserInfo(auth.accessToken);
+        }
       } catch (e) {
         linkedInError = e instanceof Error ? e.message : String(e);
       }
