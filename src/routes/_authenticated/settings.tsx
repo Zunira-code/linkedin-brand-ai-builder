@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { getMyProfile, updateProfile, connectLinkedIn, disconnectLinkedIn, getLinkedInStatus } from "@/lib/profile.functions";
+import { getMyProfile, updateProfile, startLinkedInOAuth, disconnectLinkedIn, getLinkedInStatus } from "@/lib/profile.functions";
 import { runCalibration, getCalibration, type Calibration } from "@/lib/calibration.functions";
 import {
   listVoiceSamples,
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 function Settings() {
   const profileFn = useServerFn(getMyProfile);
   const updateFn = useServerFn(updateProfile);
-  const connectFn = useServerFn(connectLinkedIn);
+  const startOAuthFn = useServerFn(startLinkedInOAuth);
   const disconnectFn = useServerFn(disconnectLinkedIn);
   const statusFn = useServerFn(getLinkedInStatus);
   const client = useQueryClient();
@@ -70,7 +70,40 @@ function Settings() {
   });
 
   const connect = useMutation({
-    mutationFn: () => connectFn(),
+    mutationFn: async () => {
+      const popup = window.open("", "linkedin-oauth", "width=600,height=720");
+      if (!popup) throw new Error("Popup blocked. Allow popups and try again.");
+      let authorizationUrl: string;
+      try {
+        const res = await startOAuthFn({ data: { origin: window.location.origin } });
+        authorizationUrl = res.authorizationUrl;
+      } catch (e) {
+        popup.close();
+        throw e;
+      }
+      popup.location.href = authorizationUrl;
+      return await new Promise<{ name: string | null }>((resolve, reject) => {
+        const cleanup = () => {
+          window.removeEventListener("message", onMessage);
+          clearInterval(timer);
+        };
+        const onMessage = (event: MessageEvent) => {
+          const data = event.data;
+          if (!data || data.type !== "linkedin-oauth") return;
+          cleanup();
+          try { popup.close(); } catch { /* ignore */ }
+          if (data.success) resolve({ name: data.name ?? null });
+          else reject(new Error(data.error ?? "LinkedIn sign-in failed"));
+        };
+        window.addEventListener("message", onMessage);
+        const timer = setInterval(() => {
+          if (popup.closed) {
+            cleanup();
+            reject(new Error("Sign in was cancelled"));
+          }
+        }, 500);
+      });
+    },
     onSuccess: () => {
       toast.success("LinkedIn connected");
       client.invalidateQueries({ queryKey: ["linkedin-status"] });

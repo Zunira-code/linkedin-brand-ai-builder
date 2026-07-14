@@ -74,6 +74,11 @@ export const syncLeadsFromLinkedIn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { getPostComments, getPersonProfile } = await import("./linkedin.server");
+    const { getLinkedInAuthForUser } = await import("./linkedin-auth.server");
+    const auth = await getLinkedInAuthForUser(context.userId);
+    if (!auth) {
+      return { syncedPosts: 0, newLeads: 0, newComments: 0, error: "Connect LinkedIn first" };
+    }
 
     // 1. Pull the user's posts that made it to LinkedIn.
     const { data: posts, error: postsErr } = await context.supabase
@@ -101,7 +106,7 @@ export const syncLeadsFromLinkedIn = createServerFn({ method: "POST" })
       const urn = post.linkedin_urn as string;
       let comments: Awaited<ReturnType<typeof getPostComments>> = [];
       try {
-        comments = await getPostComments(urn);
+        comments = await getPostComments(auth.accessToken, urn);
       } catch (e) {
         if (!firstError) firstError = e instanceof Error ? e.message : String(e);
         continue;
@@ -129,7 +134,7 @@ export const syncLeadsFromLinkedIn = createServerFn({ method: "POST" })
         let leadId = leadRow?.id;
         let profile: Awaited<ReturnType<typeof getPersonProfile>> = null;
         if (!leadRow || !leadRow.name) {
-          profile = await getPersonProfile(actor).catch(() => null);
+          profile = await getPersonProfile(auth.accessToken, actor).catch(() => null);
         }
 
         if (leadRow) {

@@ -79,10 +79,14 @@ export const runCalibration = createServerFn({ method: "POST" })
     let liName = "";
     let liEmail = "";
     try {
-      const { getUserInfo } = await import("@/lib/linkedin.server");
-      const info = await getUserInfo();
-      liName = info.name ?? "";
-      liEmail = info.email ?? "";
+      const { getLinkedInAuthForUser } = await import("@/lib/linkedin-auth.server");
+      const auth = await getLinkedInAuthForUser(context.userId);
+      if (auth) {
+        const { getUserInfo } = await import("@/lib/linkedin.server");
+        const info = await getUserInfo(auth.accessToken);
+        liName = info.name ?? "";
+        liEmail = info.email ?? "";
+      }
     } catch {
       /* LinkedIn not connected — proceed with pasted text only */
     }

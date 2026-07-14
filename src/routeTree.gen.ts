@@ -32,6 +32,7 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as ApiPublicLinkedinCallbackRouteImport } from './routes/api/public/linkedin/callback'
 import { Route as ApiPublicCronPublishDueRouteImport } from './routes/api/public/cron/publish-due'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -152,6 +153,12 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicLinkedinCallbackRoute =
+  ApiPublicLinkedinCallbackRouteImport.update({
+    id: '/api/public/linkedin/callback',
+    path: '/api/public/linkedin/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCronPublishDueRoute = ApiPublicCronPublishDueRouteImport.update({
   id: '/api/public/cron/publish-due',
   path: '/api/public/cron/publish-due',
@@ -182,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/cron/publish-due': typeof ApiPublicCronPublishDueRoute
+  '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -207,6 +215,7 @@ export interface FileRoutesByTo {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/cron/publish-due': typeof ApiPublicCronPublishDueRoute
+  '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -234,6 +243,7 @@ export interface FileRoutesById {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/cron/publish-due': typeof ApiPublicCronPublishDueRoute
+  '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -261,6 +271,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/cron/publish-due'
+    | '/api/public/linkedin/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/cron/publish-due'
+    | '/api/public/linkedin/callback'
   id:
     | '__root__'
     | '/'
@@ -312,6 +324,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/cron/publish-due'
+    | '/api/public/linkedin/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -329,6 +342,7 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicCronPublishDueRoute: typeof ApiPublicCronPublishDueRoute
+  ApiPublicLinkedinCallbackRoute: typeof ApiPublicLinkedinCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -494,6 +508,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/linkedin/callback': {
+      id: '/api/public/linkedin/callback'
+      path: '/api/public/linkedin/callback'
+      fullPath: '/api/public/linkedin/callback'
+      preLoaderRoute: typeof ApiPublicLinkedinCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/publish-due': {
       id: '/api/public/cron/publish-due'
       path: '/api/public/cron/publish-due'
@@ -549,6 +570,7 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicCronPublishDueRoute: ApiPublicCronPublishDueRoute,
+  ApiPublicLinkedinCallbackRoute: ApiPublicLinkedinCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
