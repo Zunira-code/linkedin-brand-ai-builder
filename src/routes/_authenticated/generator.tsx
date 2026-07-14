@@ -431,13 +431,25 @@ function Generator() {
             <Button onClick={generate} disabled={busy} className="w-full bg-brand-gradient text-brand-foreground">
               {busy ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Writing…</> : <><Sparkles className="mr-2 h-4 w-4" />Generate</>}
             </Button>
-            <RepurposeDialog
-              onPick={(content) => {
-                setEdited(content);
-                setEditingId(undefined);
-                toast.success("Draft loaded — edit, then send to calendar or publish.");
-              }}
-            />
+            <RequireTier
+              tier="growth"
+              feature="Repurpose content"
+              fallback={
+                <Button variant="outline" className="w-full" asChild>
+                  <Link to="/upgrade" search={{ tier: "growth", feature: "Repurpose content" }}>
+                    <Recycle className="mr-2 h-4 w-4" /> Repurpose content — Growth
+                  </Link>
+                </Button>
+              }
+            >
+              <RepurposeDialog
+                onPick={(content) => {
+                  setEdited(content);
+                  setEditingId(undefined);
+                  toast.success("Draft loaded — edit, then send to calendar or publish.");
+                }}
+              />
+            </RequireTier>
             {voiceTrained ? (
               <p className="flex items-center gap-1.5 text-xs text-success">
                 <Mic className="h-3 w-3" /> Voice trained on {sampleCount} of your posts.
