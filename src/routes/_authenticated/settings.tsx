@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { getMyProfile, updateProfile, connectLinkedIn, getLinkedInStatus } from "@/lib/profile.functions";
+import { getMyProfile, updateProfile, connectLinkedIn, disconnectLinkedIn, getLinkedInStatus } from "@/lib/profile.functions";
 import { runCalibration, getCalibration, type Calibration } from "@/lib/calibration.functions";
 import {
   listVoiceSamples,
@@ -28,6 +28,7 @@ function Settings() {
   const profileFn = useServerFn(getMyProfile);
   const updateFn = useServerFn(updateProfile);
   const connectFn = useServerFn(connectLinkedIn);
+  const disconnectFn = useServerFn(disconnectLinkedIn);
   const statusFn = useServerFn(getLinkedInStatus);
   const client = useQueryClient();
 
@@ -72,6 +73,16 @@ function Settings() {
     mutationFn: () => connectFn(),
     onSuccess: () => {
       toast.success("LinkedIn connected");
+      client.invalidateQueries({ queryKey: ["linkedin-status"] });
+      client.invalidateQueries({ queryKey: ["profile"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
+  });
+
+  const disconnect = useMutation({
+    mutationFn: () => disconnectFn(),
+    onSuccess: () => {
+      toast.success("LinkedIn disconnected");
       client.invalidateQueries({ queryKey: ["linkedin-status"] });
       client.invalidateQueries({ queryKey: ["profile"] });
     },
@@ -139,6 +150,15 @@ function Settings() {
               <p className="mt-1 text-muted-foreground">You can publish and schedule posts.</p>
               <Button size="sm" variant="outline" className="mt-3" onClick={() => connect.mutate()} disabled={connect.isPending}>
                 Refresh
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-3 ml-2 text-destructive hover:text-destructive"
+                onClick={() => disconnect.mutate()}
+                disabled={disconnect.isPending}
+              >
+                {disconnect.isPending ? "Disconnecting…" : "Disconnect"}
               </Button>
             </div>
           ) : (
