@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Sparkles, Save, Send, Loader2, Wand2, Image as ImageIcon, Download, Hash, Video as VideoIcon, X, MessageSquare, Recycle, Link2, ChevronLeft, ChevronRight } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { AppShell } from "@/components/app-shell";
+import { RequireTier, UpgradePaywall } from "@/components/tier-gate";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -429,13 +430,25 @@ function Generator() {
             <Button onClick={generate} disabled={busy} className="w-full bg-brand-gradient text-brand-foreground">
               {busy ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Writing…</> : <><Sparkles className="mr-2 h-4 w-4" />Generate</>}
             </Button>
-            <RepurposeDialog
-              onPick={(content) => {
-                setEdited(content);
-                setEditingId(undefined);
-                toast.success("Draft loaded — edit, then send to calendar or publish.");
-              }}
-            />
+            <RequireTier
+              tier="growth"
+              feature="Repurpose content"
+              fallback={
+                <Button variant="outline" className="w-full" asChild>
+                  <Link to="/upgrade" search={{ tier: "growth", feature: "Repurpose content" }}>
+                    <Recycle className="mr-2 h-4 w-4" /> Repurpose content — Growth
+                  </Link>
+                </Button>
+              }
+            >
+              <RepurposeDialog
+                onPick={(content) => {
+                  setEdited(content);
+                  setEditingId(undefined);
+                  toast.success("Draft loaded — edit, then send to calendar or publish.");
+                }}
+              />
+            </RequireTier>
             {voiceTrained ? (
               <p className="flex items-center gap-1.5 text-xs text-success">
                 <Mic className="h-3 w-3" /> Voice trained on {sampleCount} of your posts.
@@ -602,6 +615,11 @@ function Generator() {
           </div>
 
           <div className="mt-6 border-t border-border pt-6">
+          <RequireTier
+            tier="growth"
+            feature="Video publishing"
+            fallback={<UpgradePaywall compact requiredTier="growth" feature="Video publishing" />}
+          >
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h3 className="flex items-center gap-2 font-display text-sm font-semibold">
@@ -707,6 +725,7 @@ function Generator() {
                 This is the same draft above — edits sync. When published, this becomes the LinkedIn post text and the MP4 attaches as the video.
               </p>
             </div>
+          </RequireTier>
           </div>
         </div>
       </div>

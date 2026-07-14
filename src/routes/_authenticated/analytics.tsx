@@ -14,6 +14,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { useTier } from "@/lib/tier";
+import { UpgradePaywall } from "@/components/tier-gate";
 import { Button } from "@/components/ui/button";
 import { getAnalytics } from "@/lib/analytics.functions";
 import {
@@ -42,6 +44,8 @@ const RANGE_OPTIONS = [
 function Analytics() {
   const fn = useServerFn(getAnalytics);
   const [rangeDays, setRangeDays] = useState(30);
+  const { has } = useTier();
+  const fullAnalytics = has("growth");
   const q = useQuery({
     queryKey: ["analytics", rangeDays],
     queryFn: () => fn({ data: { rangeDays } }),
@@ -116,6 +120,8 @@ function Analytics() {
 
         {/* Follower growth chart — right */}
         <div className="rounded-2xl border border-border bg-card p-6 lg:col-span-7">
+        {fullAnalytics ? (
+          <>
           <div className="flex items-start justify-between">
             <div>
               <h2 className="font-display text-lg font-semibold">Follower growth</h2>
@@ -158,10 +164,15 @@ function Analytics() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
+          </>
+        ) : (
+          <UpgradePaywall compact requiredTier="growth" feature="Follower growth chart" />
+        )}
         </div>
       </div>
 
       {/* Top performing posts */}
+      {fullAnalytics ? (
       <div className="mt-6 rounded-2xl border border-border bg-card">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div>
@@ -210,6 +221,11 @@ function Analytics() {
           </ul>
         )}
       </div>
+      ) : (
+        <div className="mt-6">
+          <UpgradePaywall compact requiredTier="growth" feature="Top performing posts" />
+        </div>
+      )}
 
       {data?.linkedInError && (
         <p className="mt-4 text-xs text-destructive">LinkedIn API error: {data.linkedInError}</p>
