@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireTier } from "@/lib/tier.server";
 
 export type Slide = { title: string; body: string };
 
@@ -52,6 +53,7 @@ export const saveCarousel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => SaveInput.parse(input))
   .handler(async ({ context, data }) => {
+    await requireTier(context.supabase, context.userId, "growth");
     const row = {
       user_id: context.userId,
       title: data.title,
@@ -99,6 +101,7 @@ export const generateCarouselSlides = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ context, data }) => {
+    await requireTier(context.supabase, context.userId, "growth");
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
 
@@ -199,6 +202,7 @@ export const saveCarouselAsPost = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ context, data }) => {
+    await requireTier(context.supabase, context.userId, "growth");
     // Look up the carousel to get title (for post content fallback).
     const { data: carousel, error: cErr } = await context.supabase
       .from("carousels")
