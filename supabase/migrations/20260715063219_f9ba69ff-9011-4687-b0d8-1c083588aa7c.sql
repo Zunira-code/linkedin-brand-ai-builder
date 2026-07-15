@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.admin_get_user_id_by_email(text) FROM PUBLIC, anon;
