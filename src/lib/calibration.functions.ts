@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { generateText } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { safeFetch } from "@/lib/ssrf.server";
 
 export type Calibration = {
   niche: string;
@@ -22,9 +23,25 @@ const Input = z.object({
 });
 async function scanLinkedInUrl(url: string): Promise<string> {
   if (!url) return "";
+  // Only allow LinkedIn profile URLs — locks SSRF down to a single host set
+  // and matches what this feature is actually for.
   try {
-    const res = await fetch(url, {
-      redirect: "follow",
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    const linkedinHosts = new Set([
+      "linkedin.com",
+      "www.linkedin.com",
+      "m.linkedin.com",
+      "in.linkedin.com",
+    ]);
+    if (!linkedinHosts.has(host)) {
+      return `LinkedIn URL: ${url} (only linkedin.com hosts are scannable)`;
+    }
+  } catch {
+    return `LinkedIn URL: ${url} (invalid URL)`;
+  }
+  try {
+    const res = await safeFetch(url, {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (compatible; PostpilotBot/1.0; +https://postpilot.app)",
