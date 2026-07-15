@@ -57,8 +57,9 @@ export function RequireTier({
   fallback?: ReactNode;
 }) {
   const { has, isLoading } = useTier();
-  if (isLoading) return null;
-  if (has(tier)) return <>{children}</>;
+  // useTier().has is optimistic while loading, so this renders children during
+  // the initial fetch and swaps to the paywall only if the user truly lacks the tier.
+  if (isLoading || has(tier)) return <>{children}</>;
   if (fallback !== undefined) return <>{fallback}</>;
   return <UpgradePaywall requiredTier={tier} feature={feature} />;
 }
