@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { safeFetch } from "@/lib/ssrf.server";
 
 export const listPosts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -276,13 +277,12 @@ export const repurposeContent = createServerFn({ method: "POST" })
     let sourceTitle = "";
     if (data.url) {
       try {
-        const res = await fetch(data.url, {
+        const res = await safeFetch(data.url, {
           headers: {
             "User-Agent":
               "Mozilla/5.0 (compatible; PostpilotBot/1.0; +https://postpilot.app)",
             Accept: "text/html,application/xhtml+xml",
           },
-          redirect: "follow",
         });
         if (!res.ok) throw new Error(`Fetch failed (${res.status})`);
         const html = await res.text();
