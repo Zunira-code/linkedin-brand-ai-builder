@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { requireApiUser } from "@/lib/api-auth.server";
 
 const SYSTEM_PROMPT = `You are Postpilot, an expert LinkedIn ghostwriter for founders, operators and creators.
 
@@ -19,6 +20,12 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        try {
+          await requireApiUser(request);
+        } catch (r) {
+          if (r instanceof Response) return r;
+          return new Response("Unauthorized", { status: 401 });
+        }
         const body = (await request.json()) as {
           messages?: UIMessage[];
           brandVoice?: string;

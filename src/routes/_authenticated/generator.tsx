@@ -81,13 +81,21 @@ function Generator() {
     () =>
       new DefaultChatTransport({
         api: "/api/chat",
-        prepareSendMessagesRequest: ({ messages }) => ({
-          body: {
-            messages,
-            brandVoice: profile.data?.brand_voice ?? "",
-            voiceSamples: (voiceSamples.data ?? []).map((s) => s.content),
-          },
-        }),
+        prepareSendMessagesRequest: async ({ messages }) => {
+          const { supabase } = await import("@/integrations/supabase/client");
+          const { data: sess } = await supabase.auth.getSession();
+          const token = sess.session?.access_token;
+          const headers: Record<string, string> = {};
+          if (token) headers.Authorization = `Bearer ${token}`;
+          return {
+            headers,
+            body: {
+              messages,
+              brandVoice: profile.data?.brand_voice ?? "",
+              voiceSamples: (voiceSamples.data ?? []).map((s) => s.content),
+            },
+          };
+        },
       }),
     [profile.data?.brand_voice, voiceSamples.data],
   );

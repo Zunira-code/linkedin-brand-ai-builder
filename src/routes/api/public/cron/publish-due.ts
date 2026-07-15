@@ -4,13 +4,15 @@ export const Route = createFileRoute("/api/public/cron/publish-due")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const cronSecret = request.headers.get("x-cron-secret");
-        const apiKey = request.headers.get("apikey");
+        // Only the private CRON_SECRET can trigger this job. The Supabase
+        // publishable/anon key ships in the client bundle and would let
+        // anyone force-publish scheduled posts.
         const expectedSecret = process.env.CRON_SECRET;
-        const expectedAnon = process.env.SUPABASE_PUBLISHABLE_KEY;
-        const okSecret = !!expectedSecret && cronSecret === expectedSecret;
-        const okApiKey = !!expectedAnon && apiKey === expectedAnon;
-        if (!okSecret && !okApiKey) {
+        if (!expectedSecret) {
+          return new Response("Server misconfigured", { status: 500 });
+        }
+        const cronSecret = request.headers.get("x-cron-secret");
+        if (cronSecret !== expectedSecret) {
           return new Response("Unauthorized", { status: 401 });
         }
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

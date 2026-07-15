@@ -1,10 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireTier } from "@/lib/tier.server";
 
 export const listLeads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    await requireTier(context.supabase, context.userId, "growth");
     const { data, error } = await context.supabase
       .from("leads")
       .select("*")
@@ -31,6 +33,7 @@ export const addLead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => AddLeadInput.parse(input))
   .handler(async ({ context, data }) => {
+    await requireTier(context.supabase, context.userId, "growth");
     const personUrn = `manual:${crypto.randomUUID()}`;
     const { data: out, error } = await context.supabase
       .from("leads")
@@ -56,6 +59,7 @@ export const updateLead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => UpdateLeadInput.parse(input))
   .handler(async ({ context, data }) => {
+    await requireTier(context.supabase, context.userId, "growth");
     const patch: { status?: "not_contacted" | "contacted"; note?: string | null } = {};
     if (data.status !== undefined) patch.status = data.status;
     if (data.note !== undefined) patch.note = data.note;
@@ -73,6 +77,7 @@ export const updateLead = createServerFn({ method: "POST" })
 export const syncLeadsFromLinkedIn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    await requireTier(context.supabase, context.userId, "growth");
     const { getPostComments, getPersonProfile } = await import("./linkedin.server");
     const { getLinkedInAuthForUser } = await import("./linkedin-auth.server");
     const auth = await getLinkedInAuthForUser(context.userId);
