@@ -28,6 +28,8 @@ export function useTier() {
   return {
     tier,
     isLoading: q.isLoading,
-    has: (required: Tier) => tierMeets(tier, required),
+    // While the profile is still loading, treat gated features as allowed so
+    // paying users don't briefly see lock icons / upgrade paywalls flashing.
+    has: (required: Tier) => (q.isLoading ? true : tierMeets(tier, required)),
   };
 }

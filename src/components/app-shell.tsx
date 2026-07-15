@@ -25,7 +25,7 @@ import { getLinkedInStatus } from "@/lib/profile.functions";
 import { getMyProfile } from "@/lib/profile.functions";
 import { amIAdmin } from "@/lib/admin.functions";
 import { useQueryClient } from "@tanstack/react-query";
-import { tierMeets, type Tier } from "@/lib/tier";
+import { useTier, type Tier } from "@/lib/tier";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, minTier: "starter" as Tier },
@@ -48,6 +48,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   const checkAdmin = useServerFn(amIAdmin);
   const adminQ = useQuery({ queryKey: ["am-i-admin"], queryFn: () => checkAdmin() });
   const qc = useQueryClient();
+  const { has: hasTier, isLoading: tierLoading } = useTier();
 
   useEffect(() => {
     const uid = profileQ.data?.id;
@@ -110,8 +111,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
           {nav.map((item) => {
             const active = pathname.startsWith(item.to);
             const Icon = item.icon;
-            const currentTier = (profileQ.data?.subscription_tier ?? null) as Tier | null;
-            const allowed = tierMeets(currentTier, item.minTier);
+            const allowed = tierLoading ? true : hasTier(item.minTier);
             const target = allowed ? item.to : "/upgrade";
             return (
               <Link

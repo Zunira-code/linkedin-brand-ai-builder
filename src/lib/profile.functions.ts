@@ -81,8 +81,18 @@ export const getLinkedInStatus = createServerFn({ method: "GET" })
       .select("linkedin_urn, display_name, avatar_url")
       .eq("id", context.userId)
       .maybeSingle();
+    // "Connected" must reflect whether we actually hold a per-user OAuth token
+    // (linkedin_connections row). Legacy users with only profiles.linkedin_urn
+    // set can't publish/sync until they reconnect, so don't advertise them as
+    // connected.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: conn } = await supabaseAdmin
+      .from("linkedin_connections")
+      .select("user_id")
+      .eq("user_id", context.userId)
+      .maybeSingle();
     return {
-      connected: !!data?.linkedin_urn,
+      connected: !!conn && !!data?.linkedin_urn,
       name: data?.display_name ?? null,
       avatar: data?.avatar_url ?? null,
     };
