@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireTier } from "@/lib/tier.server";
 
 export const listLeads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -73,6 +74,7 @@ export const updateLead = createServerFn({ method: "POST" })
 export const syncLeadsFromLinkedIn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    await requireTier(context.supabase, context.userId, "growth");
     const { getPostComments, getPersonProfile } = await import("./linkedin.server");
     const { getLinkedInAuthForUser } = await import("./linkedin-auth.server");
     const auth = await getLinkedInAuthForUser(context.userId);
