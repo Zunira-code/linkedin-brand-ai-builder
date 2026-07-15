@@ -80,19 +80,15 @@ export const inviteUser = createServerFn({ method: "POST" })
         .upsert({ id: userId, is_approved: true }, { onConflict: "id" });
     };
 
-    // Helper: find an existing auth user by email (paginates as needed).
+    // Helper: find an existing auth user id by email via a SECURITY DEFINER RPC
+    // (admin-only). Reliable across Supabase key formats.
     const findExistingUserId = async (): Promise<string | null> => {
-      for (let page = 1; page <= 20; page++) {
-        const { data: list, error: listErr } =
-          await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
-        if (listErr) throw new Error(listErr.message);
-        const match = list?.users?.find(
-          (u) => (u.email ?? "").toLowerCase() === email,
-        );
-        if (match) return match.id;
-        if (!list?.users || list.users.length < 200) return null;
-      }
-      return null;
+      const { data: uid, error: rpcErr } = await context.supabase.rpc(
+        "admin_get_user_id_by_email",
+        { _email: email },
+      );
+      if (rpcErr) throw new Error(rpcErr.message);
+      return (uid as string | null) ?? null;
     };
 
     const { data: out, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(
