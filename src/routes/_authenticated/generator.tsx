@@ -85,8 +85,10 @@ function Generator() {
           const { supabase } = await import("@/integrations/supabase/client");
           const { data: sess } = await supabase.auth.getSession();
           const token = sess.session?.access_token;
+          const headers: Record<string, string> = {};
+          if (token) headers.Authorization = `Bearer ${token}`;
           return {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            headers,
             body: {
               messages,
               brandVoice: profile.data?.brand_voice ?? "",
