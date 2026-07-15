@@ -71,16 +71,48 @@ export const inviteUser = createServerFn({ method: "POST" })
     const siteUrl =
       process.env.SITE_URL ||
       "https://linkedin-brand-ai-builder.lovable.app";
-    const { data: out, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-      data.email,
-      { redirectTo: `${siteUrl}/auth` },
-    );
-    if (error) throw new Error(error.message);
-    // Pre-approve invited users so they get instant access on first sign-in
-    if (out?.user?.id) {
+    const email = data.email.trim().toLowerCase();
+
+    // Helper: pre-approve a user by id so they get instant access.
+    const preApprove = async (userId: string) => {
       await supabaseAdmin
         .from("profiles")
-        .upsert({ id: out.user.id, is_approved: true }, { onConflict: "id" });
+        .upsert({ id: userId, is_approved: true }, { onConflict: "id" });
+    };
+
+    // Helper: find an existing auth user id by email via a SECURITY DEFINER RPC
+    // (admin-only). Reliable across Supabase key formats.
+    const findExistingUserId = async (): Promise<string | null> => {
+      const { data: uid, error: rpcErr } = await context.supabase.rpc(
+        "admin_get_user_id_by_email",
+        { _email: email },
+      );
+      if (rpcErr) throw new Error(rpcErr.message);
+      return (uid as string | null) ?? null;
+    };
+
+    const { data: out, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+      email,
+      { redirectTo: `${siteUrl}/auth` },
+    );
+
+    if (error) {
+      // Already registered → just pre-approve them so they can sign in.
+      const msg = error.message?.toLowerCase() ?? "";
+      const alreadyExists =
+        msg.includes("already been registered") ||
+        msg.includes("already registered") ||
+        msg.includes("already exists") ||
+        msg.includes("user already");
+      if (!alreadyExists) throw new Error(error.message);
+      const existingId = await findExistingUserId();
+      if (existingId) {
+        await preApprove(existingId);
+        return { ok: true, email, alreadyExisted: true };
+      }
+      throw new Error(error.message);
     }
-    return { ok: true, email: data.email };
+
+    if (out?.user?.id) await preApprove(out.user.id);
+    return { ok: true, email, alreadyExisted: false };
   });
