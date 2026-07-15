@@ -44,7 +44,11 @@ function AdminPage() {
   const inviteMut = useMutation({
     mutationFn: (email: string) => invite({ data: { email } }),
     onSuccess: (r) => {
-      toast.success(`Invite sent to ${r.email}`);
+      toast.success(
+        r.alreadyExisted
+          ? `${r.email} already has an account — approved for access.`
+          : `Invite sent to ${r.email}`,
+      );
       setInviteEmail("");
       qc.invalidateQueries({ queryKey: ["admin-profiles"] });
     },
