@@ -8,20 +8,13 @@ import { TIER_RANK } from "./tier";
  * features can't be reached by direct RPC calls that bypass the UI.
  */
 export async function requireTier(
-  supabase: {
-    from: (t: "profiles") => {
-      select: (c: string) => {
-        eq: (col: string, v: string) => {
-          maybeSingle: () => Promise<{ data: { subscription_tier: Tier | null } | null; error: unknown }>;
-        };
-      };
-    };
-  },
+  supabase: { from: (t: string) => unknown },
   userId: string,
   required: Tier,
 ): Promise<void> {
-  const { data, error } = await supabase
-    .from("profiles")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const q: any = supabase.from("profiles");
+  const { data, error } = await q
     .select("subscription_tier")
     .eq("id", userId)
     .maybeSingle();
