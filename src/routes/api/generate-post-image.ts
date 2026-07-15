@@ -1,9 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireApiUser } from "@/lib/api-auth.server";
 
 export const Route = createFileRoute("/api/generate-post-image")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        try {
+          await requireApiUser(request);
+        } catch (r) {
+          if (r instanceof Response) return r;
+          return new Response("Unauthorized", { status: 401 });
+        }
         const { prompt } = (await request.json()) as { prompt?: string };
         if (!prompt || !prompt.trim()) {
           return new Response("prompt required", { status: 400 });
