@@ -15,6 +15,7 @@ export const SLIDE_BODY_MAX = 180;
 export const listCarousels = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    await requireTier(context.supabase, context.userId, "growth");
     const { data, error } = await context.supabase
       .from("carousels")
       .select("*")
@@ -27,6 +28,7 @@ export const getCarousel = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ context, data }) => {
+    await requireTier(context.supabase, context.userId, "growth");
     const { data: out, error } = await context.supabase
       .from("carousels")
       .select("*")
@@ -85,6 +87,7 @@ export const deleteCarousel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ context, data }) => {
+    await requireTier(context.supabase, context.userId, "growth");
     const { error } = await context.supabase.from("carousels").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -253,6 +256,7 @@ export const markCarouselPosted = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ context, data }) => {
+    await requireTier(context.supabase, context.userId, "growth");
     const nowIso = new Date().toISOString();
     const { error: cErr } = await context.supabase
       .from("carousels")
