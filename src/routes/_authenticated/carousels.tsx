@@ -54,11 +54,15 @@ export const Route = createFileRoute("/_authenticated/carousels")({
   component: CarouselsPage,
 });
 
-type Template = "bold" | "minimal" | "editorial";
+type Template = "bold" | "minimal" | "editorial" | "gradient" | "mono" | "quote" | "split";
 const TEMPLATES: Array<{ id: Template; label: string; description: string }> = [
   { id: "bold", label: "Bold", description: "Big type on your brand color" },
   { id: "minimal", label: "Minimal", description: "White canvas, thin accent" },
   { id: "editorial", label: "Editorial", description: "Serif headline, muted paper" },
+  { id: "gradient", label: "Gradient", description: "Diagonal brand gradient, punchy" },
+  { id: "mono", label: "Mono", description: "Technical mono type, grid lines" },
+  { id: "quote", label: "Quote", description: "Oversized serif quote, cream paper" },
+  { id: "split", label: "Split", description: "Color-blocked halves, magazine energy" },
 ];
 
 function CarouselsPage() {
@@ -756,7 +760,155 @@ function TemplateSurface({
     );
   }
 
-  // editorial
+  if (template === "gradient") {
+    return (
+      <div
+        className="flex h-full w-full flex-col justify-between p-20"
+        style={{
+          background: `linear-gradient(135deg, ${brand.primary} 0%, ${brand.accent} 100%)`,
+          color: brand.secondary,
+          fontFamily: fontStack(brand, "'Space Grotesk', system-ui, sans-serif"),
+        }}
+      >
+        <div className="flex items-center justify-between">
+          {brand.logo ? (
+            <img src={brand.logo} alt="" className="h-14 w-auto max-w-[240px] object-contain" style={{ filter: "brightness(0) invert(1)" }} crossOrigin="anonymous" />
+          ) : <span />}
+          <span className="rounded-full border border-white/30 px-4 py-1 text-lg opacity-80">
+            {index + 1} · {total}
+          </span>
+        </div>
+        <div>
+          <div className="text-[96px] font-bold leading-[1.02] tracking-tight drop-shadow-sm">
+            {slide.title || "Your headline"}
+          </div>
+          {slide.body ? (
+            <div className="mt-8 whitespace-pre-wrap text-[34px] leading-[1.35] opacity-95">
+              {slide.body}
+            </div>
+          ) : null}
+        </div>
+        <div className="text-xl uppercase tracking-[0.3em] opacity-70">
+          {isCover ? "Swipe →" : isCta ? "Follow for more" : ""}
+        </div>
+      </div>
+    );
+  }
+
+  if (template === "mono") {
+    return (
+      <div
+        className="relative flex h-full w-full flex-col justify-between p-20"
+        style={{
+          background: brand.secondary,
+          color: brand.primary,
+          fontFamily: "'JetBrains Mono', 'Geist Mono', ui-monospace, monospace",
+          backgroundImage: `linear-gradient(${brand.primary}0d 1px, transparent 1px), linear-gradient(90deg, ${brand.primary}0d 1px, transparent 1px)`,
+          backgroundSize: "80px 80px",
+        }}
+      >
+        <div className="flex items-center justify-between text-lg">
+          <span className="uppercase tracking-[0.35em]" style={{ color: brand.accent }}>
+            {isCover ? "// intro" : isCta ? "// end" : `// ${String(index).padStart(2, "0")}`}
+          </span>
+          {brand.logo ? (
+            <img src={brand.logo} alt="" className="h-10 w-auto max-w-[180px] object-contain" crossOrigin="anonymous" />
+          ) : (
+            <span>{String(index + 1).padStart(2, "0")}/{String(total).padStart(2, "0")}</span>
+          )}
+        </div>
+        <div>
+          <div className="h-1 w-24" style={{ background: brand.accent }} />
+          <div className="mt-8 text-[72px] font-semibold leading-[1.1]">
+            {slide.title || "Your headline"}
+          </div>
+          {slide.body ? (
+            <div className="mt-8 whitespace-pre-wrap text-[28px] leading-[1.5] opacity-80">
+              {slide.body}
+            </div>
+          ) : null}
+        </div>
+        <div className="text-sm uppercase tracking-[0.3em] opacity-50">postpilot.deck</div>
+      </div>
+    );
+  }
+
+  if (template === "quote") {
+    return (
+      <div
+        className="flex h-full w-full flex-col justify-between p-24"
+        style={{
+          background: "#F5EFE4",
+          color: brand.primary,
+          fontFamily: fontStack(brand, "Georgia, serif"),
+        }}
+      >
+        <div className="flex items-center justify-between">
+          {brand.logo ? (
+            <img src={brand.logo} alt="" className="h-10 w-auto max-w-[180px] object-contain" crossOrigin="anonymous" />
+          ) : <span />}
+          <span className="text-lg italic opacity-60">— {index + 1} / {total}</span>
+        </div>
+        <div className="relative">
+          <div
+            className="absolute -left-6 -top-24 text-[260px] leading-none opacity-20"
+            style={{ color: brand.accent, fontFamily: "Georgia, serif" }}
+          >
+            “
+          </div>
+          <div className="relative text-[72px] font-semibold italic leading-[1.15] tracking-tight">
+            {slide.title || "Your headline"}
+          </div>
+          {slide.body ? (
+            <div className="mt-8 whitespace-pre-wrap text-[28px] leading-[1.55] opacity-80">
+              {slide.body}
+            </div>
+          ) : null}
+        </div>
+        <div className="flex items-center gap-3 text-lg opacity-70">
+          <div className="h-px w-16" style={{ background: brand.accent }} />
+          <span className="uppercase tracking-[0.3em]">{isCover ? "Essay" : isCta ? "Coda" : "Chapter " + index}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (template === "split") {
+    return (
+      <div
+        className="grid h-full w-full grid-rows-[45%_55%]"
+        style={{ fontFamily: fontStack(brand, "'Space Grotesk', system-ui, sans-serif") }}
+      >
+        <div
+          className="flex items-end justify-between p-16"
+          style={{ background: brand.accent, color: brand.secondary }}
+        >
+          {brand.logo ? (
+            <img src={brand.logo} alt="" className="h-14 w-auto max-w-[220px] object-contain" style={{ filter: "brightness(0) invert(1)" }} crossOrigin="anonymous" />
+          ) : <span className="text-2xl font-semibold opacity-80">{isCover ? "New series" : `Part ${index + 1}`}</span>}
+          <span className="text-4xl font-bold">{String(index + 1).padStart(2, "0")}</span>
+        </div>
+        <div
+          className="flex flex-col justify-between p-16"
+          style={{ background: brand.primary, color: brand.secondary }}
+        >
+          <div className="text-[80px] font-bold leading-[1.05] tracking-tight">
+            {slide.title || "Your headline"}
+          </div>
+          <div className="flex items-end justify-between">
+            {slide.body ? (
+              <div className="max-w-[70%] whitespace-pre-wrap text-[28px] leading-[1.4] opacity-90">
+                {slide.body}
+              </div>
+            ) : <span />}
+            <span className="text-lg uppercase tracking-[0.3em] opacity-60">{isCta ? "Follow →" : `${index + 1}/${total}`}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // editorial (default fallback)
   return (
     <div
       className="flex h-full w-full flex-col justify-between p-24"
@@ -789,8 +941,22 @@ function TemplateSurface({
 }
 
 function MiniSlide({ slide, template, brand }: { slide: Slide; template: Template; brand: Brand }) {
-  const bg = template === "minimal" ? brand.secondary : template === "editorial" ? "#F5F1EA" : brand.primary;
-  const fg = template === "bold" ? brand.secondary : brand.primary;
+  const bg =
+    template === "minimal"
+      ? brand.secondary
+      : template === "editorial"
+      ? "#F5F1EA"
+      : template === "quote"
+      ? "#F5EFE4"
+      : template === "mono"
+      ? brand.secondary
+      : template === "gradient"
+      ? `linear-gradient(135deg, ${brand.primary}, ${brand.accent})`
+      : brand.primary;
+  const fg =
+    template === "bold" || template === "gradient" || template === "split"
+      ? brand.secondary
+      : brand.primary;
   return (
     <div
       className="flex h-full w-full flex-col justify-between p-2"

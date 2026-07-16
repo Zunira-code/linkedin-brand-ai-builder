@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Linkedin, CheckCircle2, Sparkles, Loader2, Wand2, Mic, Trash2, Palette, Upload, Image as ImageIcon } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -335,22 +335,34 @@ function BrandKitCard({ className }: { className?: string }) {
   const [font, setFont] = useState<string>("inter");
   const [uploading, setUploading] = useState(false);
 
+  // Hydrate local state from the server ONCE. Subsequent refetches (e.g. after
+  // the color picker steals window focus) must NOT reset the user's in-progress
+  // edits back to the last saved values — that was silently discarding changes.
+  const hydrated = useRef(false);
   useEffect(() => {
-    if (!profile.data) return;
-    setPrimary((profile.data as { brand_primary_color?: string | null }).brand_primary_color ?? "#0F172A");
-    setSecondary((profile.data as { brand_secondary_color?: string | null }).brand_secondary_color ?? "#FFFFFF");
-    setAccent((profile.data as { brand_accent_color?: string | null }).brand_accent_color ?? "#3B82F6");
-    setLogoUrl((profile.data as { brand_logo_url?: string | null }).brand_logo_url ?? null);
-    setFont((profile.data as { brand_font?: string | null }).brand_font ?? "inter");
+    if (hydrated.current || !profile.data) return;
+    hydrated.current = true;
+    const p = profile.data as {
+      brand_primary_color?: string | null;
+      brand_secondary_color?: string | null;
+      brand_accent_color?: string | null;
+      brand_logo_url?: string | null;
+      brand_font?: string | null;
+    };
+    setPrimary(p.brand_primary_color ?? "#0F172A");
+    setSecondary(p.brand_secondary_color ?? "#FFFFFF");
+    setAccent(p.brand_accent_color ?? "#3B82F6");
+    setLogoUrl(p.brand_logo_url ?? null);
+    setFont(p.brand_font ?? "inter");
   }, [profile.data]);
 
   const save = useMutation({
     mutationFn: () =>
       updateFn({
         data: {
-          brand_primary_color: primary,
-          brand_secondary_color: secondary,
-          brand_accent_color: accent,
+          brand_primary_color: normalizeHex(primary),
+          brand_secondary_color: normalizeHex(secondary),
+          brand_accent_color: normalizeHex(accent),
           brand_logo_url: logoUrl,
           brand_font: font as "inter" | "space-grotesk" | "dm-serif" | "geist" | "georgia",
         },
@@ -496,6 +508,22 @@ function BrandKitCard({ className }: { className?: string }) {
 }
 
 function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return _ColorField({ label, value, onChange });
+}
+
+function normalizeHex(v: string): string {
+  const s = (v || "").trim();
+  const m = s.match(/^#?([0-9a-fA-F]{6})$/);
+  if (m) return `#${m[1].toUpperCase()}`;
+  const short = s.match(/^#?([0-9a-fA-F]{3})$/);
+  if (short) {
+    const [a, b, c] = short[1];
+    return `#${(a + a + b + b + c + c).toUpperCase()}`;
+  }
+  return "#000000";
+}
+
+function _ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
       <Label className="text-xs">{label}</Label>
