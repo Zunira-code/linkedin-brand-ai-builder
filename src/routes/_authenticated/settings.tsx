@@ -508,6 +508,22 @@ function BrandKitCard({ className }: { className?: string }) {
 }
 
 function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return _ColorField({ label, value, onChange });
+}
+
+function normalizeHex(v: string): string {
+  const s = (v || "").trim();
+  const m = s.match(/^#?([0-9a-fA-F]{6})$/);
+  if (m) return `#${m[1].toUpperCase()}`;
+  const short = s.match(/^#?([0-9a-fA-F]{3})$/);
+  if (short) {
+    const [a, b, c] = short[1];
+    return `#${(a + a + b + b + c + c).toUpperCase()}`;
+  }
+  return "#000000";
+}
+
+function _ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
       <Label className="text-xs">{label}</Label>
