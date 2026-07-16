@@ -46,7 +46,9 @@ const SlideSchema = z.object({
 const SaveInput = z.object({
   id: z.string().uuid().optional(),
   title: z.string().min(1).max(200),
-  template: z.enum(["bold", "minimal", "editorial"]).default("bold"),
+  template: z
+    .enum(["bold", "minimal", "editorial", "gradient", "mono", "quote", "split"])
+    .default("bold"),
   slides: z.array(SlideSchema).min(1).max(12),
   status: z.enum(["draft", "ready", "posted"]).default("draft"),
 });
