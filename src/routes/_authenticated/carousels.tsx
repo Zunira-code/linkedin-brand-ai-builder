@@ -54,11 +54,15 @@ export const Route = createFileRoute("/_authenticated/carousels")({
   component: CarouselsPage,
 });
 
-type Template = "bold" | "minimal" | "editorial";
+type Template = "bold" | "minimal" | "editorial" | "gradient" | "mono" | "quote" | "split";
 const TEMPLATES: Array<{ id: Template; label: string; description: string }> = [
   { id: "bold", label: "Bold", description: "Big type on your brand color" },
   { id: "minimal", label: "Minimal", description: "White canvas, thin accent" },
   { id: "editorial", label: "Editorial", description: "Serif headline, muted paper" },
+  { id: "gradient", label: "Gradient", description: "Diagonal brand gradient, punchy" },
+  { id: "mono", label: "Mono", description: "Technical mono type, grid lines" },
+  { id: "quote", label: "Quote", description: "Oversized serif quote, cream paper" },
+  { id: "split", label: "Split", description: "Color-blocked halves, magazine energy" },
 ];
 
 function CarouselsPage() {
