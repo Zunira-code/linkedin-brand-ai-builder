@@ -175,6 +175,24 @@ function Settings() {
           <p className="mt-2 text-sm text-muted-foreground">
             Connect LinkedIn so Postpilot can publish your posts and pull profile data.
           </p>
+          <div className="mt-3 rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+            <p className="font-medium text-foreground">What Postpilot will access</p>
+            <ul className="mt-1.5 list-disc pl-4 space-y-0.5">
+              <li>Your basic profile (name, headline, photo) and email — via LinkedIn OAuth scopes <code className="rounded bg-muted px-1">openid profile email</code>.</li>
+              <li>Permission to publish posts you write in Postpilot on your behalf — scope <code className="rounded bg-muted px-1">w_member_social</code>.</li>
+              <li>Comment counts on your own posts (used only for your analytics).</li>
+            </ul>
+            <p className="mt-2 font-medium text-foreground">What we will not do</p>
+            <ul className="mt-1.5 list-disc pl-4 space-y-0.5">
+              <li>No scraping, auto-follow, auto-like, or auto-connect. No reading other members' posts or DMs.</li>
+              <li>No selling or sharing your LinkedIn data with third parties.</li>
+            </ul>
+            <p className="mt-2">
+              Access tokens are stored encrypted, tied to your account, and used only while you're signed in. You can revoke access anytime with <span className="text-foreground">Disconnect</span> below, or from your{" "}
+              <a href="https://www.linkedin.com/psettings/permitted-services" target="_blank" rel="noreferrer" className="underline hover:text-foreground">LinkedIn permitted services</a> page. See our{" "}
+              <Link to="/privacy" className="underline hover:text-foreground">Privacy Policy</Link>.
+            </p>
+          </div>
           {status.data?.connected ? (
             <div className="mt-4 rounded-lg border border-success/40 bg-success/10 p-4 text-sm">
               <div className="flex items-center gap-2 font-medium text-success">
