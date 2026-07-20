@@ -1,6 +1,73 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+/**
+ * Sync analytics from LinkedIn for the current user.
+ *
+ * Reality check: LinkedIn's public OAuth scopes (openid, profile, email,
+ * w_member_social) do NOT grant access to post impressions, reactions,
+ * profile views, or follower counts. Those endpoints require Marketing
+ * Developer Platform / partner scopes (r_member_postAnalytics, etc.).
+ *
+ * What we CAN pull with a standard member token:
+ *   - Comment counts on each of the member's own posts via
+ *     /v2/socialActions/{urn}/comments.
+ *
+ * So this sync walks every locally-published post that has a LinkedIn URN,
+ * fetches its comments, and upserts a linkedin_posts_metrics row with the
+ * real comment count + content + published_at. Impressions/reactions stay
+ * at 0 (surfaced as "not available" in the UI).
+ */
+export const syncLinkedInAnalytics = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { getLinkedInAuthForUser } = await import("@/lib/linkedin-auth.server");
+    const auth = await getLinkedInAuthForUser(context.userId);
+    if (!auth) {
+      throw new Error(
+        "LinkedIn not connected. Reconnect in Settings to enable analytics sync.",
+      );
+    }
+    const { getPostComments } = await import("@/lib/linkedin.server");
+
+    const { data: posts, error: postsErr } = await context.supabase
+      .from("posts")
+      .select("linkedin_urn, content, posted_at")
+      .eq("user_id", context.userId)
+      .eq("status", "posted")
+      .not("linkedin_urn", "is", null);
+    if (postsErr) throw new Error(postsErr.message);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = context.supabase as any;
+    let synced = 0;
+    const errors: string[] = [];
+    for (const p of posts ?? []) {
+      if (!p.linkedin_urn) continue;
+      try {
+        const comments = await getPostComments(auth.accessToken, p.linkedin_urn);
+        await sb.from("linkedin_posts_metrics").upsert(
+          {
+            user_id: context.userId,
+            post_urn: p.linkedin_urn,
+            content: p.content,
+            comments: comments.length,
+            impressions: 0,
+            reactions: 0,
+            shares: 0,
+            published_at: p.posted_at,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,post_urn" },
+        );
+        synced += 1;
+      } catch (e) {
+        errors.push(e instanceof Error ? e.message : String(e));
+      }
+    }
+    return { synced, total: posts?.length ?? 0, errors };
+  });
+
 export const getAnalytics = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { rangeDays?: number } | undefined) => ({
