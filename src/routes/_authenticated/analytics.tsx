@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import {
@@ -12,12 +12,15 @@ import {
   TrendingDown,
   MessageSquare,
   Sparkles,
+  RefreshCw,
+  Info,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { useTier } from "@/lib/tier";
 import { UpgradePaywall } from "@/components/tier-gate";
 import { Button } from "@/components/ui/button";
-import { getAnalytics } from "@/lib/analytics.functions";
+import { getAnalytics, syncLinkedInAnalytics } from "@/lib/analytics.functions";
+import { toast } from "sonner";
 import {
   Area,
   AreaChart,
@@ -43,6 +46,8 @@ const RANGE_OPTIONS = [
 
 function Analytics() {
   const fn = useServerFn(getAnalytics);
+  const syncFn = useServerFn(syncLinkedInAnalytics);
+  const qc = useQueryClient();
   const [rangeDays, setRangeDays] = useState(30);
   const { has } = useTier();
   const fullAnalytics = has("growth");
@@ -51,6 +56,16 @@ function Analytics() {
     queryFn: () => fn({ data: { rangeDays } }),
   });
   const data = q.data;
+  const syncMut = useMutation({
+    mutationFn: () => syncFn(),
+    onSuccess: (r) => {
+      toast.success(
+        `Synced ${r.synced}/${r.total} posts${r.errors.length ? ` (${r.errors.length} errors)` : ""}`,
+      );
+      qc.invalidateQueries({ queryKey: ["analytics"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Sync failed"),
+  });
 
   if (data && !data.isConnected) {
     return (
@@ -71,6 +86,17 @@ function Analytics() {
             LinkedIn performance · <span className="text-foreground">{rangeLabel}</span>
           </p>
         </div>
+        <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => syncMut.mutate()}
+          disabled={syncMut.isPending}
+          className="gap-2"
+        >
+          <RefreshCw className={cn("h-3.5 w-3.5", syncMut.isPending && "animate-spin")} />
+          {syncMut.isPending ? "Syncing…" : "Sync now"}
+        </Button>
         <div className="inline-flex rounded-lg border border-border bg-card p-1">
           {RANGE_OPTIONS.map((opt) => (
             <button
@@ -86,6 +112,19 @@ function Analytics() {
               {opt.label}
             </button>
           ))}
+        </div>
+        </div>
+      </div>
+
+      <div className="mb-6 flex gap-3 rounded-xl border border-border bg-muted/30 p-4 text-sm">
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+        <div className="text-muted-foreground">
+          <span className="text-foreground font-medium">About these numbers.</span>{" "}
+          LinkedIn's public API only exposes <span className="text-foreground">comment counts</span> on
+          your posts to third-party apps. Impressions, reactions, follower counts, and profile views
+          require LinkedIn's Marketing Developer Platform partner access, which isn't available for
+          standard OAuth apps. Click <span className="text-foreground">Sync now</span> to refresh
+          comment counts on your published posts.
         </div>
       </div>
 
