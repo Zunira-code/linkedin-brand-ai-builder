@@ -24,6 +24,7 @@ import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedInspirationRouteImport } from './routes/_authenticated/inspiration'
 import { Route as AuthenticatedGeneratorRouteImport } from './routes/_authenticated/generator'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedCommentsRouteImport } from './routes/_authenticated/comments'
 import { Route as AuthenticatedCarouselsRouteImport } from './routes/_authenticated/carousels'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
@@ -110,6 +111,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCommentsRoute = AuthenticatedCommentsRouteImport.update({
+  id: '/comments',
+  path: '/comments',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCarouselsRoute = AuthenticatedCarouselsRouteImport.update({
   id: '/carousels',
   path: '/carousels',
@@ -178,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/carousels': typeof AuthenticatedCarouselsRoute
+  '/comments': typeof AuthenticatedCommentsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/generator': typeof AuthenticatedGeneratorRoute
   '/inspiration': typeof AuthenticatedInspirationRoute
@@ -204,6 +211,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/carousels': typeof AuthenticatedCarouselsRoute
+  '/comments': typeof AuthenticatedCommentsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/generator': typeof AuthenticatedGeneratorRoute
   '/inspiration': typeof AuthenticatedInspirationRoute
@@ -232,6 +240,7 @@ export interface FileRoutesById {
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/carousels': typeof AuthenticatedCarouselsRoute
+  '/_authenticated/comments': typeof AuthenticatedCommentsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/generator': typeof AuthenticatedGeneratorRoute
   '/_authenticated/inspiration': typeof AuthenticatedInspirationRoute
@@ -260,6 +269,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/calendar'
     | '/carousels'
+    | '/comments'
     | '/dashboard'
     | '/generator'
     | '/inspiration'
@@ -286,6 +296,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/calendar'
     | '/carousels'
+    | '/comments'
     | '/dashboard'
     | '/generator'
     | '/inspiration'
@@ -313,6 +324,7 @@ export interface FileRouteTypes {
     | '/_authenticated/analytics'
     | '/_authenticated/calendar'
     | '/_authenticated/carousels'
+    | '/_authenticated/comments'
     | '/_authenticated/dashboard'
     | '/_authenticated/generator'
     | '/_authenticated/inspiration'
@@ -452,6 +464,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/comments': {
+      id: '/_authenticated/comments'
+      path: '/comments'
+      fullPath: '/comments'
+      preLoaderRoute: typeof AuthenticatedCommentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/carousels': {
       id: '/_authenticated/carousels'
       path: '/carousels'
@@ -530,6 +549,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedCarouselsRoute: typeof AuthenticatedCarouselsRoute
+  AuthenticatedCommentsRoute: typeof AuthenticatedCommentsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedGeneratorRoute: typeof AuthenticatedGeneratorRoute
   AuthenticatedInspirationRoute: typeof AuthenticatedInspirationRoute
@@ -543,6 +563,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedCarouselsRoute: AuthenticatedCarouselsRoute,
+  AuthenticatedCommentsRoute: AuthenticatedCommentsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedGeneratorRoute: AuthenticatedGeneratorRoute,
   AuthenticatedInspirationRoute: AuthenticatedInspirationRoute,
