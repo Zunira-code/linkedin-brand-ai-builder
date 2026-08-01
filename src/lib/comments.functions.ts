@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { safeFetch } from "@/lib/ssrf.server";
 
 export const COMMENT_STYLES = {
   thoughtful: "Thoughtful / insightful — add a sharp, specific perspective that deepens the discussion.",
@@ -111,6 +110,7 @@ export const generateComments = createServerFn({ method: "POST" })
     let source = (data.postText ?? "").trim();
     if (!source && data.url) {
       try {
+        const { safeFetch } = await import("@/lib/ssrf.server");
         const res = await safeFetch(data.url, {
           headers: {
             "User-Agent": "Mozilla/5.0 (compatible; PostpilotBot/1.0; +https://postpilot.app)",
