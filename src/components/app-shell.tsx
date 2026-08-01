@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   Lock,
   ShieldCheck,
+  MessageSquarePlus,
 } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 import { Logo } from "@/components/logo";
