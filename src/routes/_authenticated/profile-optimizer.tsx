@@ -60,7 +60,7 @@ export const Route = createFileRoute("/_authenticated/profile-optimizer")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: ProfileOptimizer;
+  component: ProfileOptimizer,
 });
 
 type TabKey = "overview" | "headline" | "about" | "featured" | "visuals";
