@@ -15,6 +15,8 @@ import {
   Video,
   Users,
   Palette,
+  UserCog,
+  MessageSquarePlus,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -45,6 +47,8 @@ export const Route = createFileRoute("/")({
 
 const features = [
   { icon: Sparkles, title: "AI post generator", desc: "Turn a topic into a scroll-stopping text post in seconds. Trained on hooks that convert." },
+  { icon: UserCog, title: "Profile Optimizer", desc: "Rewrite your headline and About section, plan your Featured picks, and fix your photo and banner — five headline styles, four About versions, saved to your Profile Kit." },
+  { icon: MessageSquarePlus, title: "AI comment generator", desc: "Paste any post, pick a style, and get three thoughtful comments in your own voice — commenting is the fastest way to grow reach." },
   { icon: Video, title: "AI video posts", desc: "Generate a short vertical video from a prompt, add your caption, and publish straight to LinkedIn." },
   { icon: Images, title: "Carousel builder", desc: "Turn any topic or long-form text into a 5–8 slide branded carousel — download the PDF and upload to LinkedIn." },
   { icon: Calendar, title: "Content calendar", desc: "Plan a week of posts. We auto-publish text & video posts to LinkedIn when the time comes." },

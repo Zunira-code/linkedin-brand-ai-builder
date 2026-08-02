@@ -20,6 +20,7 @@ import { Route as ApiGeneratePostImageRouteImport } from './routes/api/generate-
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedUpgradeRouteImport } from './routes/_authenticated/upgrade'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedProfileOptimizerRouteImport } from './routes/_authenticated/profile-optimizer'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedInspirationRouteImport } from './routes/_authenticated/inspiration'
 import { Route as AuthenticatedGeneratorRouteImport } from './routes/_authenticated/generator'
@@ -90,6 +91,12 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfileOptimizerRoute =
+  AuthenticatedProfileOptimizerRouteImport.update({
+    id: '/profile-optimizer',
+    path: '/profile-optimizer',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
   id: '/leads',
   path: '/leads',
@@ -189,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/generator': typeof AuthenticatedGeneratorRoute
   '/inspiration': typeof AuthenticatedInspirationRoute
   '/leads': typeof AuthenticatedLeadsRoute
+  '/profile-optimizer': typeof AuthenticatedProfileOptimizerRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/upgrade': typeof AuthenticatedUpgradeRoute
   '/api/chat': typeof ApiChatRoute
@@ -216,6 +224,7 @@ export interface FileRoutesByTo {
   '/generator': typeof AuthenticatedGeneratorRoute
   '/inspiration': typeof AuthenticatedInspirationRoute
   '/leads': typeof AuthenticatedLeadsRoute
+  '/profile-optimizer': typeof AuthenticatedProfileOptimizerRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/upgrade': typeof AuthenticatedUpgradeRoute
   '/api/chat': typeof ApiChatRoute
@@ -245,6 +254,7 @@ export interface FileRoutesById {
   '/_authenticated/generator': typeof AuthenticatedGeneratorRoute
   '/_authenticated/inspiration': typeof AuthenticatedInspirationRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
+  '/_authenticated/profile-optimizer': typeof AuthenticatedProfileOptimizerRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/upgrade': typeof AuthenticatedUpgradeRoute
   '/api/chat': typeof ApiChatRoute
@@ -274,6 +284,7 @@ export interface FileRouteTypes {
     | '/generator'
     | '/inspiration'
     | '/leads'
+    | '/profile-optimizer'
     | '/settings'
     | '/upgrade'
     | '/api/chat'
@@ -301,6 +312,7 @@ export interface FileRouteTypes {
     | '/generator'
     | '/inspiration'
     | '/leads'
+    | '/profile-optimizer'
     | '/settings'
     | '/upgrade'
     | '/api/chat'
@@ -329,6 +341,7 @@ export interface FileRouteTypes {
     | '/_authenticated/generator'
     | '/_authenticated/inspiration'
     | '/_authenticated/leads'
+    | '/_authenticated/profile-optimizer'
     | '/_authenticated/settings'
     | '/_authenticated/upgrade'
     | '/api/chat'
@@ -434,6 +447,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile-optimizer': {
+      id: '/_authenticated/profile-optimizer'
+      path: '/profile-optimizer'
+      fullPath: '/profile-optimizer'
+      preLoaderRoute: typeof AuthenticatedProfileOptimizerRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/leads': {
@@ -554,6 +574,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedGeneratorRoute: typeof AuthenticatedGeneratorRoute
   AuthenticatedInspirationRoute: typeof AuthenticatedInspirationRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
+  AuthenticatedProfileOptimizerRoute: typeof AuthenticatedProfileOptimizerRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedUpgradeRoute: typeof AuthenticatedUpgradeRoute
 }
@@ -568,6 +589,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedGeneratorRoute: AuthenticatedGeneratorRoute,
   AuthenticatedInspirationRoute: AuthenticatedInspirationRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
+  AuthenticatedProfileOptimizerRoute: AuthenticatedProfileOptimizerRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedUpgradeRoute: AuthenticatedUpgradeRoute,
 }
