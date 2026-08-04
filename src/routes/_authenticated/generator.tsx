@@ -179,7 +179,7 @@ function Generator() {
           format,
           status: input.status,
           scheduled_at: input.scheduled_at ?? null,
-          image_data_url: imgSrc && imgFinal ? imgSrc : null,
+          image_data_url: attachedImage,
           video_url: videoPath ?? null,
           first_comment: firstComment.trim() ? firstComment.trim() : null,
         },
@@ -213,7 +213,7 @@ function Generator() {
         },
       });
       if (saved?.id) setEditingId(saved.id);
-      const imageDataUrl = imgSrc && imgFinal ? imgSrc : undefined;
+      const imageDataUrl = attachedImage ?? undefined;
       return publishFn({ data: { id: saved.id, imageDataUrl } });
     },
     onSuccess: () => {
