@@ -128,6 +128,10 @@ function Generator() {
   const [imgSrc, setImgSrc] = useState<string | null>(null);
   const [imgFinal, setImgFinal] = useState(false);
   const [imgBusy, setImgBusy] = useState(false);
+  // "ai" keeps the existing generated-image behaviour; "custom" uses the user's own upload.
+  const [imageMode, setImageMode] = useState<"ai" | "custom">("ai");
+  const [customImg, setCustomImg] = useState<string | null>(null);
+  const attachedImage = imageMode === "custom" ? customImg : imgSrc && imgFinal ? imgSrc : null;
 
   // Video state — `videoPath` is the storage key (persisted); `videoPreviewUrl`
   // is a local object URL (or signed URL when loading an existing post).
