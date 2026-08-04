@@ -593,37 +593,77 @@ function Generator() {
           </div>
 
           <div className="mt-6 border-t border-border pt-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h3 className="flex items-center gap-2 font-display text-sm font-semibold">
                   <ImageIcon className="h-4 w-4 text-brand" /> Visual for this post
+                  {imageMode === "custom" && customImg ? (
+                    <span className="rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-brand">
+                      Using your image
+                    </span>
+                  ) : null}
                 </h3>
-                <p className="text-xs text-muted-foreground">AI-generated square image tuned for LinkedIn engagement.</p>
+                <p className="text-xs text-muted-foreground">
+                  {imageMode === "ai"
+                    ? "AI-generated square image tuned for LinkedIn engagement."
+                    : "Upload your own photo, screenshot or branded graphic."}
+                </p>
               </div>
-              <div className="flex items-center gap-2">
-                <Button size="sm" variant="outline" onClick={generateImage} disabled={imgBusy || !edited}>
-                  {imgBusy ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Rendering…</> : <><Sparkles className="mr-2 h-4 w-4" /> {imgSrc ? "Regenerate image" : "Generate image"}</>}
-                </Button>
-                {imgSrc && imgFinal ? (
-                  <Button size="sm" variant="outline" onClick={downloadImage}>
-                    <Download className="mr-2 h-4 w-4" /> Download
+              <div className="inline-flex rounded-lg border border-border bg-background p-0.5" role="tablist" aria-label="Image source">
+                {([
+                  { key: "ai", label: "AI Image" },
+                  { key: "custom", label: "My Images" },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={imageMode === opt.key}
+                    onClick={() => {
+                      setImageMode(opt.key);
+                      // Switching back to AI drops the custom image from the post.
+                      if (opt.key === "ai") setCustomImg(null);
+                    }}
+                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                      imageMode === opt.key
+                        ? "bg-brand-gradient text-brand-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {imageMode === "ai" ? (
+              <>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={generateImage} disabled={imgBusy || !edited}>
+                    {imgBusy ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Rendering…</> : <><Sparkles className="mr-2 h-4 w-4" /> {imgSrc ? "Regenerate image" : "Generate image"}</>}
                   </Button>
-                ) : null}
-              </div>
-            </div>
-            <div className="mt-4 flex items-center justify-center rounded-xl border border-dashed border-border bg-background/40 p-4">
-              {imgSrc ? (
-                <img
-                  src={imgSrc}
-                  alt="Generated post visual"
-                  className={`aspect-square w-full max-w-md rounded-lg object-cover transition-[filter] duration-500 ${imgFinal ? "blur-0" : "blur-2xl"}`}
-                />
-              ) : (
-                <div className="flex aspect-square w-full max-w-md items-center justify-center rounded-lg text-xs text-muted-foreground">
-                  {imgBusy ? "Warming up…" : "Draft a post, then generate a matching visual."}
+                  {imgSrc && imgFinal ? (
+                    <Button size="sm" variant="outline" onClick={downloadImage}>
+                      <Download className="mr-2 h-4 w-4" /> Download
+                    </Button>
+                  ) : null}
                 </div>
-              )}
-            </div>
+                <div className="mt-4 flex items-center justify-center rounded-xl border border-dashed border-border bg-background/40 p-4">
+                  {imgSrc ? (
+                    <img
+                      src={imgSrc}
+                      alt="Generated post visual"
+                      className={`aspect-square w-full max-w-md rounded-lg object-cover transition-[filter] duration-500 ${imgFinal ? "blur-0" : "blur-2xl"}`}
+                    />
+                  ) : (
+                    <div className="flex aspect-square w-full max-w-md items-center justify-center rounded-lg text-xs text-muted-foreground">
+                      {imgBusy ? "Warming up…" : "Draft a post, then generate a matching visual."}
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <PostImagePicker value={customImg} onChange={setCustomImg} />
+            )}
           </div>
 
           <div className="mt-6 border-t border-border pt-6">
