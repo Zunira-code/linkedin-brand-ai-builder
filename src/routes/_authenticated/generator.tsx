@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Sparkles, Save, Send, Loader2, Wand2, Image as ImageIcon, Download, Hash, Video as VideoIcon, X, MessageSquare, Recycle, Link2, ChevronLeft, ChevronRight } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { AppShell } from "@/components/app-shell";
+import { PostImagePicker } from "@/components/post-image-picker";
 import { RequireTier, UpgradePaywall } from "@/components/tier-gate";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
