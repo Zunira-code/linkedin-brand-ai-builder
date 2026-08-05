@@ -77,7 +77,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
     navigate({ to: "/auth", replace: true });
   }
 
-  if (profileQ.data && !profileQ.data.is_approved) {
+  if (profileQ.data && !profileQ.data.is_approved && !adminQ.data?.admin) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-6 text-foreground">
         <div className="max-w-lg rounded-2xl border border-border bg-card p-8 text-center shadow-lg">
