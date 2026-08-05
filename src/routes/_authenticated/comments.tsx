@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Copy, Loader2, MessageSquarePlus, Sparkles } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { RequireTier, UpgradePaywall } from "@/components/tier-gate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,8 +29,24 @@ export const Route = createFileRoute("/_authenticated/comments")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: CommentGenerator,
+  component: CommentsPage,
 });
+
+function CommentsPage() {
+  return (
+    <RequireTier
+      tier="agency"
+      feature="Comment AI"
+      fallback={
+        <AppShell title="AI comment generator">
+          <UpgradePaywall requiredTier="agency" feature="Comment AI" />
+        </AppShell>
+      }
+    >
+      <CommentGenerator />
+    </RequireTier>
+  );
+}
 
 type StyleKey = "thoughtful" | "supportive" | "question" | "experience" | "punchy";
 
