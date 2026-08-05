@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireTier } from "@/lib/tier.server";
 
 export const COMMENT_STYLES = {
   thoughtful: "Thoughtful / insightful — add a sharp, specific perspective that deepens the discussion.",
@@ -107,6 +108,7 @@ export const generateComments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => GenerateInput.parse(input))
   .handler(async ({ context, data }) => {
+    await requireTier(context.supabase, context.userId, "agency");
     let source = (data.postText ?? "").trim();
     if (!source && data.url) {
       try {
@@ -166,7 +168,8 @@ const RefineInput = z.object({
 export const refineComment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => RefineInput.parse(input))
-  .handler(async ({ data }) => {
+  .handler(async ({ context, data }) => {
+    await requireTier(context.supabase, context.userId, "agency");
     const system = `${BASE_RULES}
 
 You are revising ONE existing comment based on the user's instruction. Keep what works, change only what the instruction asks.

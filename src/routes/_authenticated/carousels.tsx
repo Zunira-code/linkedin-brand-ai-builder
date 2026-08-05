@@ -69,11 +69,11 @@ function CarouselsPage() {
   const search = useSearch({ from: "/_authenticated/carousels" });
   return (
     <RequireTier
-      tier="growth"
+      tier="agency"
       feature="Carousel builder"
       fallback={
         <AppShell title="Carousels">
-          <UpgradePaywall requiredTier="growth" feature="Carousel builder" />
+          <UpgradePaywall requiredTier="agency" feature="Carousel builder" />
         </AppShell>
       }
     >
