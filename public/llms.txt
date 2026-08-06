@@ -1,12 +1,7 @@
 # Postpilot
 
-> An AI LinkedIn growth tool: AI LinkedIn post generator, content calendar and scheduler, carousel generator, comment generator, profile optimizer and personal analytics in one workspace.
+> An AI-powered LinkedIn brand builder: post generator, content calendar, viral post library and personal analytics in one workspace.
 
 ## Pages
-- [Home](/): product overview, features and FAQ
-- [AI LinkedIn post generator](/ai-linkedin-post-generator): write LinkedIn posts with AI in your own voice
-- [LinkedIn content calendar](/linkedin-content-calendar): plan and auto-publish posts with the AI scheduler
-- [LinkedIn profile optimizer](/linkedin-profile-optimizer): AI headline, About, Featured and visuals guidance
-- [Pricing](/pricing): plans from KES 1,500/month
-- [Privacy](/privacy): data and LinkedIn OAuth policy
+- [Home](/): product overview and features
 - [Sign in](/auth): create an account or sign in

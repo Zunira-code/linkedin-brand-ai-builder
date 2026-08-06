@@ -20,48 +20,10 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import { FaqList, faqSchema } from "@/components/marketing-chrome";
-
-const homeFaqs = [
-  {
-    q: "What is Postpilot?",
-    a: "Postpilot is an AI LinkedIn growth tool: an AI LinkedIn post generator, content calendar and scheduler, carousel and comment generators, a profile optimizer and personal analytics in one workspace.",
-  },
-  {
-    q: "Is there a free AI LinkedIn post generator?",
-    a: "Yes — sign up free and start generating LinkedIn posts with AI. Paid plans start at KES 1,500/month and unlock video posts, carousels, warm leads and full analytics.",
-  },
-  {
-    q: "Will AI posts sound like me?",
-    a: "Paste 10–20 of your past LinkedIn posts into Brand Voice and every draft matches your vocabulary, sentence length and tone.",
-  },
-  {
-    q: "Is Postpilot safe to use with my LinkedIn account?",
-    a: "Yes. Postpilot connects through official LinkedIn OAuth and never scrapes LinkedIn — the behaviour that gets accounts restricted.",
-  },
-];
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AI LinkedIn Post Generator & Growth Tool | Postpilot" },
-      {
-        name: "description",
-        content:
-          "Postpilot is an AI LinkedIn post generator and growth tool: write posts in your voice, plan a LinkedIn content calendar, optimize your profile and track results.",
-      },
-      { property: "og:title", content: "AI LinkedIn Post Generator & Growth Tool | Postpilot" },
-      {
-        property: "og:description",
-        content:
-          "Write LinkedIn posts with AI, schedule them on a content calendar, optimize your profile and turn engagement into leads — all in one workspace.",
-      },
-      { name: "twitter:title", content: "AI LinkedIn Post Generator & Growth Tool | Postpilot" },
-      {
-        name: "twitter:description",
-        content:
-          "Write LinkedIn posts with AI, schedule them on a content calendar, optimize your profile and turn engagement into leads — all in one workspace.",
-      },
       { property: "og:url", content: "https://app.mywork.co.ke/" },
     ],
     links: [{ rel: "canonical", href: "https://app.mywork.co.ke/" }],
@@ -70,25 +32,13 @@ export const Route = createFileRoute("/")({
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "SoftwareApplication",
+          "@type": "Service",
           name: "Postpilot",
-          applicationCategory: "BusinessApplication",
-          operatingSystem: "Web",
-          url: "https://app.mywork.co.ke",
-          description:
-            "AI LinkedIn post generator and growth tool with content calendar, AI scheduler, carousel generator, comment generator and profile optimizer.",
-          offers: {
-            "@type": "Offer",
-            price: "1500",
-            priceCurrency: "KES",
-            url: "https://app.mywork.co.ke/pricing",
-          },
-          publisher: { "@type": "Organization", name: "Postpilot", url: "https://app.mywork.co.ke" },
+          description: "AI-powered LinkedIn growth workspace with post generator, content calendar, viral inspiration library and personal analytics.",
+          provider: { "@type": "Organization", name: "Postpilot", url: "https://app.mywork.co.ke" },
+          areaServed: "Worldwide",
+          serviceType: "LinkedIn content and growth automation",
         }),
-      },
-      {
-        type: "application/ld+json",
-        children: JSON.stringify(faqSchema(homeFaqs)),
       },
     ],
   }),
@@ -121,9 +71,8 @@ function Index() {
         <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
           <Logo />
           <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
-            <Link to="/ai-linkedin-post-generator" className="hover:text-foreground">Post generator</Link>
-            <Link to="/linkedin-content-calendar" className="hover:text-foreground">Calendar</Link>
-            <Link to="/linkedin-profile-optimizer" className="hover:text-foreground">Profile optimizer</Link>
+            <a href="#features" className="hover:text-foreground">Features</a>
+            <a href="#how" className="hover:text-foreground">How it works</a>
             <Link to="/pricing" className="hover:text-foreground">Pricing</Link>
             <a href="#contact" className="hover:text-foreground">Contact</a>
           </nav>
@@ -153,9 +102,9 @@ function Index() {
             transition={{ duration: 0.6, delay: 0.05 }}
             className="mt-6 font-display text-5xl font-semibold tracking-tight md:text-7xl"
           >
-            AI LinkedIn post generator
+            Build your LinkedIn brand
             <br />
-            <span className="text-brand-gradient">that grows your brand on autopilot.</span>
+            <span className="text-brand-gradient">on autopilot.</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
@@ -163,8 +112,8 @@ function Index() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground"
           >
-            Postpilot is the AI LinkedIn content tool that writes posts in your voice, schedules them on
-            your LinkedIn content calendar, optimizes your profile and shows you what actually works.
+            Postpilot writes, schedules and publishes posts that grow your audience. One workspace for
+            drafting, planning, and tracking what actually works.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -197,11 +146,10 @@ function Index() {
         <div className="mx-auto max-w-2xl text-center">
           <p className="font-display text-sm uppercase tracking-widest text-brand">Everything you need</p>
           <h2 className="mt-3 font-display text-4xl font-semibold md:text-5xl">
-            One AI LinkedIn growth tool to run your whole feed.
+            One workspace to run your LinkedIn.
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Stop juggling docs and schedulers. Draft with AI, plan your calendar, generate carousels and
-            comments, and analyze results — all in one place.
+            Stop juggling docs and schedulers. Draft, plan and analyze — all in one place.
           </p>
         </div>
         <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -266,53 +214,6 @@ function Index() {
           <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-success" /> Unlimited drafts</span>
           <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-success" /> AI-powered scheduling</span>
           <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-success" /> Analytics dashboard</span>
-        </div>
-      </section>
-
-      <section className="border-t border-border py-24">
-        <div className="mx-auto max-w-5xl px-6">
-          <h2 className="text-center font-display text-4xl font-semibold">Explore Postpilot</h2>
-          <p className="mx-auto mt-4 max-w-xl text-center text-muted-foreground">
-            Dig into the tools people use most to grow LinkedIn with AI.
-          </p>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {[
-              {
-                to: "/ai-linkedin-post-generator" as const,
-                t: "AI LinkedIn post generator",
-                d: "Turn any topic into a publish-ready post in your own voice — free to start.",
-              },
-              {
-                to: "/linkedin-content-calendar" as const,
-                t: "LinkedIn content calendar",
-                d: "Plan a month ahead and let the AI LinkedIn scheduler publish for you.",
-              },
-              {
-                to: "/linkedin-profile-optimizer" as const,
-                t: "LinkedIn profile optimizer",
-                d: "Rewrite your headline, About section and Featured picks that convert visits.",
-              },
-            ].map((c) => (
-              <Link
-                key={c.to}
-                to={c.to}
-                className="group rounded-2xl border border-border bg-card p-6 text-left transition hover:border-brand"
-              >
-                <h3 className="font-display text-lg font-semibold">{c.t}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{c.d}</p>
-                <span className="mt-4 inline-flex items-center gap-1 text-sm text-brand">
-                  Learn more <ArrowRight className="h-3 w-3" />
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="faq" className="border-t border-border py-24">
-        <div className="mx-auto max-w-5xl px-6">
-          <h2 className="text-center font-display text-4xl font-semibold">Frequently asked questions</h2>
-          <FaqList items={homeFaqs} />
         </div>
       </section>
 

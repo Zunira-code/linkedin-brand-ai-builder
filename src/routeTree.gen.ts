@@ -9,13 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as McpRouteImport } from './routes/mcp'
-import { Route as LinkedinProfileOptimizerRouteImport } from './routes/linkedin-profile-optimizer'
-import { Route as LinkedinContentCalendarRouteImport } from './routes/linkedin-content-calendar'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AiLinkedinPostGeneratorRouteImport } from './routes/ai-linkedin-post-generator'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiGeneratePostImageRouteImport } from './routes/api/generate-post-image'
@@ -39,6 +37,11 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 import { Route as ApiPublicLinkedinCallbackRouteImport } from './routes/api/public/linkedin/callback'
 import { Route as ApiPublicCronPublishDueRouteImport } from './routes/api/public/cron/publish-due'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
@@ -54,25 +57,9 @@ const McpRoute = McpRouteImport.update({
   path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LinkedinProfileOptimizerRoute =
-  LinkedinProfileOptimizerRouteImport.update({
-    id: '/linkedin-profile-optimizer',
-    path: '/linkedin-profile-optimizer',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LinkedinContentCalendarRoute = LinkedinContentCalendarRouteImport.update({
-  id: '/linkedin-content-calendar',
-  path: '/linkedin-content-calendar',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AiLinkedinPostGeneratorRoute = AiLinkedinPostGeneratorRouteImport.update({
-  id: '/ai-linkedin-post-generator',
-  path: '/ai-linkedin-post-generator',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -193,13 +180,11 @@ const ApiPublicCronPublishDueRoute = ApiPublicCronPublishDueRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/ai-linkedin-post-generator': typeof AiLinkedinPostGeneratorRoute
   '/auth': typeof AuthRoute
-  '/linkedin-content-calendar': typeof LinkedinContentCalendarRoute
-  '/linkedin-profile-optimizer': typeof LinkedinProfileOptimizerRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -223,13 +208,11 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/ai-linkedin-post-generator': typeof AiLinkedinPostGeneratorRoute
   '/auth': typeof AuthRoute
-  '/linkedin-content-calendar': typeof LinkedinContentCalendarRoute
-  '/linkedin-profile-optimizer': typeof LinkedinProfileOptimizerRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -255,13 +238,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/ai-linkedin-post-generator': typeof AiLinkedinPostGeneratorRoute
   '/auth': typeof AuthRoute
-  '/linkedin-content-calendar': typeof LinkedinContentCalendarRoute
-  '/linkedin-profile-optimizer': typeof LinkedinProfileOptimizerRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
@@ -287,13 +268,11 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/ai-linkedin-post-generator'
     | '/auth'
-    | '/linkedin-content-calendar'
-    | '/linkedin-profile-optimizer'
     | '/mcp'
     | '/pricing'
     | '/privacy'
+    | '/sitemap.xml'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
@@ -317,13 +296,11 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/ai-linkedin-post-generator'
     | '/auth'
-    | '/linkedin-content-calendar'
-    | '/linkedin-profile-optimizer'
     | '/mcp'
     | '/pricing'
     | '/privacy'
+    | '/sitemap.xml'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
@@ -348,13 +325,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
-    | '/ai-linkedin-post-generator'
     | '/auth'
-    | '/linkedin-content-calendar'
-    | '/linkedin-profile-optimizer'
     | '/mcp'
     | '/pricing'
     | '/privacy'
+    | '/sitemap.xml'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
@@ -380,13 +355,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AiLinkedinPostGeneratorRoute: typeof AiLinkedinPostGeneratorRoute
   AuthRoute: typeof AuthRoute
-  LinkedinContentCalendarRoute: typeof LinkedinContentCalendarRoute
-  LinkedinProfileOptimizerRoute: typeof LinkedinProfileOptimizerRoute
   McpRoute: typeof McpRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -399,6 +372,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/privacy': {
       id: '/privacy'
       path: '/privacy'
@@ -420,32 +400,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/linkedin-profile-optimizer': {
-      id: '/linkedin-profile-optimizer'
-      path: '/linkedin-profile-optimizer'
-      fullPath: '/linkedin-profile-optimizer'
-      preLoaderRoute: typeof LinkedinProfileOptimizerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/linkedin-content-calendar': {
-      id: '/linkedin-content-calendar'
-      path: '/linkedin-content-calendar'
-      fullPath: '/linkedin-content-calendar'
-      preLoaderRoute: typeof LinkedinContentCalendarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth': {
       id: '/auth'
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ai-linkedin-post-generator': {
-      id: '/ai-linkedin-post-generator'
-      path: '/ai-linkedin-post-generator'
-      fullPath: '/ai-linkedin-post-generator'
-      preLoaderRoute: typeof AiLinkedinPostGeneratorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -641,13 +600,11 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AiLinkedinPostGeneratorRoute: AiLinkedinPostGeneratorRoute,
   AuthRoute: AuthRoute,
-  LinkedinContentCalendarRoute: LinkedinContentCalendarRoute,
-  LinkedinProfileOptimizerRoute: LinkedinProfileOptimizerRoute,
   McpRoute: McpRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
