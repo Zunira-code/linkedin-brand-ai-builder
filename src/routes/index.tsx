@@ -24,6 +24,24 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
+      { title: "AI LinkedIn Post Generator & Growth Tool | Postpilot" },
+      {
+        name: "description",
+        content:
+          "Postpilot is an AI LinkedIn post generator and growth tool: write posts in your voice, plan a LinkedIn content calendar, optimize your profile and track results.",
+      },
+      { property: "og:title", content: "AI LinkedIn Post Generator & Growth Tool | Postpilot" },
+      {
+        property: "og:description",
+        content:
+          "Write LinkedIn posts with AI, schedule them on a content calendar, optimize your profile and turn engagement into leads — all in one workspace.",
+      },
+      { name: "twitter:title", content: "AI LinkedIn Post Generator & Growth Tool | Postpilot" },
+      {
+        name: "twitter:description",
+        content:
+          "Write LinkedIn posts with AI, schedule them on a content calendar, optimize your profile and turn engagement into leads — all in one workspace.",
+      },
       { property: "og:url", content: "https://app.mywork.co.ke/" },
     ],
     links: [{ rel: "canonical", href: "https://app.mywork.co.ke/" }],
@@ -32,13 +50,25 @@ export const Route = createFileRoute("/")({
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "Service",
+          "@type": "SoftwareApplication",
           name: "Postpilot",
-          description: "AI-powered LinkedIn growth workspace with post generator, content calendar, viral inspiration library and personal analytics.",
-          provider: { "@type": "Organization", name: "Postpilot", url: "https://app.mywork.co.ke" },
-          areaServed: "Worldwide",
-          serviceType: "LinkedIn content and growth automation",
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          url: "https://app.mywork.co.ke",
+          description:
+            "AI LinkedIn post generator and growth tool with content calendar, AI scheduler, carousel generator, comment generator and profile optimizer.",
+          offers: {
+            "@type": "Offer",
+            price: "1500",
+            priceCurrency: "KES",
+            url: "https://app.mywork.co.ke/pricing",
+          },
+          publisher: { "@type": "Organization", name: "Postpilot", url: "https://app.mywork.co.ke" },
         }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify(faqSchema(homeFaqs)),
       },
     ],
   }),
