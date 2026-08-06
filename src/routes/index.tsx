@@ -20,6 +20,26 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
+import { FaqList, faqSchema } from "@/components/marketing-chrome";
+
+const homeFaqs = [
+  {
+    q: "What is Postpilot?",
+    a: "Postpilot is an AI LinkedIn growth tool: an AI LinkedIn post generator, content calendar and scheduler, carousel and comment generators, a profile optimizer and personal analytics in one workspace.",
+  },
+  {
+    q: "Is there a free AI LinkedIn post generator?",
+    a: "Yes — sign up free and start generating LinkedIn posts with AI. Paid plans start at KES 1,500/month and unlock video posts, carousels, warm leads and full analytics.",
+  },
+  {
+    q: "Will AI posts sound like me?",
+    a: "Paste 10–20 of your past LinkedIn posts into Brand Voice and every draft matches your vocabulary, sentence length and tone.",
+  },
+  {
+    q: "Is Postpilot safe to use with my LinkedIn account?",
+    a: "Yes. Postpilot connects through official LinkedIn OAuth and never scrapes LinkedIn — the behaviour that gets accounts restricted.",
+  },
+];
 
 export const Route = createFileRoute("/")({
   head: () => ({
