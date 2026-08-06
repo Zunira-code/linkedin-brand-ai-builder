@@ -12,7 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as McpRouteImport } from './routes/mcp'
+import { Route as LinkedinProfileOptimizerRouteImport } from './routes/linkedin-profile-optimizer'
+import { Route as LinkedinContentCalendarRouteImport } from './routes/linkedin-content-calendar'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AiLinkedinPostGeneratorRouteImport } from './routes/ai-linkedin-post-generator'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiGeneratePostImageRouteImport } from './routes/api/generate-post-image'
@@ -51,9 +54,25 @@ const McpRoute = McpRouteImport.update({
   path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LinkedinProfileOptimizerRoute =
+  LinkedinProfileOptimizerRouteImport.update({
+    id: '/linkedin-profile-optimizer',
+    path: '/linkedin-profile-optimizer',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LinkedinContentCalendarRoute = LinkedinContentCalendarRouteImport.update({
+  id: '/linkedin-content-calendar',
+  path: '/linkedin-content-calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiLinkedinPostGeneratorRoute = AiLinkedinPostGeneratorRouteImport.update({
+  id: '/ai-linkedin-post-generator',
+  path: '/ai-linkedin-post-generator',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -174,7 +193,10 @@ const ApiPublicCronPublishDueRoute = ApiPublicCronPublishDueRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ai-linkedin-post-generator': typeof AiLinkedinPostGeneratorRoute
   '/auth': typeof AuthRoute
+  '/linkedin-content-calendar': typeof LinkedinContentCalendarRoute
+  '/linkedin-profile-optimizer': typeof LinkedinProfileOptimizerRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -201,7 +223,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ai-linkedin-post-generator': typeof AiLinkedinPostGeneratorRoute
   '/auth': typeof AuthRoute
+  '/linkedin-content-calendar': typeof LinkedinContentCalendarRoute
+  '/linkedin-profile-optimizer': typeof LinkedinProfileOptimizerRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -230,7 +255,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/ai-linkedin-post-generator': typeof AiLinkedinPostGeneratorRoute
   '/auth': typeof AuthRoute
+  '/linkedin-content-calendar': typeof LinkedinContentCalendarRoute
+  '/linkedin-profile-optimizer': typeof LinkedinProfileOptimizerRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -259,7 +287,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/ai-linkedin-post-generator'
     | '/auth'
+    | '/linkedin-content-calendar'
+    | '/linkedin-profile-optimizer'
     | '/mcp'
     | '/pricing'
     | '/privacy'
@@ -286,7 +317,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/ai-linkedin-post-generator'
     | '/auth'
+    | '/linkedin-content-calendar'
+    | '/linkedin-profile-optimizer'
     | '/mcp'
     | '/pricing'
     | '/privacy'
@@ -314,7 +348,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/ai-linkedin-post-generator'
     | '/auth'
+    | '/linkedin-content-calendar'
+    | '/linkedin-profile-optimizer'
     | '/mcp'
     | '/pricing'
     | '/privacy'
@@ -343,7 +380,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AiLinkedinPostGeneratorRoute: typeof AiLinkedinPostGeneratorRoute
   AuthRoute: typeof AuthRoute
+  LinkedinContentCalendarRoute: typeof LinkedinContentCalendarRoute
+  LinkedinProfileOptimizerRoute: typeof LinkedinProfileOptimizerRoute
   McpRoute: typeof McpRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -380,11 +420,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/linkedin-profile-optimizer': {
+      id: '/linkedin-profile-optimizer'
+      path: '/linkedin-profile-optimizer'
+      fullPath: '/linkedin-profile-optimizer'
+      preLoaderRoute: typeof LinkedinProfileOptimizerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/linkedin-content-calendar': {
+      id: '/linkedin-content-calendar'
+      path: '/linkedin-content-calendar'
+      fullPath: '/linkedin-content-calendar'
+      preLoaderRoute: typeof LinkedinContentCalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-linkedin-post-generator': {
+      id: '/ai-linkedin-post-generator'
+      path: '/ai-linkedin-post-generator'
+      fullPath: '/ai-linkedin-post-generator'
+      preLoaderRoute: typeof AiLinkedinPostGeneratorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -580,7 +641,10 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AiLinkedinPostGeneratorRoute: AiLinkedinPostGeneratorRoute,
   AuthRoute: AuthRoute,
+  LinkedinContentCalendarRoute: LinkedinContentCalendarRoute,
+  LinkedinProfileOptimizerRoute: LinkedinProfileOptimizerRoute,
   McpRoute: McpRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
