@@ -47,7 +47,7 @@ const plans = [
     features: [
       "Everything in Starter",
       "Video publishing",
-      "Profile Optimizer",
+      "Carousel builder",
       "Warm leads",
       "Full analytics",
     ],
@@ -62,8 +62,6 @@ const plans = [
     description: "Manage multiple brands with hands-on support.",
     features: [
       "Everything in Growth",
-      "Carousel builder",
-      "Comment AI",
       "Multiple LinkedIn profiles",
       "Priority support",
     ],

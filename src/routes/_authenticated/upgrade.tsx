@@ -36,7 +36,7 @@ const PLANS: Array<{
       "Everything in Starter",
       "Repurpose content",
       "Video publishing",
-      "Profile Optimizer",
+      "Carousel builder",
       "Warm leads",
       "Full analytics",
     ],
@@ -44,13 +44,7 @@ const PLANS: Array<{
   {
     tier: "agency",
     price: "KES 12,000 / month",
-    features: [
-      "Everything in Growth",
-      "Carousel builder",
-      "Comment AI",
-      "Multiple LinkedIn profiles",
-      "Priority support",
-    ],
+    features: ["Everything in Growth", "Multiple LinkedIn profiles", "Priority support"],
   },
 ];
 

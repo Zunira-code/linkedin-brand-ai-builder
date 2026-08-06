@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { requireTier } from "@/lib/tier.server";
 
 const BASE_RULES = `You are a senior LinkedIn brand strategist writing for a real professional.
 
@@ -103,7 +102,6 @@ export const generateHeadlines = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => HeadlineInput.parse(input))
   .handler(async ({ context, data }) => {
-    await requireTier(context.supabase, context.userId, "growth");
     const voice = await voiceBlock(context.supabase, context.userId, data.useVoice);
     const system = `${BASE_RULES}
 
@@ -149,7 +147,6 @@ export const generateAbout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => AboutInput.parse(input))
   .handler(async ({ context, data }) => {
-    await requireTier(context.supabase, context.userId, "growth");
     const voice = await voiceBlock(context.supabase, context.userId, data.useVoice);
     const wordTarget =
       data.length === "short" ? "90-130 words" : data.length === "long" ? "280-350 words" : "170-230 words";
@@ -194,8 +191,7 @@ const RewriteInput = z.object({
 export const refineText = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => RewriteInput.parse(input))
-  .handler(async ({ context, data }) => {
-    await requireTier(context.supabase, context.userId, "growth");
+  .handler(async ({ data }) => {
     const system = `${BASE_RULES}
 
 Revise the given LinkedIn profile text based on the instruction. Keep what works, change only what's asked. Preserve blank-line paragraph formatting.
@@ -219,8 +215,7 @@ const FeaturedInput = z.object({
 export const recommendFeatured = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => FeaturedInput.parse(input))
-  .handler(async ({ context, data }) => {
-    await requireTier(context.supabase, context.userId, "growth");
+  .handler(async ({ data }) => {
     const system = `${BASE_RULES}
 
 Recommend what this person should pin to the LinkedIn "Featured" section. Return 5 recommendations, ordered by impact for their stated goal.
@@ -259,8 +254,7 @@ const DescribeInput = z.object({
 export const describeFeaturedItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => DescribeInput.parse(input))
-  .handler(async ({ context, data }) => {
-    await requireTier(context.supabase, context.userId, "growth");
+  .handler(async ({ data }) => {
     const system = `${BASE_RULES}
 
 Write one short description for a LinkedIn Featured item: max 200 characters, specific, makes someone want to click.
@@ -288,7 +282,6 @@ export const generateBannerTaglines = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => BannerInput.parse(input))
   .handler(async ({ context, data }) => {
-    await requireTier(context.supabase, context.userId, "growth");
     const voice = await voiceBlock(context.supabase, context.userId, data.useVoice);
     const system = `${BASE_RULES}
 
@@ -308,7 +301,6 @@ Return STRICT JSON only: {"taglines":["...","...","..."],"artDirection":"..."}${
 export const listProfileKit = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await requireTier(context.supabase, context.userId, "growth");
     const { data, error } = await context.supabase
       .from("profile_kit_items")
       .select("id, kind, title, content, meta, created_at")
@@ -328,7 +320,6 @@ export const saveProfileKitItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => SaveInput.parse(input))
   .handler(async ({ context, data }) => {
-    await requireTier(context.supabase, context.userId, "growth");
     const { error } = await context.supabase.from("profile_kit_items").insert({
       user_id: context.userId,
       kind: data.kind,
@@ -345,7 +336,6 @@ export const deleteProfileKitItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => DeleteInput.parse(input))
   .handler(async ({ context, data }) => {
-    await requireTier(context.supabase, context.userId, "growth");
     const { error } = await context.supabase
       .from("profile_kit_items")
       .delete()

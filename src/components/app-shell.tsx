@@ -34,11 +34,11 @@ const nav = [
   { to: "/generator", label: "Post generator", icon: Sparkles, minTier: "starter" as Tier },
   { to: "/calendar", label: "Calendar", icon: Calendar, minTier: "starter" as Tier },
   { to: "/inspiration", label: "Inspiration", icon: Flame, minTier: "starter" as Tier },
-  { to: "/comments", label: "Comment AI", icon: MessageSquarePlus, minTier: "agency" as Tier },
-  { to: "/profile-optimizer", label: "Profile Optimizer", icon: UserCog, minTier: "growth" as Tier },
+  { to: "/comments", label: "Comment AI", icon: MessageSquarePlus, minTier: "starter" as Tier },
+  { to: "/profile-optimizer", label: "Profile Optimizer", icon: UserCog, minTier: "starter" as Tier },
   { to: "/analytics", label: "Analytics", icon: BarChart3, minTier: "starter" as Tier },
   { to: "/leads", label: "Warm leads", icon: Users, minTier: "growth" as Tier },
-  { to: "/carousels", label: "Carousels", icon: Images, minTier: "agency" as Tier },
+  { to: "/carousels", label: "Carousels", icon: Images, minTier: "growth" as Tier },
   { to: "/settings", label: "Settings", icon: Settings, minTier: "starter" as Tier },
 ] as const;
 

@@ -22,7 +22,6 @@ import {
   X,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { RequireTier, UpgradePaywall } from "@/components/tier-gate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,24 +60,8 @@ export const Route = createFileRoute("/_authenticated/profile-optimizer")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: ProfileOptimizerPage,
+  component: ProfileOptimizer,
 });
-
-function ProfileOptimizerPage() {
-  return (
-    <RequireTier
-      tier="growth"
-      feature="Profile Optimizer"
-      fallback={
-        <AppShell title="Profile Optimizer">
-          <UpgradePaywall requiredTier="growth" feature="Profile Optimizer" />
-        </AppShell>
-      }
-    >
-      <ProfileOptimizer />
-    </RequireTier>
-  );
-}
 
 type TabKey = "overview" | "headline" | "about" | "featured" | "visuals";
 

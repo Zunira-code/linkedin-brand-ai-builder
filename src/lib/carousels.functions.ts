@@ -15,7 +15,7 @@ export const SLIDE_BODY_MAX = 180;
 export const listCarousels = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await requireTier(context.supabase, context.userId, "agency");
+    await requireTier(context.supabase, context.userId, "growth");
     const { data, error } = await context.supabase
       .from("carousels")
       .select("*")
@@ -28,7 +28,7 @@ export const getCarousel = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ context, data }) => {
-    await requireTier(context.supabase, context.userId, "agency");
+    await requireTier(context.supabase, context.userId, "growth");
     const { data: out, error } = await context.supabase
       .from("carousels")
       .select("*")
@@ -57,7 +57,7 @@ export const saveCarousel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => SaveInput.parse(input))
   .handler(async ({ context, data }) => {
-    await requireTier(context.supabase, context.userId, "agency");
+    await requireTier(context.supabase, context.userId, "growth");
     const row = {
       user_id: context.userId,
       title: data.title,
@@ -89,7 +89,7 @@ export const deleteCarousel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ context, data }) => {
-    await requireTier(context.supabase, context.userId, "agency");
+    await requireTier(context.supabase, context.userId, "growth");
     const { error } = await context.supabase.from("carousels").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -106,7 +106,7 @@ export const generateCarouselSlides = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ context, data }) => {
-    await requireTier(context.supabase, context.userId, "agency");
+    await requireTier(context.supabase, context.userId, "growth");
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
 
@@ -207,7 +207,7 @@ export const saveCarouselAsPost = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ context, data }) => {
-    await requireTier(context.supabase, context.userId, "agency");
+    await requireTier(context.supabase, context.userId, "growth");
     // Look up the carousel to get title (for post content fallback).
     const { data: carousel, error: cErr } = await context.supabase
       .from("carousels")
@@ -258,7 +258,7 @@ export const markCarouselPosted = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ context, data }) => {
-    await requireTier(context.supabase, context.userId, "agency");
+    await requireTier(context.supabase, context.userId, "growth");
     const nowIso = new Date().toISOString();
     const { error: cErr } = await context.supabase
       .from("carousels")
