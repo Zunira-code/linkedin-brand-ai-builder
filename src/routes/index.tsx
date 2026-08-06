@@ -269,6 +269,53 @@ function Index() {
         </div>
       </section>
 
+      <section className="border-t border-border py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <h2 className="text-center font-display text-4xl font-semibold">Explore Postpilot</h2>
+          <p className="mx-auto mt-4 max-w-xl text-center text-muted-foreground">
+            Dig into the tools people use most to grow LinkedIn with AI.
+          </p>
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {[
+              {
+                to: "/ai-linkedin-post-generator" as const,
+                t: "AI LinkedIn post generator",
+                d: "Turn any topic into a publish-ready post in your own voice — free to start.",
+              },
+              {
+                to: "/linkedin-content-calendar" as const,
+                t: "LinkedIn content calendar",
+                d: "Plan a month ahead and let the AI LinkedIn scheduler publish for you.",
+              },
+              {
+                to: "/linkedin-profile-optimizer" as const,
+                t: "LinkedIn profile optimizer",
+                d: "Rewrite your headline, About section and Featured picks that convert visits.",
+              },
+            ].map((c) => (
+              <Link
+                key={c.to}
+                to={c.to}
+                className="group rounded-2xl border border-border bg-card p-6 text-left transition hover:border-brand"
+              >
+                <h3 className="font-display text-lg font-semibold">{c.t}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{c.d}</p>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm text-brand">
+                  Learn more <ArrowRight className="h-3 w-3" />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="faq" className="border-t border-border py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <h2 className="text-center font-display text-4xl font-semibold">Frequently asked questions</h2>
+          <FaqList items={homeFaqs} />
+        </div>
+      </section>
+
       <section id="contact" className="border-t border-border bg-card/40 py-24">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <p className="font-display text-sm uppercase tracking-widest text-brand">Contact</p>
