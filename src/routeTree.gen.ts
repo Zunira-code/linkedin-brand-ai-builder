@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as McpRouteImport } from './routes/mcp'
+import { Route as LinkedinContentCalendarRouteImport } from './routes/linkedin-content-calendar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AiLinkedinPostGeneratorRouteImport } from './routes/ai-linkedin-post-generator'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -50,6 +51,11 @@ const PricingRoute = PricingRouteImport.update({
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LinkedinContentCalendarRoute = LinkedinContentCalendarRouteImport.update({
+  id: '/linkedin-content-calendar',
+  path: '/linkedin-content-calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -182,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ai-linkedin-post-generator': typeof AiLinkedinPostGeneratorRoute
   '/auth': typeof AuthRoute
+  '/linkedin-content-calendar': typeof LinkedinContentCalendarRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -210,6 +217,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ai-linkedin-post-generator': typeof AiLinkedinPostGeneratorRoute
   '/auth': typeof AuthRoute
+  '/linkedin-content-calendar': typeof LinkedinContentCalendarRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -240,6 +248,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/ai-linkedin-post-generator': typeof AiLinkedinPostGeneratorRoute
   '/auth': typeof AuthRoute
+  '/linkedin-content-calendar': typeof LinkedinContentCalendarRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -270,6 +279,7 @@ export interface FileRouteTypes {
     | '/'
     | '/ai-linkedin-post-generator'
     | '/auth'
+    | '/linkedin-content-calendar'
     | '/mcp'
     | '/pricing'
     | '/privacy'
@@ -298,6 +308,7 @@ export interface FileRouteTypes {
     | '/'
     | '/ai-linkedin-post-generator'
     | '/auth'
+    | '/linkedin-content-calendar'
     | '/mcp'
     | '/pricing'
     | '/privacy'
@@ -327,6 +338,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/ai-linkedin-post-generator'
     | '/auth'
+    | '/linkedin-content-calendar'
     | '/mcp'
     | '/pricing'
     | '/privacy'
@@ -357,6 +369,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AiLinkedinPostGeneratorRoute: typeof AiLinkedinPostGeneratorRoute
   AuthRoute: typeof AuthRoute
+  LinkedinContentCalendarRoute: typeof LinkedinContentCalendarRoute
   McpRoute: typeof McpRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -391,6 +404,13 @@ declare module '@tanstack/react-router' {
       path: '/mcp'
       fullPath: '/mcp'
       preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/linkedin-content-calendar': {
+      id: '/linkedin-content-calendar'
+      path: '/linkedin-content-calendar'
+      fullPath: '/linkedin-content-calendar'
+      preLoaderRoute: typeof LinkedinContentCalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -602,6 +622,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AiLinkedinPostGeneratorRoute: AiLinkedinPostGeneratorRoute,
   AuthRoute: AuthRoute,
+  LinkedinContentCalendarRoute: LinkedinContentCalendarRoute,
   McpRoute: McpRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
