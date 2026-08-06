@@ -121,8 +121,9 @@ function Index() {
         <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
           <Logo />
           <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
-            <a href="#features" className="hover:text-foreground">Features</a>
-            <a href="#how" className="hover:text-foreground">How it works</a>
+            <Link to="/ai-linkedin-post-generator" className="hover:text-foreground">Post generator</Link>
+            <Link to="/linkedin-content-calendar" className="hover:text-foreground">Calendar</Link>
+            <Link to="/linkedin-profile-optimizer" className="hover:text-foreground">Profile optimizer</Link>
             <Link to="/pricing" className="hover:text-foreground">Pricing</Link>
             <a href="#contact" className="hover:text-foreground">Contact</a>
           </nav>
@@ -152,9 +153,9 @@ function Index() {
             transition={{ duration: 0.6, delay: 0.05 }}
             className="mt-6 font-display text-5xl font-semibold tracking-tight md:text-7xl"
           >
-            Build your LinkedIn brand
+            AI LinkedIn post generator
             <br />
-            <span className="text-brand-gradient">on autopilot.</span>
+            <span className="text-brand-gradient">that grows your brand on autopilot.</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
@@ -162,8 +163,8 @@ function Index() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground"
           >
-            Postpilot writes, schedules and publishes posts that grow your audience. One workspace for
-            drafting, planning, and tracking what actually works.
+            Postpilot is the AI LinkedIn content tool that writes posts in your voice, schedules them on
+            your LinkedIn content calendar, optimizes your profile and shows you what actually works.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -196,10 +197,11 @@ function Index() {
         <div className="mx-auto max-w-2xl text-center">
           <p className="font-display text-sm uppercase tracking-widest text-brand">Everything you need</p>
           <h2 className="mt-3 font-display text-4xl font-semibold md:text-5xl">
-            One workspace to run your LinkedIn.
+            One AI LinkedIn growth tool to run your whole feed.
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Stop juggling docs and schedulers. Draft, plan and analyze — all in one place.
+            Stop juggling docs and schedulers. Draft with AI, plan your calendar, generate carousels and
+            comments, and analyze results — all in one place.
           </p>
         </div>
         <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
