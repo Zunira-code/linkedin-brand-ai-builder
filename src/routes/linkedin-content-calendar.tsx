@@ -123,7 +123,7 @@ function CalendarPage() {
 
       <section className="border-y border-border bg-card/40 py-20">
         <div className="mx-auto max-w-5xl px-6 text-center">
-          <h2 className="font-染 font-display text-3xl font-semibold md:text-4xl">
+          <h2 className="font-display text-3xl font-semibold md:text-4xl">
             Consistency is the whole game
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
