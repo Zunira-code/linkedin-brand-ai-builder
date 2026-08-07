@@ -75,7 +75,7 @@ function AuthPage() {
   async function onGoogle() {
     setBusy(true);
     try {
-      const redirectPath = next ? `/auth?next=${encodeURIComponent(next)}` : "/auth";
+      const redirectPath = next ||"/";
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin + redirectPath,
       });
