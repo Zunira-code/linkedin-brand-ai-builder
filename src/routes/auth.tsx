@@ -75,13 +75,16 @@ function AuthPage() {
   async function onGoogle() {
   setBusy(true);
   try {
-    const redirectPath = next || "/";
+    // Specify the app feature page route (e.g., /dashboard, /app, or /feed)
+    const redirectPath = next || "/dashboard"; 
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: window.location.origin + redirectPath,
       },
     });
+
     if (error) toast.error(error.message);
   } catch (err) {
     toast.error(err instanceof Error ? err.message : String(err));
@@ -89,7 +92,6 @@ function AuthPage() {
     setBusy(false);
   }
 }
-
 
   return (
     <main className="relative flex min-h-screen items-center justify-center bg-background px-4">
