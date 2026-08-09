@@ -30,3 +30,13 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment files containing secret keys
+.env
+.env.local
+.env.*.local
+
+# Build output & dependencies
+node_modules/
+dist/
+.DS_Store
