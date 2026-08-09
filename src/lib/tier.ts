@@ -24,12 +24,26 @@ export function tierMeets(current: Tier | null | undefined, required: Tier): boo
 export function useTier() {
   const getProfile = useServerFn(getMyProfile);
   const q = useQuery({ queryKey: ["profile"], queryFn: () => getProfile() });
-  const tier = (q.data?.subscription_tier ?? null) as Tier | null;
+
+  const profile = q.data;
+  
+  // Read tier (checks both subscription_tier and tier field names)
+  const tier = (profile?.subscription_tier ?? profile?.tier ?? null) as Tier | null;
+  
+  // Check backend approval status
+  const isApproved = profile?.is_approved ?? (profile?.status === "approved");
+
   return {
     tier,
+    isApproved,
     isLoading: q.isLoading,
-    // While the profile is still loading, treat gated features as allowed so
-    // paying users don't briefly see lock icons / upgrade paywalls flashing.
-    has: (required: Tier) => (q.isLoading ? true : tierMeets(tier, required)),
+    // While loading, treat as allowed so approved users don't see flash.
+    // Once loaded: if user is NOT approved -> block access (return false).
+    // If user IS approved -> check if their tier rank meets required rank.
+    has: (required: Tier) => {
+      if (q.isLoading) return true;
+      if (!isApproved) return false;
+      return tierMeets(tier, required);
+    },
   };
 }
