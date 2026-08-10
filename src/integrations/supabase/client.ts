@@ -2,13 +2,13 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 // Fallback to your actual Supabase URL if VITE_SUPABASE_URL is missing
-const SUPABASE_URL = 
-  import.meta.env.VITE_SUPABASE_URL || 'https://wrcfhqmyvuiuoclfxyrt.supabase.co';
+const SUPABASE_URL =
+  import.meta.env.VITE_SUPABASE_URL || 'https://wrcfhqmyvuioclfxyrt.supabase.co';
 
 // Support standard Vite key names
-const SUPABASE_ANON_KEY = 
-  import.meta.env.VITE_SUPABASE_ANON_KEY || 
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 
+const SUPABASE_ANON_KEY =
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
   '';
 
 if (!SUPABASE_ANON_KEY) {
@@ -23,7 +23,6 @@ export const supabase = createClient<Database>(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      storage: typeof window !== 'undefined' ? localStorage : undefined,
     },
   }
 );
