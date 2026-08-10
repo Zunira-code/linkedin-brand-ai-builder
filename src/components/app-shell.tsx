@@ -27,19 +27,18 @@ import { getLinkedInStatus } from "@/lib/profile.functions";
 import { getMyProfile } from "@/lib/profile.functions";
 import { amIAdmin } from "@/lib/admin.functions";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTier, type Tier } from "@/lib/tier";
 
 const nav = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, minTier: "starter" as Tier },
-  { to: "/generator", label: "Post generator", icon: Sparkles, minTier: "starter" as Tier },
-  { to: "/calendar", label: "Calendar", icon: Calendar, minTier: "starter" as Tier },
-  { to: "/inspiration", label: "Inspiration", icon: Flame, minTier: "starter" as Tier },
-  { to: "/comments", label: "Comment AI", icon: MessageSquarePlus, minTier: "starter" as Tier },
-  { to: "/profile-optimizer", label: "Profile Optimizer", icon: UserCog, minTier: "starter" as Tier },
-  { to: "/analytics", label: "Analytics", icon: BarChart3, minTier: "starter" as Tier },
-  { to: "/leads", label: "Warm leads", icon: Users, minTier: "growth" as Tier },
-  { to: "/carousels", label: "Carousels", icon: Images, minTier: "growth" as Tier },
-  { to: "/settings", label: "Settings", icon: Settings, minTier: "starter" as Tier },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/generator", label: "Post generator", icon: Sparkles },
+  { to: "/calendar", label: "Calendar", icon: Calendar },
+  { to: "/inspiration", label: "Inspiration", icon: Flame },
+  { to: "/comments", label: "Comment AI", icon: MessageSquarePlus },
+  { to: "/profile-optimizer", label: "Profile Optimizer", icon: UserCog },
+  { to: "/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/leads", label: "Warm leads", icon: Users },
+  { to: "/carousels", label: "Carousels", icon: Images },
+  { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
 export function AppShell({ children, title }: { children: ReactNode; title?: string }) {
@@ -52,7 +51,6 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   const checkAdmin = useServerFn(amIAdmin);
   const adminQ = useQuery({ queryKey: ["am-i-admin"], queryFn: () => checkAdmin() });
   const qc = useQueryClient();
-  const { has: hasTier, isLoading: tierLoading } = useTier();
 
   useEffect(() => {
     const uid = profileQ.data?.id;
@@ -77,32 +75,6 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
     navigate({ to: "/auth", replace: true });
   }
 
-  if (profileQ.data && !profileQ.data.is_approved && !adminQ.data?.admin) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-6 text-foreground">
-        <div className="max-w-lg rounded-2xl border border-border bg-card p-8 text-center shadow-lg">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand/10 text-brand">
-            <Lock className="h-6 w-6" />
-          </div>
-          <h1 className="mt-5 font-display text-2xl font-semibold">Welcome to the Postpilot Beta!</h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            🔒 Your account is currently under review. The creator will manually approve
-            your access shortly. If you were invited, please ping them directly to unlock
-            your workspace.
-          </p>
-          <p className="mt-4 text-xs text-muted-foreground">
-            Signed in as <span className="font-medium text-foreground">{profileQ.data.display_name ?? "you"}</span>.
-            This page unlocks automatically once you're approved.
-          </p>
-          <Button variant="ghost" size="sm" className="mt-6 gap-2" onClick={signOut}>
-            <LogOut className="h-4 w-4" />
-            Sign out
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar p-4 md:flex">
@@ -115,13 +87,14 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
           {nav.map((item) => {
             const active = pathname.startsWith(item.to);
             const Icon = item.icon;
-            const allowed = tierLoading ? true : hasTier(item.minTier);
-            const target = allowed ? item.to : "/upgrade";
+            // Full access enabled: every link goes directly to its destination
+            const allowed = true;
+            const target = item.to;
+
             return (
               <Link
                 key={item.to}
                 to={target}
-                search={allowed ? undefined : { tier: item.minTier, feature: item.label }}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   active
@@ -131,7 +104,6 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
               >
                 <Icon className="h-4 w-4" />
                 <span className="flex-1">{item.label}</span>
-                {!allowed && <Lock className="h-3 w-3 opacity-60" />}
               </Link>
             );
           })}
