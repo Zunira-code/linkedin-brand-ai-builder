@@ -117,17 +117,16 @@ function AuthPage() {
   async function onGoogle() {
   setBusy(true);
   try {
-    // Specify the app feature page route (e.g., /dashboard, /app, or /feed)
-    const redirectPath = next || "/dashboard"; 
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin + redirectPath,
-      },
+    // Google OAuth must go through the Lovable broker (iframe-safe), and the
+    // redirect target must be a public same-origin URL — not a protected route.
+    try {
+      sessionStorage.setItem("postpilot:next", returnTo);
+    } catch {
+      /* ignore */
+    }
+    await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
     });
-
-    if (error) toast.error(error.message);
   } catch (err) {
     handleAuthError(err);
   } finally {
@@ -138,11 +137,10 @@ function AuthPage() {
 async function onLinkedIn() {
   setBusy(true);
   try {
-    const redirectPath = next || "/dashboard";
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "linkedin_oidc",
       options: {
-        redirectTo: window.location.origin + redirectPath,
+        redirectTo: window.location.origin,
       },
     });
     if (error) toast.error(error.message);
