@@ -264,6 +264,10 @@ function CropDialog({
   const boxRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
   const [boxSize, setBoxSize] = useState(320);
+  const zoomRef = useRef(1);
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
 
   useEffect(() => {
     let cancelled = false;
@@ -298,10 +302,30 @@ function CropDialog({
     [boxSize, drawW, drawH],
   );
 
+  // Centre only when a new image loads or the box is measured — never on zoom,
+  // which would discard the user's repositioning.
   useEffect(() => {
-    setOffset((o) => clamp({ x: (boxSize - drawW) / 2 || o.x, y: (boxSize - drawH) / 2 || o.y }));
-    // recentre when zoom/image changes
-  }, [clamp, boxSize, drawW, drawH]);
+    if (!img) return;
+    const w = img.naturalWidth * Math.max(boxSize / img.naturalWidth, boxSize / img.naturalHeight) * zoomRef.current;
+    const h = img.naturalHeight * Math.max(boxSize / img.naturalWidth, boxSize / img.naturalHeight) * zoomRef.current;
+    setOffset({ x: (boxSize - w) / 2, y: (boxSize - h) / 2 });
+  }, [img, boxSize]);
+
+  // Keep the visual centre anchored while zooming, then re-clamp.
+  function changeZoom(next: number) {
+    setOffset((o) => {
+      const ratio = next / zoom;
+      const x = (o.x - boxSize / 2) * ratio + boxSize / 2;
+      const y = (o.y - boxSize / 2) * ratio + boxSize / 2;
+      const nw = drawW * ratio;
+      const nh = drawH * ratio;
+      return {
+        x: Math.min(0, Math.max(boxSize - nw, x)),
+        y: Math.min(0, Math.max(boxSize - nh, y)),
+      };
+    });
+    setZoom(next);
+  }
 
   function startDrag(clientX: number, clientY: number) {
     dragRef.current = { x: clientX, y: clientY, ox: offset.x, oy: offset.y };
@@ -374,10 +398,10 @@ function CropDialog({
             max={3}
             step={0.01}
             value={zoom}
-            onChange={(e) => setZoom(Number(e.target.value))}
+            onChange={(e) => changeZoom(Number(e.target.value))}
             className="h-1.5 flex-1 accent-[hsl(var(--brand))]"
           />
-          <Button size="sm" variant="ghost" onClick={() => setZoom(1)} aria-label="Reset zoom">
+          <Button size="sm" variant="ghost" onClick={() => changeZoom(1)} aria-label="Reset zoom">
             <RotateCcw className="h-4 w-4" />
           </Button>
         </div>
