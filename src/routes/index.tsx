@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sparkles,
   Calendar,
@@ -61,6 +63,32 @@ const features = [
 ];
 
 function Index() {
+  // After an OAuth round-trip lands back here, send the signed-in user on to
+  // the page they were headed for.
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (cancelled || !data.session) return;
+        let next = "/dashboard";
+        try {
+          const stored = sessionStorage.getItem("postpilot:next");
+          if (stored && stored.startsWith("/") && !stored.startsWith("//")) next = stored;
+          sessionStorage.removeItem("postpilot:next");
+        } catch {
+          /* ignore */
+        }
+        window.location.replace(next);
+      })
+      .catch(() => {
+        /* landing page stays usable if auth is unreachable */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="relative overflow-hidden">
