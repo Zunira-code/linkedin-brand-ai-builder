@@ -38,11 +38,52 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [backendDown, setBackendDown] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+
+  function isNetworkError(err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return /failed to fetch|networkerror|load failed|fetch failed|network request failed|err_connection|timeout/i.test(
+      msg,
+    );
+  }
+
+  function handleAuthError(err: unknown) {
+    if (isNetworkError(err)) {
+      setBackendDown(true);
+      toast.error("Can't reach the authentication service — it looks paused or offline.");
+    } else {
+      toast.error(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function retryConnection() {
+    setRetrying(true);
+    try {
+      const { error } = await supabase.auth.getSession();
+      if (error) throw error;
+      setBackendDown(false);
+      toast.success("Connection restored — you can sign in now.");
+    } catch (err) {
+      if (isNetworkError(err)) {
+        toast.error("Still can't reach the authentication service. Try again in a moment.");
+      } else {
+        setBackendDown(false);
+      }
+    } finally {
+      setRetrying(false);
+    }
+  }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) window.location.replace(returnTo);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (data.session) window.location.replace(returnTo);
+      })
+      .catch((err) => {
+        if (isNetworkError(err)) setBackendDown(true);
+      });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       if (session) window.location.replace(returnTo);
     });
@@ -65,8 +106,9 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
+      setBackendDown(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : String(err));
+      handleAuthError(err);
     } finally {
       setBusy(false);
     }
@@ -87,7 +129,7 @@ function AuthPage() {
 
     if (error) toast.error(error.message);
   } catch (err) {
-    toast.error(err instanceof Error ? err.message : String(err));
+    handleAuthError(err);
   } finally {
     setBusy(false);
   }
@@ -105,7 +147,7 @@ async function onLinkedIn() {
     });
     if (error) toast.error(error.message);
   } catch (err) {
-    toast.error(err instanceof Error ? err.message : String(err));
+    handleAuthError(err);
   } finally {
     setBusy(false);
   }
@@ -125,6 +167,29 @@ async function onLinkedIn() {
         <p className="mt-1 text-center text-sm text-muted-foreground">
           {mode === "signin" ? "Sign in to your Postpilot workspace." : "Start writing LinkedIn posts that convert."}
         </p>
+
+        {backendDown && (
+          <div
+            role="alert"
+            className="mt-6 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm"
+          >
+            <p className="font-medium text-destructive">Authentication service unreachable</p>
+            <p className="mt-1 text-muted-foreground">
+              The backend appears to be paused or offline, so sign-in can't be completed right now.
+              Your details are fine — this is a temporary connection problem.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              onClick={retryConnection}
+              disabled={retrying}
+            >
+              {retrying ? "Retrying…" : "Retry connection"}
+            </Button>
+          </div>
+        )}
 
         <Button
           variant="outline"
