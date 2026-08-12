@@ -6,6 +6,7 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
+import { ensureNodejsCompat } from "./vite-plugins/ensure-nodejs-compat";
 
 export default defineConfig({
   tanstackStart: {
@@ -14,6 +15,6 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
-    plugins: [],
+    plugins: [ensureNodejsCompat()],
   },
 });
