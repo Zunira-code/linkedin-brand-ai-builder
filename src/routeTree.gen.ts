@@ -32,6 +32,7 @@ import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
+import { Route as ApiPublicDiagRouteImport } from './routes/api/public/diag'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicLinkedinCallbackRouteImport } from './routes/api/public/linkedin/callback'
@@ -155,6 +156,11 @@ const Char91DotmcpChar93ListToolsRoute =
     path: '/.mcp/list-tools',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicDiagRoute = ApiPublicDiagRouteImport.update({
+  id: '/api/public/diag',
+  path: '/api/public/diag',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Char91DotmcpChar93InvokeToolToolRoute =
   Char91DotmcpChar93InvokeToolToolRouteImport.update({
     id: '/.mcp/invoke-tool/$tool',
@@ -203,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/api/generate-post-image': typeof ApiGeneratePostImageRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/diag': typeof ApiPublicDiagRoute
   '/api/public/cron/publish-due': typeof ApiPublicCronPublishDueRoute
   '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
 }
@@ -231,6 +238,7 @@ export interface FileRoutesByTo {
   '/api/generate-post-image': typeof ApiGeneratePostImageRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/diag': typeof ApiPublicDiagRoute
   '/api/public/cron/publish-due': typeof ApiPublicCronPublishDueRoute
   '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
 }
@@ -261,6 +269,7 @@ export interface FileRoutesById {
   '/api/generate-post-image': typeof ApiGeneratePostImageRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/diag': typeof ApiPublicDiagRoute
   '/api/public/cron/publish-due': typeof ApiPublicCronPublishDueRoute
   '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
 }
@@ -291,6 +300,7 @@ export interface FileRouteTypes {
     | '/api/generate-post-image'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/diag'
     | '/api/public/cron/publish-due'
     | '/api/public/linkedin/callback'
   fileRoutesByTo: FileRoutesByTo
@@ -319,6 +329,7 @@ export interface FileRouteTypes {
     | '/api/generate-post-image'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/diag'
     | '/api/public/cron/publish-due'
     | '/api/public/linkedin/callback'
   id:
@@ -348,6 +359,7 @@ export interface FileRouteTypes {
     | '/api/generate-post-image'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/diag'
     | '/api/public/cron/publish-due'
     | '/api/public/linkedin/callback'
   fileRoutesById: FileRoutesById
@@ -366,6 +378,7 @@ export interface RootRouteChildren {
   ApiGeneratePostImageRoute: typeof ApiGeneratePostImageRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicDiagRoute: typeof ApiPublicDiagRoute
   ApiPublicCronPublishDueRoute: typeof ApiPublicCronPublishDueRoute
   ApiPublicLinkedinCallbackRoute: typeof ApiPublicLinkedinCallbackRoute
 }
@@ -533,6 +546,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/diag': {
+      id: '/api/public/diag'
+      path: '/api/public/diag'
+      fullPath: '/api/public/diag'
+      preLoaderRoute: typeof ApiPublicDiagRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/.mcp/invoke-tool/$tool': {
       id: '/.mcp/invoke-tool/$tool'
       path: '/.mcp/invoke-tool/$tool'
@@ -612,6 +632,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiGeneratePostImageRoute: ApiGeneratePostImageRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicDiagRoute: ApiPublicDiagRoute,
   ApiPublicCronPublishDueRoute: ApiPublicCronPublishDueRoute,
   ApiPublicLinkedinCallbackRoute: ApiPublicLinkedinCallbackRoute,
 }
