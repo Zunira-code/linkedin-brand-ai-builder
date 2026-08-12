@@ -77,8 +77,21 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      // Nitro pushes swallowed handler errors onto req.context.nitro.errors.
+      // Seeding the array lets us recover the original stack for logging.
+      const captureBucket: Array<{ error: unknown }> = [];
+      try {
+        (request as unknown as { context?: Record<string, unknown> }).context = {
+          nitro: { errors: captureBucket },
+        };
+      } catch {
+        // request may be frozen in some runtimes; diagnostics are best-effort
+      }
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
+      if (response.status >= 500) {
+        for (const entry of captureBucket) console.error("[ssr-nitro-error]", entry?.error);
+      }
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
       console.error(error);
