@@ -1,12 +1,19 @@
 import type { Plugin } from "vite";
 
 /**
- * The deploy runtime does NOT enable Node.js built-ins by default, but the
- * generated dist/server/wrangler.json ships with an empty compatibility_flags
- * array. Without `nodejs_compat` the server bundle fails at module init with
- * `No such module "node:module"`, which makes every route return 500.
- * This plugin re-adds the flag after the build output is written.
+ * Two deploy-config problems make every server-rendered route return 500:
+ *
+ * 1. The generated dist/server/wrangler.json ships with an empty
+ *    compatibility_flags array, so Node built-ins are unavailable and the
+ *    server bundle dies at module init with `No such module "node:module"`.
+ * 2. compatibility_date defaults to the build date, which opts the worker into
+ *    brand-new runtime defaults the bundled server stack has not been tested
+ *    against.
+ *
+ * This plugin re-adds `nodejs_compat` and pins the compatibility date to a
+ * known-good value after the build output is written.
  */
+const SAFE_COMPATIBILITY_DATE = "2026-08-01";
 export function ensureNodejsCompat(): Plugin {
   let root = process.cwd();
 
@@ -25,11 +32,21 @@ export function ensureNodejsCompat(): Plugin {
     const flags = Array.isArray(config.compatibility_flags)
       ? (config.compatibility_flags as string[])
       : [];
-    if (flags.includes("nodejs_compat")) return;
+    const nextFlags = flags.includes("nodejs_compat") ? flags : [...flags, "nodejs_compat"];
+    const dateNeedsPin = config.compatibility_date !== SAFE_COMPATIBILITY_DATE;
+    if (nextFlags.length === flags.length && !dateNeedsPin) return;
 
     await writeFile(
       configPath,
-      JSON.stringify({ ...config, compatibility_flags: [...flags, "nodejs_compat"] }, null, 2),
+      JSON.stringify(
+        {
+          ...config,
+          compatibility_date: SAFE_COMPATIBILITY_DATE,
+          compatibility_flags: nextFlags,
+        },
+        null,
+        2,
+      ),
     );
   };
 
