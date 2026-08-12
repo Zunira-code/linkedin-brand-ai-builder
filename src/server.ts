@@ -28,11 +28,41 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   const body = await response.clone().text();
   if (!isH3SwallowedErrorBody(body)) return response;
 
-  console.error(consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`));
+  const captured = consumeLastCapturedError();
+  if (captured) {
+    console.error(captured);
+  } else {
+    console.error(new Error(`h3 swallowed SSR error: ${body}`));
+    await logRuntimeProbes();
+  }
   return new Response(renderErrorPage(), {
     status: 500,
     headers: { "content-type": "text/html; charset=utf-8" },
   });
+}
+
+// Diagnostic: when h3 hides the original throw, probe the runtime features the
+// server bundle depends on so the failure shows up in server logs.
+async function logRuntimeProbes(): Promise<void> {
+  const probes: Array<[string, () => Promise<unknown>]> = [
+    ["node:module", () => import("node:module")],
+    ["node:crypto", () => import("node:crypto")],
+    ["node:stream", () => import("node:stream")],
+    ["node:buffer", () => import("node:buffer")],
+    ["react-dom/server", () => import("react-dom/server")],
+  ];
+  for (const [name, load] of probes) {
+    try {
+      await load();
+    } catch (error) {
+      console.error(`[ssr-probe] ${name} failed:`, error);
+    }
+  }
+  console.error(
+    `[ssr-probe] env present: ${["SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY", "SUPABASE_SERVICE_ROLE_KEY"]
+      .map((k) => `${k}=${process.env[k] ? "yes" : "no"}`)
+      .join(" ")}`,
+  );
 }
 
 function isH3SwallowedErrorBody(body: string): boolean {
