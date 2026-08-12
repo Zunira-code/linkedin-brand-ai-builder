@@ -1,18 +1,43 @@
 import type { Plugin } from "vite";
 
 /**
- * The generated dist/server/wrangler.json ships with an empty
- * compatibility_flags array. Without `nodejs_compat` the deployed worker
- * cannot resolve Node built-ins (`No such module "node:module"`), which makes
- * every server-rendered route return 500. This plugin re-adds the flag after
- * the build output is written, leaving compatibility_date untouched.
+ * The deployed worker runs without the `nodejs_compat` flag, so any static
+ * `node:*` import in the server bundle fails at module init with
+ * `No such module "node:module"` — which made every server-rendered route
+ * return 500.
+ *
+ * The only such import is Rolldown's generated `dist/server/_runtime.mjs`,
+ * which imports `createRequire` from `node:module` to build a `__require`
+ * helper. No chunk in the bundle imports that helper, so we replace it with a
+ * throwing stub and drop the `node:module` import. We also re-add
+ * `nodejs_compat` to the generated wrangler config for local/preview parity.
  */
-const SAFE_COMPATIBILITY_DATE = "2026-08-01";
-
 export function ensureNodejsCompat(): Plugin {
   let root = process.cwd();
 
-  const patch = async () => {
+  const patchRuntime = async () => {
+    const { readFile, writeFile } = await import("node:fs/promises");
+    const { join } = await import("node:path");
+    const runtimePath = join(root, "dist/server/_runtime.mjs");
+
+    let source: string;
+    try {
+      source = await readFile(runtimePath, "utf8");
+    } catch {
+      return;
+    }
+    if (!source.includes('from "node:module"')) return;
+
+    const patched = source
+      .replace(/import\s*\{[^}]*\}\s*from\s*"node:module";?\n?/, "")
+      .replace(
+        /var __require = [^\n]*\n/,
+        'var __require = (id) => { throw new Error(`Dynamic require of "${id}" is not supported`); };\n',
+      );
+    await writeFile(runtimePath, patched);
+  };
+
+  const patchWrangler = async () => {
     const { readFile, writeFile } = await import("node:fs/promises");
     const { join } = await import("node:path");
     const configPath = join(root, "dist/server/wrangler.json");
@@ -23,26 +48,19 @@ export function ensureNodejsCompat(): Plugin {
     } catch {
       return;
     }
-
     const flags = Array.isArray(config.compatibility_flags)
       ? (config.compatibility_flags as string[])
       : [];
-    const nextFlags = flags.includes("nodejs_compat") ? flags : [...flags, "nodejs_compat"];
-    const dateNeedsPin = config.compatibility_date !== SAFE_COMPATIBILITY_DATE;
-    if (nextFlags.length === flags.length && !dateNeedsPin) return;
-
+    if (flags.includes("nodejs_compat")) return;
     await writeFile(
       configPath,
-      JSON.stringify(
-        {
-          ...config,
-          compatibility_date: SAFE_COMPATIBILITY_DATE,
-          compatibility_flags: nextFlags,
-        },
-        null,
-        2,
-      ),
+      JSON.stringify({ ...config, compatibility_flags: [...flags, "nodejs_compat"] }, null, 2),
     );
+  };
+
+  const patch = async () => {
+    await patchRuntime();
+    await patchWrangler();
   };
 
   return {
