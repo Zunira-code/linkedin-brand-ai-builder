@@ -12,10 +12,40 @@ let serverEntryPromise: Promise<ServerEntry> | undefined;
 async function getServerEntry(): Promise<ServerEntry> {
   if (!serverEntryPromise) {
     serverEntryPromise = import("@tanstack/react-start/server-entry").then(
-      (m) => (m.default ?? m) as ServerEntry,
+      async (m) => {
+        const entry = (m.default ?? m) as ServerEntry;
+        // Warm up so the nitro app instance exists, then hook its error handler
+        // so the original throw is logged instead of h3's generic 500 body.
+        try {
+          await entry.fetch(new Request("http://localhost/__ssr_warmup"), undefined, undefined);
+        } catch {
+          // ignore warmup failures
+        }
+        hookNitroErrorHandler();
+        return entry;
+      },
     );
   }
   return serverEntryPromise;
+}
+
+function hookNitroErrorHandler(): void {
+  try {
+    const registry = (globalThis as Record<string, any>).__nitro__;
+    for (const app of Object.values(registry ?? {})) {
+      const h3 = (app as any)?.h3;
+      const config = h3?.config ?? h3?._config;
+      if (!config || typeof config.onError !== "function" || config.__lovableHooked) continue;
+      const original = config.onError.bind(config);
+      config.onError = (error: unknown, event: unknown) => {
+        console.error("[ssr-original-error]", error);
+        return original(error, event);
+      };
+      config.__lovableHooked = true;
+    }
+  } catch (error) {
+    console.error("[ssr-hook-failed]", error);
+  }
 }
 
 // h3 swallows in-handler throws into a normal 500 Response with body
