@@ -7,6 +7,8 @@ import type { Plugin } from "vite";
  * every server-rendered route return 500. This plugin re-adds the flag after
  * the build output is written, leaving compatibility_date untouched.
  */
+const SAFE_COMPATIBILITY_DATE = "2026-08-01";
+
 export function ensureNodejsCompat(): Plugin {
   let root = process.cwd();
 
@@ -25,11 +27,21 @@ export function ensureNodejsCompat(): Plugin {
     const flags = Array.isArray(config.compatibility_flags)
       ? (config.compatibility_flags as string[])
       : [];
-    if (flags.includes("nodejs_compat")) return;
+    const nextFlags = flags.includes("nodejs_compat") ? flags : [...flags, "nodejs_compat"];
+    const dateNeedsPin = config.compatibility_date !== SAFE_COMPATIBILITY_DATE;
+    if (nextFlags.length === flags.length && !dateNeedsPin) return;
 
     await writeFile(
       configPath,
-      JSON.stringify({ ...config, compatibility_flags: [...flags, "nodejs_compat"] }, null, 2),
+      JSON.stringify(
+        {
+          ...config,
+          compatibility_date: SAFE_COMPATIBILITY_DATE,
+          compatibility_flags: nextFlags,
+        },
+        null,
+        2,
+      ),
     );
   };
 
