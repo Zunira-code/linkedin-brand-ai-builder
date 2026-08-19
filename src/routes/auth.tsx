@@ -117,17 +117,17 @@ function AuthPage() {
   async function onGoogle() {
   setBusy(true);
   try {
-    // Specify the app feature page route (e.g., /dashboard, /app, or /feed)
-    const redirectPath = next || "/dashboard"; 
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin + redirectPath,
-      },
+    // Remember where to land; OAuth must return to a public same-origin URL.
+    sessionStorage.setItem("postpilot:next", returnTo);
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin + "/auth",
     });
-
-    if (error) toast.error(error.message);
+    if (result.error) {
+      toast.error(result.error.message ?? "Google sign-in failed.");
+      return;
+    }
+    if (result.redirected) return;
+    window.location.replace(returnTo);
   } catch (err) {
     handleAuthError(err);
   } finally {
@@ -145,7 +145,15 @@ async function onLinkedIn() {
         redirectTo: window.location.origin + redirectPath,
       },
     });
-    if (error) toast.error(error.message);
+    if (error) {
+      if (/unsupported provider|provider is not enabled/i.test(error.message)) {
+        toast.error(
+          "LinkedIn sign-in isn't enabled yet. Sign in with Google or email, then connect LinkedIn from Settings to publish.",
+        );
+      } else {
+        toast.error(error.message);
+      }
+    }
   } catch (err) {
     handleAuthError(err);
   } finally {
