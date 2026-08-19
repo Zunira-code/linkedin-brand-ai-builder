@@ -135,31 +135,6 @@ function AuthPage() {
   }
 }
 
-async function onLinkedIn() {
-  setBusy(true);
-  try {
-    const redirectPath = next || "/dashboard";
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "linkedin_oidc",
-      options: {
-        redirectTo: window.location.origin + redirectPath,
-      },
-    });
-    if (error) {
-      if (/unsupported provider|provider is not enabled/i.test(error.message)) {
-        toast.error(
-          "LinkedIn sign-in isn't enabled yet. Sign in with Google or email, then connect LinkedIn from Settings to publish.",
-        );
-      } else {
-        toast.error(error.message);
-      }
-    }
-  } catch (err) {
-    handleAuthError(err);
-  } finally {
-    setBusy(false);
-  }
-}
 
   return (
     <main className="relative flex min-h-screen items-center justify-center bg-background px-4">
