@@ -1,300 +1,277 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { motion } from "framer-motion";
-import {
-  Sparkles,
-  Calendar,
-  Flame,
-  BarChart3,
-  Zap,
-  Wand2,
-  CheckCircle2,
-  ArrowRight,
-  Mail,
-  Phone,
-  Images,
-  Video,
-  Users,
-  Palette,
-  UserCog,
-  MessageSquarePlus,
-} from "lucide-react";
-import { Logo } from "@/components/logo";
+import { createFileRoute } from "@tanstack/react-router";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowDown, ArrowUpRight, Asterisk, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import atelierImage from "@/assets/project-atelier.jpg";
+import habitatImage from "@/assets/project-habitat.jpg";
+import frequencyImage from "@/assets/project-frequency.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { property: "og:url", content: "https://app.mywork.co.ke/" },
+      { title: "MYWORK — Web Design & Development Agency" },
+      {
+        name: "description",
+        content:
+          "MYWORK is a Nairobi web design and development agency creating distinctive digital experiences for ambitious brands.",
+      },
+      { property: "og:title", content: "MYWORK — Digital experiences with impact" },
+      {
+        property: "og:description",
+        content: "Independent web design and development studio building memorable, high-performance digital experiences.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: "https://app.mywork.co.ke/" }],
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Service",
-          name: "Postpilot",
-          description: "AI-powered LinkedIn growth workspace with post generator, content calendar, viral inspiration library and personal analytics.",
-          provider: { "@type": "Organization", name: "Postpilot", url: "https://app.mywork.co.ke" },
-          areaServed: "Worldwide",
-          serviceType: "LinkedIn content and growth automation",
-        }),
-      },
-    ],
   }),
   component: Index,
 });
 
-const features = [
-  { icon: Sparkles, title: "AI post generator", desc: "Turn a topic into a scroll-stopping text post in seconds. Trained on hooks that convert." },
-  { icon: UserCog, title: "Profile Optimizer", desc: "Rewrite your headline and About section, plan your Featured picks, and fix your photo and banner — five headline styles, four About versions, saved to your Profile Kit." },
-  { icon: MessageSquarePlus, title: "AI comment generator", desc: "Paste any post, pick a style, and get three thoughtful comments in your own voice — commenting is the fastest way to grow reach." },
-  { icon: Video, title: "AI video posts", desc: "Generate a short vertical video from a prompt, add your caption, and publish straight to LinkedIn." },
-  { icon: Images, title: "Carousel builder", desc: "Turn any topic or long-form text into a 5–8 slide branded carousel — download the PDF and upload to LinkedIn." },
-  { icon: Calendar, title: "Content calendar", desc: "Plan a week of posts. We auto-publish text & video posts to LinkedIn when the time comes." },
-  { icon: Flame, title: "Viral inspiration", desc: "A curated library of proven post patterns you can remix into your own draft with one click." },
-  { icon: BarChart3, title: "Personal analytics", desc: "Track followers, reach and post performance right next to your drafts." },
-  { icon: Users, title: "Warm leads", desc: "See who's engaging with your posts so you can turn interactions into conversations." },
-  { icon: Wand2, title: "Your brand voice", desc: "Teach Postpilot how you write once. Every draft sounds like you, not like AI." },
-  { icon: Palette, title: "Brand kit", desc: "Save your logo, colors and fonts once — reused across every carousel and visual you generate." },
-  { icon: Zap, title: "One-click publish", desc: "Connect LinkedIn via OAuth and ship posts without leaving the app. Or schedule for peak hours." },
+const projects = [
+  {
+    number: "01",
+    title: "Atelier Nia",
+    type: "Digital flagship / Art direction",
+    year: "2026",
+    image: atelierImage,
+    className: "lg:col-span-7",
+  },
+  {
+    number: "02",
+    title: "Kijani House",
+    type: "Web platform / Digital identity",
+    year: "2026",
+    image: habitatImage,
+    className: "lg:col-span-5 lg:mt-48",
+  },
+  {
+    number: "03",
+    title: "Frequency",
+    type: "Culture platform / Commerce",
+    year: "2025",
+    image: frequencyImage,
+    className: "lg:col-span-9 lg:col-start-3",
+  },
 ];
 
-function Index() {
+const services = [
+  ["01", "Strategy & direction", "Research, positioning and digital roadmaps that turn ambitious ideas into focused experiences."],
+  ["02", "Web design", "Editorial interfaces and brand systems created to feel unmistakably yours on every screen."],
+  ["03", "Development", "Fast, accessible websites and digital products engineered for lasting performance."],
+  ["04", "Creative technology", "Motion, interaction and experimental technology that give every project a pulse."],
+];
+
+function Reveal({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const reduceMotion = useReducedMotion();
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 grid-pattern opacity-40" aria-hidden />
-        <div className="absolute -left-40 top-20 h-96 w-96 rounded-full bg-brand/30 blur-3xl" aria-hidden />
-        <div className="absolute -right-40 top-60 h-96 w-96 rounded-full bg-brand-glow/20 blur-3xl" aria-hidden />
-
-        <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-          <Logo />
-          <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
-            <a href="#features" className="hover:text-foreground">Features</a>
-            <a href="#how" className="hover:text-foreground">How it works</a>
-            <Link to="/pricing" className="hover:text-foreground">Pricing</Link>
-            <a href="#contact" className="hover:text-foreground">Contact</a>
-          </nav>
-          <div className="flex items-center gap-2">
-            <Link to="/auth"><Button variant="ghost" size="sm">Sign in</Button></Link>
-            <Link to="/auth">
-              <Button size="sm" className="bg-brand-gradient text-brand-foreground hover:opacity-95">
-                Start free
-              </Button>
-            </Link>
-          </div>
-        </header>
-
-        <section className="relative z-10 mx-auto max-w-5xl px-6 pb-24 pt-16 text-center md:pt-28">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur"
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-success" />
-            AI-powered LinkedIn growth workspace
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.05 }}
-            className="mt-6 font-display text-5xl font-semibold tracking-tight md:text-7xl"
-          >
-            Build your LinkedIn brand
-            <br />
-            <span className="text-brand-gradient">on autopilot.</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground"
-          >
-            Postpilot writes, schedules and publishes posts that grow your audience. One workspace for
-            drafting, planning, and tracking what actually works.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.25 }}
-            className="mt-8 flex flex-wrap items-center justify-center gap-3"
-          >
-            <Link to="/auth">
-              <Button size="lg" className="bg-brand-gradient text-brand-foreground shadow-glow hover:opacity-95">
-                Start writing for free
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            </Link>
-            <a href="#features"><Button size="lg" variant="outline">See how it works</Button></a>
-          </motion.div>
-          <p className="mt-4 text-xs text-muted-foreground">No credit card required · Connect LinkedIn in 30 seconds</p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.35 }}
-            className="mt-16"
-          >
-            <HeroMock />
-          </motion.div>
-        </section>
-      </div>
-
-      <section id="features" className="mx-auto max-w-6xl px-6 py-24">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="font-display text-sm uppercase tracking-widest text-brand">Everything you need</p>
-          <h2 className="mt-3 font-display text-4xl font-semibold md:text-5xl">
-            One workspace to run your LinkedIn.
-          </h2>
-          <p className="mt-4 text-muted-foreground">
-            Stop juggling docs and schedulers. Draft, plan and analyze — all in one place.
-          </p>
-        </div>
-        <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {features.map((f, i) => (
-            <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.4, delay: i * 0.05 }}
-              className="rounded-2xl border border-border bg-card p-6"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand/15 text-brand">
-                <f.icon className="h-5 w-5" />
-              </div>
-              <h3 className="mt-4 font-display text-lg font-semibold">{f.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{f.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      <section id="how" className="border-y border-border bg-card/40 py-24">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="font-display text-sm uppercase tracking-widest text-brand">How it works</p>
-            <h2 className="mt-3 font-display text-4xl font-semibold">From idea to feed in 3 steps.</h2>
-          </div>
-          <div className="mt-14 grid gap-8 md:grid-cols-3">
-            {[
-              { n: "01", t: "Give a topic", d: "Type an idea, pick a tone, and let Postpilot draft your post." },
-              { n: "02", t: "Refine your voice", d: "Edit inline, remix from viral templates, or regenerate variations." },
-              { n: "03", t: "Publish or schedule", d: "Send it now, or drop it on your calendar and let us publish it." },
-            ].map((s) => (
-              <div key={s.n} className="rounded-2xl border border-border bg-background p-6">
-                <div className="font-display text-sm text-brand">{s.n}</div>
-                <h3 className="mt-2 font-display text-xl font-semibold">{s.t}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{s.d}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="pricing" className="mx-auto max-w-4xl px-6 py-24 text-center">
-        <h2 className="font-display text-4xl font-semibold md:text-5xl">
-          Start writing better posts today.
-        </h2>
-        <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-          Free while in beta. Connect your LinkedIn, teach Postpilot your voice, and never stare at a
-          blinking cursor again.
-        </p>
-        <div className="mt-8">
-          <Link to="/auth">
-            <Button size="lg" className="bg-brand-gradient text-brand-foreground shadow-glow">
-              Create your account
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-success" /> Unlimited drafts</span>
-          <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-success" /> AI-powered scheduling</span>
-          <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-success" /> Analytics dashboard</span>
-        </div>
-      </section>
-
-      <section id="contact" className="border-t border-border bg-card/40 py-24">
-        <div className="mx-auto max-w-4xl px-6 text-center">
-          <p className="font-display text-sm uppercase tracking-widest text-brand">Contact</p>
-          <h2 className="mt-3 font-display text-4xl font-semibold md:text-5xl">Get in touch</h2>
-          <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            Questions, partnerships, or feedback? We'd love to hear from you.
-          </p>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2">
-            <a href="mailto:linkedin@mywork.co.ke" className="group rounded-2xl border border-border bg-background p-6 text-left transition hover:border-brand">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand/15 text-brand">
-                <Mail className="h-5 w-5" />
-              </div>
-              <h3 className="mt-4 font-display text-lg font-semibold">Email us</h3>
-              <p className="mt-1 text-sm text-muted-foreground">linkedin@mywork.co.ke</p>
-            </a>
-            <a href="tel:+254716534393" className="group rounded-2xl border border-border bg-background p-6 text-left transition hover:border-brand">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand/15 text-brand">
-                <Phone className="h-5 w-5" />
-              </div>
-              <h3 className="mt-4 font-display text-lg font-semibold">Call us</h3>
-              <p className="mt-1 text-sm text-muted-foreground">0716 534 393</p>
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <footer className="border-t border-border py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 text-xs text-muted-foreground md:flex-row">
-          <Logo />
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <a href="mailto:linkedin@mywork.co.ke" className="inline-flex items-center gap-1 hover:text-foreground">
-              <Mail className="h-3 w-3" /> linkedin@mywork.co.ke
-            </a>
-            <a href="tel:+254716534393" className="inline-flex items-center gap-1 hover:text-foreground">
-              <Phone className="h-3 w-3" /> 0716 534 393
-            </a>
-            <Link to="/privacy" className="hover:text-foreground">
-              Privacy Policy
-            </Link>
-          </div>
-          <p>© {new Date().getFullYear()} Postpilot. Not affiliated with LinkedIn Corp.</p>
-        </div>
-      </footer>
-    </main>
+    <motion.div
+      initial={reduceMotion ? false : { opacity: 0, y: 48 }}
+      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-12%" }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className={className}
+    >
+      {children}
+    </motion.div>
   );
 }
 
-function HeroMock() {
+function Project({ project }: { project: (typeof projects)[number] }) {
+  const reduceMotion = useReducedMotion();
   return (
-    <div className="mx-auto max-w-4xl rounded-3xl border border-border bg-card/70 p-2 shadow-glow backdrop-blur">
-      <div className="rounded-2xl bg-background/80 p-6 text-left">
-        <div className="flex items-center gap-2 border-b border-border pb-3">
-          <Sparkles className="h-4 w-4 text-brand" />
-          <span className="text-xs font-medium text-muted-foreground">Post generator</span>
-          <span className="ml-auto text-xs text-muted-foreground">Draft · 892 characters</span>
-        </div>
-        <div className="mt-4 space-y-3 font-display text-lg leading-relaxed">
-          <p className="text-foreground">Everyone told me to post daily.</p>
-          <p className="text-foreground/90">So I did — for 90 days. Here is what nobody warned me about:</p>
-          <p className="text-muted-foreground">
-            The first month feels invisible. The second feels awkward. The third quietly compounds.
-          </p>
-          <p className="text-muted-foreground">
-            The people who broke through did not have better ideas. They just kept showing up after
-            most people quit.
-          </p>
-          <p className="text-brand">What is the one thing you would keep doing even if nobody watched?</p>
-        </div>
-        <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border pt-4">
-          <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">Tone: Vulnerable</span>
-          <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">Hook: Story</span>
-          <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">Length: Medium</span>
-          <div className="ml-auto flex items-center gap-2">
-            <Button size="sm" variant="ghost">Regenerate</Button>
-            <Button size="sm" className="bg-brand-gradient text-brand-foreground">Publish</Button>
+    <Reveal className={project.className}>
+      <a href="#contact" className="group block" aria-label={`Discuss a project like ${project.title}`}>
+        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+          <motion.img
+            src={project.image}
+            alt={`${project.title} featured project`}
+            width={1600}
+            height={1104}
+            loading="lazy"
+            className="h-full w-full object-cover"
+            whileHover={reduceMotion ? undefined : { scale: 1.035 }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          />
+          <div className="absolute right-5 top-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-0 transition-all duration-300 group-hover:opacity-100 md:h-20 md:w-20">
+            <ArrowUpRight className="h-6 w-6 md:h-8 md:w-8" />
           </div>
         </div>
+        <div className="grid grid-cols-[auto_1fr_auto] items-baseline gap-4 border-b border-border py-5">
+          <span className="font-mono text-xs text-primary">/{project.number}</span>
+          <div>
+            <h3 className="font-display text-3xl md:text-5xl">{project.title}</h3>
+            <p className="mt-1 text-xs uppercase text-muted-foreground">{project.type}</p>
+          </div>
+          <span className="font-mono text-xs text-muted-foreground">{project.year}</span>
+        </div>
+      </a>
+    </Reveal>
+  );
+}
+
+function Index() {
+  const reduceMotion = useReducedMotion();
+
+  return (
+    <main className="overflow-hidden bg-background text-foreground">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-md">
+        <div className="mx-auto flex h-20 max-w-[1600px] items-center justify-between px-5 md:px-10">
+          <a href="#top" className="flex items-center gap-3" aria-label="MYWORK home">
+            <span className="flex h-9 w-9 items-center justify-center bg-primary font-display text-2xl italic text-primary-foreground">M</span>
+            <span className="text-sm font-semibold uppercase tracking-[0.18em]">MYWORK®</span>
+          </a>
+          <nav className="hidden items-center gap-8 text-xs uppercase tracking-[0.14em] md:flex" aria-label="Main navigation">
+            <a href="#work" className="agency-link">Work</a>
+            <a href="#studio" className="agency-link">Studio</a>
+            <a href="#services" className="agency-link">Services</a>
+          </nav>
+          <Button asChild className="hidden rounded-none px-6 uppercase tracking-[0.12em] md:inline-flex">
+            <a href="#contact">Start a project <ArrowUpRight /></a>
+          </Button>
+          <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open navigation" asChild>
+            <a href="#contact"><Menu /></a>
+          </Button>
+        </div>
+      </header>
+
+      <section id="top" className="relative min-h-[94svh] border-b border-border pt-20">
+        <div className="mx-auto grid min-h-[calc(94svh-5rem)] max-w-[1600px] grid-cols-1 lg:grid-cols-12">
+          <aside className="hidden items-center justify-center border-r border-border lg:col-span-1 lg:flex">
+            <span className="-rotate-90 whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.4em] text-muted-foreground">Nairobi · Worldwide · 2026</span>
+          </aside>
+          <div className="flex flex-col justify-between px-5 py-12 sm:px-10 md:py-16 lg:col-span-7 lg:border-r lg:border-border lg:px-16">
+            <motion.div
+              initial={reduceMotion ? false : { opacity: 0, y: 28 }}
+              animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <p className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+                <span className="h-2.5 w-2.5 rounded-full bg-primary" /> Independent digital agency
+              </p>
+              <h1 className="mt-10 max-w-4xl font-display text-[clamp(4.25rem,10vw,9.5rem)] leading-[0.78]">
+                We build
+                <br />
+                <span className="ml-[8%] italic text-primary">digital</span>
+                <br />
+                landmarks.
+              </h1>
+            </motion.div>
+            <div className="mt-16 grid items-end gap-8 border-t border-border pt-8 md:grid-cols-[1fr_auto]">
+              <p className="max-w-lg text-lg leading-relaxed text-muted-foreground md:text-xl">
+                Strategy, design and technology for ambitious brands ready to become impossible to ignore.
+              </p>
+              <a href="#work" className="flex items-center gap-3 text-xs uppercase tracking-[0.16em]">
+                Explore our work <ArrowDown className="h-4 w-4 text-primary" />
+              </a>
+            </div>
+          </div>
+          <div className="flex min-h-[440px] flex-col bg-primary text-primary-foreground lg:col-span-4">
+            <div className="flex-1 p-8 md:p-10">
+              <div className="mb-20 flex justify-between font-mono text-[10px] uppercase tracking-[0.18em]">
+                <span>[ What we do ]</span><span>01—04</span>
+              </div>
+              <ul>
+                {services.map(([number, title]) => (
+                  <li key={number} className="group flex items-center justify-between border-b border-primary-foreground/35 py-5">
+                    <span className="text-sm uppercase tracking-[0.12em]">{title}</span>
+                    <span className="font-mono text-xs opacity-60">/{number}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="border-t border-primary-foreground/35 p-8 md:p-10">
+              <Asterisk className="mb-8 h-10 w-10" />
+              <p className="font-display text-3xl italic leading-tight">Built in Nairobi.<br />Made for everywhere.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="marquee border-b border-border bg-foreground py-5 text-background" aria-hidden="true">
+        <div className="marquee-track flex w-max items-center gap-8 font-display text-4xl italic md:text-6xl">
+          {[0, 1].map((set) => (
+            <div key={set} className="flex items-center gap-8">
+              <span>Ideas with impact</span><Asterisk className="h-9 w-9 text-primary" />
+              <span>Design with purpose</span><Asterisk className="h-9 w-9 text-primary" />
+              <span>Technology with soul</span><Asterisk className="h-9 w-9 text-primary" />
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+
+      <section id="work" className="px-5 py-24 sm:px-10 md:py-36">
+        <div className="mx-auto max-w-[1500px]">
+          <Reveal className="mb-16 grid gap-8 md:grid-cols-2 md:items-end">
+            <div>
+              <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">Selected work / 2025—26</p>
+              <h2 className="mt-5 font-display text-6xl leading-none md:text-8xl">Made to<br /><span className="italic text-muted-foreground">move people.</span></h2>
+            </div>
+            <p className="max-w-md text-lg leading-relaxed text-muted-foreground md:justify-self-end">Three worlds, built from the first idea to the final interaction. Every detail exists to make the brand felt.</p>
+          </Reveal>
+          <div className="grid gap-x-8 gap-y-24 lg:grid-cols-12">
+            {projects.map((project) => <Project key={project.title} project={project} />)}
+          </div>
+        </div>
+      </section>
+
+      <section id="studio" className="bg-foreground px-5 py-24 text-background sm:px-10 md:py-40">
+        <div className="mx-auto max-w-[1500px]">
+          <Reveal>
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">Our point of view</p>
+            <p className="mt-10 max-w-6xl font-display text-[clamp(2.8rem,7vw,7rem)] leading-[0.95]">
+              The internet has enough ordinary websites. <span className="italic text-primary">We make the ones you remember.</span>
+            </p>
+          </Reveal>
+          <div className="mt-20 grid gap-10 border-t border-background/25 pt-10 md:grid-cols-3 md:gap-16">
+            <p className="text-xs uppercase tracking-[0.18em] text-background/55">Independent by design</p>
+            <p className="leading-relaxed text-background/70">We bring senior thinkers, designers and engineers directly to the work—small teams, sharp decisions and no layers of noise.</p>
+            <p className="leading-relaxed text-background/70">From a first sketch to launch day, we blend strategy and craft into digital experiences that perform as beautifully as they look.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="services" className="px-5 py-24 sm:px-10 md:py-36">
+        <div className="mx-auto max-w-[1500px]">
+          <div className="grid gap-12 lg:grid-cols-12">
+            <div className="lg:col-span-4">
+              <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">Capabilities</p>
+              <h2 className="mt-5 font-display text-6xl md:text-8xl">All the way<br /><span className="italic text-muted-foreground">through.</span></h2>
+            </div>
+            <div className="lg:col-span-8">
+              {services.map(([number, title, description]) => (
+                <Reveal key={number} className="grid gap-4 border-t border-border py-8 sm:grid-cols-[64px_1fr_1fr] sm:gap-8">
+                  <span className="font-mono text-xs text-primary">/{number}</span>
+                  <h3 className="font-display text-3xl md:text-4xl">{title}</h3>
+                  <p className="leading-relaxed text-muted-foreground">{description}</p>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="contact" className="relative bg-primary px-5 py-24 text-primary-foreground sm:px-10 md:py-36">
+        <div className="mx-auto max-w-[1500px]">
+          <p className="font-mono text-xs uppercase tracking-[0.2em]">Have a project in mind?</p>
+          <a href="mailto:linkedin@mywork.co.ke" className="group mt-8 flex items-end justify-between border-b border-primary-foreground pb-8">
+            <h2 className="max-w-5xl font-display text-[clamp(3.8rem,10vw,10rem)] leading-[0.78]">Let’s make<br /><span className="italic">it matter.</span></h2>
+            <ArrowUpRight className="mb-2 h-12 w-12 shrink-0 transition-transform duration-300 group-hover:-translate-y-2 group-hover:translate-x-2 md:h-24 md:w-24" />
+          </a>
+          <div className="mt-10 flex flex-col justify-between gap-5 text-sm sm:flex-row">
+            <a href="mailto:linkedin@mywork.co.ke">linkedin@mywork.co.ke</a>
+            <a href="tel:+254716534393">+254 716 534 393</a>
+            <span>Nairobi, Kenya · Working worldwide</span>
+          </div>
+        </div>
+      </section>
+
+      <footer className="bg-foreground px-5 py-8 text-background sm:px-10">
+        <div className="mx-auto flex max-w-[1500px] flex-col justify-between gap-4 text-xs uppercase tracking-[0.14em] sm:flex-row">
+          <span>MYWORK® — Digital agency</span>
+          <span>© {new Date().getFullYear()} All rights reserved</span>
+        </div>
+      </footer>
+    </main>
   );
 }
