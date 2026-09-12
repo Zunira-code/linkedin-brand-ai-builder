@@ -77,18 +77,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Postpilot — AI LinkedIn brand builder" },
-      { name: "description", content: "Grow your LinkedIn brand on autopilot. AI post generator, content calendar, viral post library and personal analytics — in one workspace." },
-      { name: "author", content: "Postpilot" },
-      { property: "og:title", content: "Postpilot — AI LinkedIn brand builder" },
-      { property: "og:description", content: "Grow your LinkedIn brand on autopilot. AI post generator, content calendar, viral post library and personal analytics — in one workspace." },
+      { title: "MYWORK — Web Design & Development Agency" },
+      { name: "description", content: "A Nairobi web design and development agency creating distinctive digital experiences for ambitious brands." },
+      { name: "author", content: "MYWORK" },
+      { property: "og:title", content: "MYWORK — Web Design & Development Agency" },
+      { property: "og:description", content: "Distinctive digital experiences for ambitious brands." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Postpilot — AI LinkedIn brand builder" },
-      { name: "twitter:description", content: "Grow your LinkedIn brand on autopilot. AI post generator, content calendar, viral post library and personal analytics — in one workspace." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/c594cd9b-821e-4d01-a120-d2edf5acd9f6" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/c594cd9b-821e-4d01-a120-d2edf5acd9f6" },
-      { property: "og:site_name", content: "Postpilot" },
+      { name: "twitter:title", content: "MYWORK — Web Design & Development Agency" },
+      { name: "twitter:description", content: "Distinctive digital experiences for ambitious brands." },
+      { property: "og:site_name", content: "MYWORK" },
     ],
     links: [
       {
@@ -96,6 +94,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=Instrument+Serif:ital@0;1&family=Work+Sans:wght@400;500;600&display=swap" },
     ],
     scripts: [
       {
@@ -103,7 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
-          name: "Postpilot",
+          name: "MYWORK",
           url: "https://app.mywork.co.ke",
           email: "linkedin@mywork.co.ke",
           telephone: "+254716534393",
@@ -114,7 +115,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
-          name: "Postpilot",
+          name: "MYWORK",
           url: "https://app.mywork.co.ke",
         }),
       },
