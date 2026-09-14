@@ -77,16 +77,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "MYWORK — Web Design & Development Agency" },
+      { title: "Nia Studio — Web Design & Development Agency" },
       { name: "description", content: "A Nairobi web design and development agency creating distinctive digital experiences for ambitious brands." },
-      { name: "author", content: "MYWORK" },
-      { property: "og:title", content: "MYWORK — Web Design & Development Agency" },
+      { name: "author", content: "Nia Studio" },
+      { property: "og:title", content: "Nia Studio — Web Design & Development Agency" },
       { property: "og:description", content: "Distinctive digital experiences for ambitious brands." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "MYWORK — Web Design & Development Agency" },
+      { name: "twitter:title", content: "Nia Studio — Web Design & Development Agency" },
       { name: "twitter:description", content: "Distinctive digital experiences for ambitious brands." },
-      { property: "og:site_name", content: "MYWORK" },
+      { property: "og:site_name", content: "Nia Studio" },
     ],
     links: [
       {
@@ -104,7 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
-          name: "MYWORK",
+          name: "Nia Studio",
           url: "https://app.mywork.co.ke",
           email: "linkedin@mywork.co.ke",
           telephone: "+254716534393",
@@ -115,7 +115,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
-          name: "MYWORK",
+          name: "Nia Studio",
           url: "https://app.mywork.co.ke",
         }),
       },
