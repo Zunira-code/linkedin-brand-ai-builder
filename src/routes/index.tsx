@@ -5,17 +5,18 @@ import { Button } from "@/components/ui/button";
 import atelierImage from "@/assets/project-atelier.jpg";
 import habitatImage from "@/assets/project-habitat.jpg";
 import frequencyImage from "@/assets/project-frequency.jpg";
+import niaLogo from "@/assets/nia-studio-logo.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MYWORK — Web Design & Development Agency" },
+      { title: "Nia Studio — Web Design & Development Agency" },
       {
         name: "description",
         content:
-          "MYWORK is a Nairobi web design and development agency creating distinctive digital experiences for ambitious brands.",
+          "Nia Studio is a Nairobi web design and development agency creating distinctive digital experiences for ambitious brands.",
       },
-      { property: "og:title", content: "MYWORK — Digital experiences with impact" },
+      { property: "og:title", content: "Nia Studio — Digital experiences with impact" },
       {
         property: "og:description",
         content: "Independent web design and development studio building memorable, high-performance digital experiences.",
@@ -117,9 +118,8 @@ function Index() {
     <main className="overflow-hidden bg-background text-foreground">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-md">
         <div className="mx-auto flex h-20 max-w-[1600px] items-center justify-between px-5 md:px-10">
-          <a href="#top" className="flex items-center gap-3" aria-label="MYWORK home">
-            <span className="flex h-9 w-9 items-center justify-center bg-primary font-display text-2xl italic text-primary-foreground">M</span>
-            <span className="text-sm font-semibold uppercase tracking-[0.18em]">MYWORK®</span>
+          <a href="#top" className="flex items-center gap-3" aria-label="Nia Studio home">
+            <img src={niaLogo} alt="Nia Studio" width={1200} height={800} className="h-9 w-auto" />
           </a>
           <nav className="hidden items-center gap-8 text-xs uppercase tracking-[0.14em] md:flex" aria-label="Main navigation">
             <a href="#work" className="agency-link">Work</a>
@@ -268,7 +268,7 @@ function Index() {
 
       <footer className="bg-foreground px-5 py-8 text-background sm:px-10">
         <div className="mx-auto flex max-w-[1500px] flex-col justify-between gap-4 text-xs uppercase tracking-[0.14em] sm:flex-row">
-          <span>MYWORK® — Digital agency</span>
+          <span>Nia Studio — Digital agency</span>
           <span>© {new Date().getFullYear()} All rights reserved</span>
         </div>
       </footer>
