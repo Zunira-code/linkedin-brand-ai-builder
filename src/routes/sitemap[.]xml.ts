@@ -6,9 +6,12 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
+        // Public, indexable pages only. Signed-in app routes (/dashboard, /admin,
+        // /analytics, ...), API and machine endpoints are intentionally excluded.
         const entries = [
           { path: "/", changefreq: "weekly", priority: "1.0" },
-          { path: "/auth", changefreq: "monthly", priority: "0.5" },
+          { path: "/pricing", changefreq: "monthly", priority: "0.8" },
+          { path: "/privacy", changefreq: "yearly", priority: "0.3" },
         ];
         const urls = entries.map(
           (e) => `  <url><loc>${BASE_URL}${e.path}</loc><changefreq>${e.changefreq}</changefreq><priority>${e.priority}</priority></url>`,

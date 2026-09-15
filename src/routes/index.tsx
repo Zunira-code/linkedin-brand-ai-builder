@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowUpRight, Asterisk, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,21 +10,66 @@ import niaLogo from "@/assets/nia-studio-logo.png";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Nia Studio — Web Design & Development Agency" },
+      { title: "Web Design & Development Agency in Nairobi | Nia Studio" },
       {
         name: "description",
         content:
-          "Nia Studio is a Nairobi web design and development agency creating distinctive digital experiences for ambitious brands.",
+          "Nia Studio is an independent web design and development agency in Nairobi, Kenya, building strategy-led websites and digital products for ambitious brands.",
       },
-      { property: "og:title", content: "Nia Studio — Digital experiences with impact" },
+      { property: "og:title", content: "Web Design & Development Agency in Nairobi | Nia Studio" },
       {
         property: "og:description",
-        content: "Independent web design and development studio building memorable, high-performance digital experiences.",
+        content: "Independent Nairobi web design and development studio building memorable, high-performance websites and digital products.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://app.mywork.co.ke/" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Web Design & Development Agency in Nairobi | Nia Studio" },
+      {
+        name: "twitter:description",
+        content: "Independent Nairobi web design and development studio building memorable, high-performance websites and digital products.",
+      },
     ],
     links: [{ rel: "canonical", href: "https://app.mywork.co.ke/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ProfessionalService",
+          "@id": "https://app.mywork.co.ke/#studio",
+          name: "Nia Studio",
+          description:
+            "Independent web design and development agency in Nairobi, Kenya, offering strategy, web design, development and creative technology.",
+          url: "https://app.mywork.co.ke/",
+          email: "linkedin@mywork.co.ke",
+          telephone: "+254716534393",
+          priceRange: "$$",
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: "Nairobi",
+            addressCountry: "KE",
+          },
+          areaServed: [
+            { "@type": "Country", name: "Kenya" },
+            { "@type": "Place", name: "Worldwide" },
+          ],
+          hasOfferCatalog: {
+            "@type": "OfferCatalog",
+            name: "Services",
+            itemListElement: [
+              "Strategy & direction",
+              "Web design",
+              "Web development",
+              "Creative technology",
+            ].map((service) => ({
+              "@type": "Offer",
+              itemOffered: { "@type": "Service", name: service },
+            })),
+          },
+        }),
+      },
+    ],
   }),
   component: Index,
 });
@@ -268,7 +313,12 @@ function Index() {
 
       <footer className="bg-foreground px-5 py-8 text-background sm:px-10">
         <div className="mx-auto flex max-w-[1500px] flex-col justify-between gap-4 text-xs uppercase tracking-[0.14em] sm:flex-row">
-          <span>Nia Studio — Digital agency</span>
+          <span>Nia Studio — Web design &amp; development agency, Nairobi</span>
+          <nav className="flex flex-wrap gap-5" aria-label="Footer">
+            <Link to="/pricing" className="hover:text-primary">Postpilot pricing</Link>
+            <Link to="/privacy" className="hover:text-primary">Privacy</Link>
+            <a href="mailto:linkedin@mywork.co.ke" className="hover:text-primary">Contact</a>
+          </nav>
           <span>© {new Date().getFullYear()} All rights reserved</span>
         </div>
       </footer>

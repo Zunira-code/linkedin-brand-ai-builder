@@ -1,7 +1,11 @@
-# Postpilot
+# Nia Studio
 
-> An AI-powered LinkedIn brand builder: post generator, content calendar, viral post library and personal analytics in one workspace.
+> An independent web design and development agency in Nairobi, Kenya, building strategy-led websites and digital products for ambitious brands worldwide.
+
+Nia Studio combines strategy and direction, web design, development and creative technology in small senior teams. The studio also builds Postpilot, an AI LinkedIn content tool.
 
 ## Pages
-- [Home](/): product overview and features
-- [Sign in](/auth): create an account or sign in
+
+- [Home](/): studio overview, selected work, capabilities and contact details.
+- [Postpilot pricing](/pricing): monthly plans for the studio's AI LinkedIn tool, from KES 1,500.
+- [Privacy policy](/privacy): how data and LinkedIn connections are handled.

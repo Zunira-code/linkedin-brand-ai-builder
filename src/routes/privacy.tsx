@@ -6,15 +6,15 @@ import { ArrowLeft, Shield, Mail, Phone } from "lucide-react";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy — Postpilot" },
-      { name: "description", content: "Postpilot's privacy policy. Learn how we use LinkedIn OAuth 2.0, store tokens securely, and protect your personal data." },
-      { property: "og:title", content: "Privacy Policy — Postpilot" },
-      { property: "og:description", content: "Postpilot's privacy policy. Learn how we use LinkedIn OAuth 2.0, store tokens securely, and protect your personal data." },
+      { title: "Privacy Policy — Nia Studio & Postpilot" },
+      { name: "description", content: "How Nia Studio and Postpilot handle your data: LinkedIn OAuth 2.0 connections, secure token storage and your privacy choices." },
+      { property: "og:title", content: "Privacy Policy — Nia Studio & Postpilot" },
+      { property: "og:description", content: "How Nia Studio and Postpilot handle your data, LinkedIn connections and secure token storage." },
       { property: "og:url", content: "https://app.mywork.co.ke/privacy" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "Privacy Policy — Postpilot" },
-      { name: "twitter:description", content: "Postpilot's privacy policy. Learn how we use LinkedIn OAuth 2.0, store tokens securely, and protect your personal data." },
+      { name: "twitter:title", content: "Privacy Policy — Nia Studio & Postpilot" },
+      { name: "twitter:description", content: "How Nia Studio and Postpilot handle your data, LinkedIn connections and secure token storage." },
     ],
     links: [
       { rel: "canonical", href: "https://app.mywork.co.ke/privacy" },

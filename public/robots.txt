@@ -1,6 +1,21 @@
 User-agent: *
 Allow: /
-Disallow: /_authenticated/
 Disallow: /auth
+Disallow: /dashboard
+Disallow: /generator
+Disallow: /calendar
+Disallow: /carousels
+Disallow: /comments
+Disallow: /inspiration
+Disallow: /leads
+Disallow: /profile-optimizer
+Disallow: /settings
+Disallow: /analytics
+Disallow: /admin
+Disallow: /upgrade
+Disallow: /api/
+Disallow: /mcp
+Disallow: /.mcp/
+Disallow: /.well-known/
 
 Sitemap: https://app.mywork.co.ke/sitemap.xml
