@@ -7,5 +7,5 @@ Nia Studio combines strategy and direction, web design, development and creative
 ## Pages
 
 - [Home](/): studio overview, selected work, capabilities and contact details.
-- [Postpilot pricing](/pricing): monthly plans for the studio's AI LinkedIn tool, from KES 1,500.
-- [Privacy policy](/privacy): how data and LinkedIn connections are handled.
+- [Web design in Nairobi](/web-design-nairobi): web design services, process and FAQs.
+- [Web development in Nairobi](/web-development-nairobi): development capabilities, stack and FAQs.
