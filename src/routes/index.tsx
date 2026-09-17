@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDown, ArrowUpRight, Asterisk, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -315,8 +315,6 @@ function Index() {
         <div className="mx-auto flex max-w-[1500px] flex-col justify-between gap-4 text-xs uppercase tracking-[0.14em] sm:flex-row">
           <span>Nia Studio — Web design &amp; development agency, Nairobi</span>
           <nav className="flex flex-wrap gap-5" aria-label="Footer">
-            <Link to="/pricing" className="hover:text-primary">Postpilot pricing</Link>
-            <Link to="/privacy" className="hover:text-primary">Privacy</Link>
             <a href="mailto:linkedin@mywork.co.ke" className="hover:text-primary">Contact</a>
           </nav>
           <span>© {new Date().getFullYear()} All rights reserved</span>
