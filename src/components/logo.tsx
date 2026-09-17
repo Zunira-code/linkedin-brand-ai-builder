@@ -7,11 +7,11 @@ export function Logo({ className, showText = true }: { className?: string; showT
       <img
         src={markSrc}
         alt="Nia Studio"
-        className="h-8 w-8 rounded-xl object-cover shadow-glow"
+        width={639}
+        height={178}
+        className="h-8 w-auto object-contain"
       />
-      {showText && (
-        <span className="font-display text-lg font-semibold tracking-tight">Nia Studio</span>
-      )}
+      {!showText && null}
     </div>
   );
 }

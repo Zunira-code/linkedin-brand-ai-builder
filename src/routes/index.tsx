@@ -164,7 +164,7 @@ function Index() {
       <header className="fixed inset-x-0 top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-md">
         <div className="mx-auto flex h-20 max-w-[1600px] items-center justify-between px-5 md:px-10">
           <a href="#top" className="flex items-center gap-3" aria-label="Nia Studio home">
-            <img src={niaLogo} alt="Nia Studio" width={1200} height={800} className="h-9 w-auto" />
+            <img src={niaLogo} alt="Nia Studio" width={639} height={178} className="h-9 w-auto" />
           </a>
           <nav className="hidden items-center gap-8 text-xs uppercase tracking-[0.14em] md:flex" aria-label="Main navigation">
             <a href="#work" className="agency-link">Work</a>
