@@ -10,6 +10,8 @@ export const Route = createFileRoute("/sitemap.xml")({
         // /analytics, ...), API and machine endpoints are intentionally excluded.
         const entries = [
           { path: "/", changefreq: "weekly", priority: "1.0" },
+          { path: "/web-design-nairobi", changefreq: "monthly", priority: "0.9" },
+          { path: "/web-development-nairobi", changefreq: "monthly", priority: "0.9" },
         ];
         const urls = entries.map(
           (e) => `  <url><loc>${BASE_URL}${e.path}</loc><changefreq>${e.changefreq}</changefreq><priority>${e.priority}</priority></url>`,
