@@ -189,8 +189,7 @@ function Settings() {
             </ul>
             <p className="mt-2">
               Access tokens are stored encrypted, tied to your account, and used only while you're signed in. You can revoke access anytime with <span className="text-foreground">Disconnect</span> below, or from your{" "}
-              <a href="https://www.linkedin.com/psettings/permitted-services" target="_blank" rel="noreferrer" className="underline hover:text-foreground">LinkedIn permitted services</a> page. See our{" "}
-              <Link to="/privacy" className="underline hover:text-foreground">Privacy Policy</Link>.
+              <a href="https://www.linkedin.com/psettings/permitted-services" target="_blank" rel="noreferrer" className="underline hover:text-foreground">LinkedIn permitted services</a> page.
             </p>
           </div>
           {status.data?.connected ? (

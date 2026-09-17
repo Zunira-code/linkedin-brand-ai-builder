@@ -37,9 +37,6 @@ export function UpgradePaywall({
             <Sparkles className="mr-2 h-4 w-4" /> Upgrade to {label}
           </Link>
         </Button>
-        <Button asChild variant="outline">
-          <Link to="/pricing">View plans</Link>
-        </Button>
       </div>
     </div>
   );

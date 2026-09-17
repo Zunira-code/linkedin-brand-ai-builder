@@ -167,8 +167,6 @@ function WebDevelopmentPage() {
         <div className="mx-auto flex max-w-[1400px] flex-wrap gap-5 text-xs uppercase tracking-[0.14em]">
           <Link to="/" className="hover:text-primary">Nia Studio home</Link>
           <Link to="/web-design-nairobi" className="hover:text-primary">Web design Nairobi</Link>
-          <Link to="/pricing" className="hover:text-primary">Postpilot pricing</Link>
-          <Link to="/privacy" className="hover:text-primary">Privacy</Link>
         </div>
       </footer>
     </main>
